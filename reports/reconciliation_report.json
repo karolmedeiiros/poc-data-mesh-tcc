@@ -1,0 +1,322 @@
+{
+  "summary": {
+    "ap_rows": 199,
+    "ar_rows": 199,
+    "unique_invoice_ids": 200,
+    "pairs_ap_and_ar": 198,
+    "counters": {
+      "staleness": 5,
+      "status_mismatch": 9,
+      "amount_mismatch": 13,
+      "currency_mismatch": 3,
+      "missing_in_ap": 1,
+      "missing_in_ar": 1
+    },
+    "rates_pct": {
+      "missing_in_ap_pct": 0.5,
+      "missing_in_ar_pct": 0.5,
+      "currency_mismatch_pct": 1.52,
+      "amount_mismatch_pct": 6.57,
+      "status_mismatch_pct": 4.55,
+      "staleness_pct": 2.53
+    },
+    "total_inconsistencies_found": 32
+  },
+  "contracts_compared": {
+    "ap": {
+      "name": "contas-a-pagar",
+      "version": "1.0.0",
+      "value_field": "amount",
+      "status_enum": [
+        "OPEN",
+        "PAID",
+        "CANCELED"
+      ]
+    },
+    "ar": {
+      "name": "contas-a-receber",
+      "version": "1.0.0",
+      "value_field": "gross_amount",
+      "status_enum": [
+        "OPEN",
+        "SETTLED",
+        "CANCELED"
+      ]
+    },
+    "known_mismatches": [
+      "AP usa amount; AR usa gross_amount",
+      "AP status enum difere de AR (PAID vs SETTLED)",
+      "AP tem supplier_id; AR tem customer_id (contraparte não padronizada)"
+    ]
+  },
+  "executive_summary": {
+    "message": "Mesmo com inconsistências baixas (%), elas já são suficientes para gerar dashboards divergentes e reconciliações manuais, principalmente porque consumidores precisam criar mapeamentos entre produtos.",
+    "key_points": [
+      "Diferenças de contrato (amount vs gross_amount) exigem mapeamento oficial.",
+      "Enums diferentes (PAID vs SETTLED) causam divergência de métricas por status.",
+      "Staleness (atualização assíncrona) cria 'verdades diferentes' dependendo do horário de consulta.",
+      "Missing records aparecem por falhas/atrasos/escopos diferentes entre domínios."
+    ],
+    "recommended_controls": [
+      "Padrões federados mínimos: nomes canônicos, enums canônicos, ids canônicos.",
+      "Testes automáticos de contrato + reconciliação contínua.",
+      "Camada de normalização (silver) com status/valor canônicos.",
+      "Observabilidade de dados (freshness) por produto com alertas."
+    ]
+  },
+  "inconsistencies": [
+    {
+      "invoice_id": "INV-1013",
+      "type": "staleness",
+      "ap_updated_at": "2026-02-21T02:10:51.387321Z",
+      "ar_updated_at": "2026-02-20T11:36:51.387321Z",
+      "staleness_minutes": 874.0,
+      "note": "Atualizações em tempos diferentes geram números diferentes dependendo do horário."
+    },
+    {
+      "invoice_id": "INV-1020",
+      "type": "status_mismatch",
+      "ap_status": "PAID",
+      "ar_status": "OPEN",
+      "ap_canonical": "SETTLED",
+      "ar_canonical": "OPEN",
+      "note": "Enums/semântica diferentes entre produtos."
+    },
+    {
+      "invoice_id": "INV-1023",
+      "type": "staleness",
+      "ap_updated_at": "2026-02-21T02:05:51.387321Z",
+      "ar_updated_at": "2026-02-20T19:32:51.387321Z",
+      "staleness_minutes": 393.0,
+      "note": "Atualizações em tempos diferentes geram números diferentes dependendo do horário."
+    },
+    {
+      "invoice_id": "INV-1028",
+      "type": "amount_mismatch",
+      "ap_amount": 4926.91,
+      "ar_gross_amount": 4926.36,
+      "delta": 0.55,
+      "note": "Diferença pode ser juros, imposto, arredondamento ou erro de integração."
+    },
+    {
+      "invoice_id": "INV-1032",
+      "type": "status_mismatch",
+      "ap_status": "OPEN",
+      "ar_status": "SETTLED",
+      "ap_canonical": "OPEN",
+      "ar_canonical": "SETTLED",
+      "note": "Enums/semântica diferentes entre produtos."
+    },
+    {
+      "invoice_id": "INV-1035",
+      "type": "staleness",
+      "ap_updated_at": "2026-02-21T02:19:51.387321Z",
+      "ar_updated_at": "2026-02-20T14:24:51.387321Z",
+      "staleness_minutes": 715.0,
+      "note": "Atualizações em tempos diferentes geram números diferentes dependendo do horário."
+    },
+    {
+      "invoice_id": "INV-1036",
+      "type": "currency_mismatch",
+      "ap_currency": "BRL",
+      "ar_currency": "USD"
+    },
+    {
+      "invoice_id": "INV-1040",
+      "type": "amount_mismatch",
+      "ap_amount": 2836.78,
+      "ar_gross_amount": 2835.28,
+      "delta": 1.5,
+      "note": "Diferença pode ser juros, imposto, arredondamento ou erro de integração."
+    },
+    {
+      "invoice_id": "INV-1042",
+      "type": "missing_in_ap",
+      "details": "Existe em AR, mas não existe em AP."
+    },
+    {
+      "invoice_id": "INV-1046",
+      "type": "currency_mismatch",
+      "ap_currency": "BRL",
+      "ar_currency": "USD"
+    },
+    {
+      "invoice_id": "INV-1052",
+      "type": "amount_mismatch",
+      "ap_amount": 2823.78,
+      "ar_gross_amount": 2824.55,
+      "delta": -0.77,
+      "note": "Diferença pode ser juros, imposto, arredondamento ou erro de integração."
+    },
+    {
+      "invoice_id": "INV-1054",
+      "type": "status_mismatch",
+      "ap_status": "PAID",
+      "ar_status": "OPEN",
+      "ap_canonical": "SETTLED",
+      "ar_canonical": "OPEN",
+      "note": "Enums/semântica diferentes entre produtos."
+    },
+    {
+      "invoice_id": "INV-1057",
+      "type": "amount_mismatch",
+      "ap_amount": 2669.74,
+      "ar_gross_amount": 2671.73,
+      "delta": -1.99,
+      "note": "Diferença pode ser juros, imposto, arredondamento ou erro de integração."
+    },
+    {
+      "invoice_id": "INV-1059",
+      "type": "currency_mismatch",
+      "ap_currency": "BRL",
+      "ar_currency": "USD"
+    },
+    {
+      "invoice_id": "INV-1074",
+      "type": "amount_mismatch",
+      "ap_amount": 3223.54,
+      "ar_gross_amount": 3223.63,
+      "delta": -0.09,
+      "note": "Diferença pode ser juros, imposto, arredondamento ou erro de integração."
+    },
+    {
+      "invoice_id": "INV-1077",
+      "type": "status_mismatch",
+      "ap_status": "OPEN",
+      "ar_status": "SETTLED",
+      "ap_canonical": "OPEN",
+      "ar_canonical": "SETTLED",
+      "note": "Enums/semântica diferentes entre produtos."
+    },
+    {
+      "invoice_id": "INV-1081",
+      "type": "amount_mismatch",
+      "ap_amount": 866.75,
+      "ar_gross_amount": 865.41,
+      "delta": 1.34,
+      "note": "Diferença pode ser juros, imposto, arredondamento ou erro de integração."
+    },
+    {
+      "invoice_id": "INV-1096",
+      "type": "amount_mismatch",
+      "ap_amount": 494.34,
+      "ar_gross_amount": 496.12,
+      "delta": -1.78,
+      "note": "Diferença pode ser juros, imposto, arredondamento ou erro de integração."
+    },
+    {
+      "invoice_id": "INV-1099",
+      "type": "status_mismatch",
+      "ap_status": "OPEN",
+      "ar_status": "CANCELED",
+      "ap_canonical": "OPEN",
+      "ar_canonical": "CANCELED",
+      "note": "Enums/semântica diferentes entre produtos."
+    },
+    {
+      "invoice_id": "INV-1100",
+      "type": "amount_mismatch",
+      "ap_amount": 648.28,
+      "ar_gross_amount": 646.88,
+      "delta": 1.4,
+      "note": "Diferença pode ser juros, imposto, arredondamento ou erro de integração."
+    },
+    {
+      "invoice_id": "INV-1112",
+      "type": "status_mismatch",
+      "ap_status": "OPEN",
+      "ar_status": "SETTLED",
+      "ap_canonical": "OPEN",
+      "ar_canonical": "SETTLED",
+      "note": "Enums/semântica diferentes entre produtos."
+    },
+    {
+      "invoice_id": "INV-1127",
+      "type": "status_mismatch",
+      "ap_status": "PAID",
+      "ar_status": "OPEN",
+      "ap_canonical": "SETTLED",
+      "ar_canonical": "OPEN",
+      "note": "Enums/semântica diferentes entre produtos."
+    },
+    {
+      "invoice_id": "INV-1135",
+      "type": "amount_mismatch",
+      "ap_amount": 2120.84,
+      "ar_gross_amount": 2120.81,
+      "delta": 0.03,
+      "note": "Diferença pode ser juros, imposto, arredondamento ou erro de integração."
+    },
+    {
+      "invoice_id": "INV-1137",
+      "type": "amount_mismatch",
+      "ap_amount": 2540.67,
+      "ar_gross_amount": 2540.63,
+      "delta": 0.04,
+      "note": "Diferença pode ser juros, imposto, arredondamento ou erro de integração."
+    },
+    {
+      "invoice_id": "INV-1157",
+      "type": "amount_mismatch",
+      "ap_amount": 2136.62,
+      "ar_gross_amount": 2137.65,
+      "delta": -1.03,
+      "note": "Diferença pode ser juros, imposto, arredondamento ou erro de integração."
+    },
+    {
+      "invoice_id": "INV-1161",
+      "type": "staleness",
+      "ap_updated_at": "2026-02-21T01:27:51.387321Z",
+      "ar_updated_at": "2026-02-20T11:44:51.387321Z",
+      "staleness_minutes": 823.0,
+      "note": "Atualizações em tempos diferentes geram números diferentes dependendo do horário."
+    },
+    {
+      "invoice_id": "INV-1185",
+      "type": "status_mismatch",
+      "ap_status": "PAID",
+      "ar_status": "OPEN",
+      "ap_canonical": "SETTLED",
+      "ar_canonical": "OPEN",
+      "note": "Enums/semântica diferentes entre produtos."
+    },
+    {
+      "invoice_id": "INV-1189",
+      "type": "amount_mismatch",
+      "ap_amount": 1267.63,
+      "ar_gross_amount": 1268.24,
+      "delta": -0.61,
+      "note": "Diferença pode ser juros, imposto, arredondamento ou erro de integração."
+    },
+    {
+      "invoice_id": "INV-1190",
+      "type": "missing_in_ar",
+      "details": "Existe em AP, mas não existe em AR."
+    },
+    {
+      "invoice_id": "INV-1192",
+      "type": "status_mismatch",
+      "ap_status": "OPEN",
+      "ar_status": "SETTLED",
+      "ap_canonical": "OPEN",
+      "ar_canonical": "SETTLED",
+      "note": "Enums/semântica diferentes entre produtos."
+    },
+    {
+      "invoice_id": "INV-1195",
+      "type": "staleness",
+      "ap_updated_at": "2026-02-21T02:37:51.387321Z",
+      "ar_updated_at": "2026-02-20T08:29:51.387321Z",
+      "staleness_minutes": 1088.0,
+      "note": "Atualizações em tempos diferentes geram números diferentes dependendo do horário."
+    },
+    {
+      "invoice_id": "INV-1197",
+      "type": "amount_mismatch",
+      "ap_amount": 3897.48,
+      "ar_gross_amount": 3899.27,
+      "delta": -1.79,
+      "note": "Diferença pode ser juros, imposto, arredondamento ou erro de integração."
+    }
+  ]
+}

@@ -1,0 +1,203 @@
+[
+  {
+    "product": "contas-a-pagar-invoice-keyed",
+    "domain": "financeiro",
+    "dataset_path": "domains/financeiro/contas-a-pagar/data/ap.jsonl",
+    "validation_timestamp": "2026-06-09T02:31:43.972411+00:00",
+    "total_records": 1999,
+    "records_with_errors": 0,
+    "records_with_warnings": 0,
+    "records_valid": 1999,
+    "total_errors": 0,
+    "total_warnings": 0,
+    "error_rate": 0.0,
+    "warning_rate": 0.0,
+    "quality_score": 100.0,
+    "rule_performance": {
+      "ap-k-invoice-id-format": {
+        "description": "invoice_id deve casar com master_entity invoice",
+        "total_executions": 1999,
+        "passes": 1999,
+        "failures": 0,
+        "warnings": 0,
+        "errors": 0,
+        "pass_rate": 100.0,
+        "failure_rate": 0.0,
+        "warning_rate": 0.0,
+        "error_rate": 0.0
+      },
+      "ap-k-positive-amount": {
+        "description": "amount > 0",
+        "total_executions": 1999,
+        "passes": 1999,
+        "failures": 0,
+        "warnings": 0,
+        "errors": 0,
+        "pass_rate": 100.0,
+        "failure_rate": 0.0,
+        "warning_rate": 0.0,
+        "error_rate": 0.0
+      },
+      "ap-k-currency-brl": {
+        "description": "currency BRL",
+        "total_executions": 1999,
+        "passes": 1999,
+        "failures": 0,
+        "warnings": 0,
+        "errors": 0,
+        "pass_rate": 100.0,
+        "failure_rate": 0.0,
+        "warning_rate": 0.0,
+        "error_rate": 0.0
+      },
+      "ap-k-valid-status": {
+        "description": "status válido",
+        "total_executions": 1999,
+        "passes": 1999,
+        "failures": 0,
+        "warnings": 0,
+        "errors": 0,
+        "pass_rate": 100.0,
+        "failure_rate": 0.0,
+        "warning_rate": 0.0,
+        "error_rate": 0.0
+      }
+    },
+    "sample_errors": [],
+    "sample_warnings": []
+  },
+  {
+    "product": "contas-a-receber-invoice-keyed",
+    "domain": "financeiro",
+    "dataset_path": "domains/financeiro/contas-a-receber/data/ar.jsonl",
+    "validation_timestamp": "2026-06-09T02:31:43.998499+00:00",
+    "total_records": 1997,
+    "records_with_errors": 0,
+    "records_with_warnings": 0,
+    "records_valid": 1997,
+    "total_errors": 0,
+    "total_warnings": 0,
+    "error_rate": 0.0,
+    "warning_rate": 0.0,
+    "quality_score": 100.0,
+    "rule_performance": {
+      "ar-k-invoice-id-format": {
+        "description": "invoice_id deve casar com master_entity invoice",
+        "total_executions": 1997,
+        "passes": 1997,
+        "failures": 0,
+        "warnings": 0,
+        "errors": 0,
+        "pass_rate": 100.0,
+        "failure_rate": 0.0,
+        "warning_rate": 0.0,
+        "error_rate": 0.0
+      },
+      "ar-k-positive-amount": {
+        "description": "gross_amount > 0",
+        "total_executions": 1997,
+        "passes": 1997,
+        "failures": 0,
+        "warnings": 0,
+        "errors": 0,
+        "pass_rate": 100.0,
+        "failure_rate": 0.0,
+        "warning_rate": 0.0,
+        "error_rate": 0.0
+      },
+      "ar-k-currency-brl": {
+        "description": "currency BRL",
+        "total_executions": 1997,
+        "passes": 1997,
+        "failures": 0,
+        "warnings": 0,
+        "errors": 0,
+        "pass_rate": 100.0,
+        "failure_rate": 0.0,
+        "warning_rate": 0.0,
+        "error_rate": 0.0
+      },
+      "ar-k-valid-status": {
+        "description": "status válido",
+        "total_executions": 1997,
+        "passes": 1997,
+        "failures": 0,
+        "warnings": 0,
+        "errors": 0,
+        "pass_rate": 100.0,
+        "failure_rate": 0.0,
+        "warning_rate": 0.0,
+        "error_rate": 0.0
+      }
+    },
+    "sample_errors": [],
+    "sample_warnings": []
+  },
+  {
+    "product": "operacoes-logistica-invoice-keyed",
+    "domain": "logistica",
+    "dataset_path": "domains/logistica/data/logistics.jsonl",
+    "validation_timestamp": "2026-06-09T02:31:44.016616+00:00",
+    "total_records": 1098,
+    "records_with_errors": 0,
+    "records_with_warnings": 0,
+    "records_valid": 1098,
+    "total_errors": 0,
+    "total_warnings": 0,
+    "error_rate": 0.0,
+    "warning_rate": 0.0,
+    "quality_score": 100.0,
+    "rule_performance": {
+      "log-k-invoice-id-format": {
+        "description": "invoice_id deve casar com master_entity invoice",
+        "total_executions": 1098,
+        "passes": 1098,
+        "failures": 0,
+        "warnings": 0,
+        "errors": 0,
+        "pass_rate": 100.0,
+        "failure_rate": 0.0,
+        "warning_rate": 0.0,
+        "error_rate": 0.0
+      },
+      "log-k-positive-count": {
+        "description": "operation_count >= 1",
+        "total_executions": 1098,
+        "passes": 1098,
+        "failures": 0,
+        "warnings": 0,
+        "errors": 0,
+        "pass_rate": 100.0,
+        "failure_rate": 0.0,
+        "warning_rate": 0.0,
+        "error_rate": 0.0
+      },
+      "log-k-currency-brl": {
+        "description": "currency BRL",
+        "total_executions": 1098,
+        "passes": 1098,
+        "failures": 0,
+        "warnings": 0,
+        "errors": 0,
+        "pass_rate": 100.0,
+        "failure_rate": 0.0,
+        "warning_rate": 0.0,
+        "error_rate": 0.0
+      },
+      "log-k-valid-status": {
+        "description": "status válido em pelo menos uma operação",
+        "total_executions": 1098,
+        "passes": 1098,
+        "failures": 0,
+        "warnings": 0,
+        "errors": 0,
+        "pass_rate": 100.0,
+        "failure_rate": 0.0,
+        "warning_rate": 0.0,
+        "error_rate": 0.0
+      }
+    },
+    "sample_errors": [],
+    "sample_warnings": []
+  }
+]

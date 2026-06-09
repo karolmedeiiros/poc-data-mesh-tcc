@@ -1,0 +1,1196 @@
+{
+  "catalog_metadata": {
+    "name": "Enterprise Data Products Catalog",
+    "version": "1.0.0",
+    "last_updated": "2026-02-22T22:55:03.976175+00:00",
+    "total_products": 3,
+    "domains": [
+      "financeiro",
+      "logistica"
+    ],
+    "description": "Catálogo federado de produtos de dados da empresa"
+  },
+  "products": [
+    {
+      "product_id": "contas-a-pagar",
+      "name": "contas-a-pagar",
+      "domain": "financeiro",
+      "owner": "finance-ap@empresa.com",
+      "version": "1.0.0",
+      "description": "",
+      "tags": [
+        "finance",
+        "ap",
+        "v1"
+      ],
+      "created_at": "2026-01-15T00:00:00Z",
+      "last_modified": "2026-01-15T00:00:00Z",
+      "schema": {
+        "registry": "http://schema-registry:8081",
+        "subject": "ap-invoices-v1",
+        "format": "avro",
+        "evolution_policy": "backward_compatible",
+        "breaking_changes": "require_major_version",
+        "deprecation_period": "P90D"
+      },
+      "sla": {
+        "freshness": "PT6H",
+        "availability": "99.0%",
+        "latency": "PT1S",
+        "throughput": "1000 msg/s"
+      },
+      "dataset_fields": [
+        {
+          "name": "invoice_id",
+          "type": "string",
+          "required": true,
+          "description": "Identificador único da fatura"
+        },
+        {
+          "name": "supplier_id",
+          "type": "string",
+          "required": true,
+          "description": "ID do fornecedor"
+        },
+        {
+          "name": "source_event_id",
+          "type": "string",
+          "required": true,
+          "description": "ID do evento fonte compartilhado entre domínios"
+        },
+        {
+          "name": "source_system",
+          "type": "string",
+          "required": true,
+          "description": "Sistema de origem do evento"
+        },
+        {
+          "name": "processing_batch_id",
+          "type": "string",
+          "required": true,
+          "description": "ID do lote de processamento do domínio AP"
+        },
+        {
+          "name": "invoice_type",
+          "type": "string",
+          "required": true,
+          "enum": [
+            "fornecedor",
+            "servico",
+            "material",
+            "aluguel",
+            "imposto"
+          ],
+          "description": "Tipo de fatura segundo classificação do domínio AP"
+        },
+        {
+          "name": "currency",
+          "type": "string",
+          "required": true,
+          "enum": [
+            "BRL"
+          ],
+          "description": "Moeda da transação (BRL para operações nacionais)"
+        },
+        {
+          "name": "amount",
+          "type": "number",
+          "required": true,
+          "constraints": {
+            "minExclusive": 0
+          },
+          "description": "Valor líquido da fatura após regras do domínio AP (retenções, taxas)"
+        },
+        {
+          "name": "base_amount",
+          "type": "number",
+          "required": true,
+          "constraints": {
+            "minExclusive": 0
+          },
+          "description": "Valor bruto original do evento fonte"
+        },
+        {
+          "name": "issue_date",
+          "type": "date",
+          "required": true,
+          "description": "Data de emissão"
+        },
+        {
+          "name": "due_date",
+          "type": "date",
+          "required": true,
+          "description": "Data de vencimento"
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "required": true,
+          "enum": [
+            "OPEN",
+            "PAID",
+            "CANCELED"
+          ],
+          "description": "Status atual da fatura"
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime",
+          "required": true,
+          "description": "Última atualização"
+        },
+        {
+          "name": "domain",
+          "type": "string",
+          "required": true,
+          "description": "Identificador do domínio dono do produto"
+        },
+        {
+          "name": "product",
+          "type": "string",
+          "required": true,
+          "description": "Nome do produto de dados"
+        }
+      ],
+      "quality_rules": [
+        {
+          "id": "ap-amount-positive",
+          "description": "amount deve ser > 0",
+          "expression": "amount > 0",
+          "severity": "error"
+        },
+        {
+          "id": "ap-currency-valid",
+          "description": "currency deve ser BRL",
+          "expression": "currency == 'BRL'",
+          "severity": "error"
+        },
+        {
+          "id": "ap-future-due-date",
+          "description": "due_date deve ser futura",
+          "expression": "due_date > issue_date",
+          "severity": "warning"
+        },
+        {
+          "id": "ap-valid-status",
+          "description": "status deve estar na lista permitida",
+          "expression": "status IN ['OPEN', 'PAID', 'CANCELED']",
+          "severity": "error"
+        },
+        {
+          "id": "ap-recent-updates",
+          "description": "updated_at não pode ser muito antigo",
+          "expression": "updated_at > NOW() - INTERVAL '30 days'",
+          "severity": "warning"
+        }
+      ],
+      "consumers": [
+        {
+          "name": "finance-dashboard",
+          "version": ">=1.0.0",
+          "contact": "finance-team@empresa.com",
+          "expectations": [
+            {
+              "field": "amount",
+              "type": "number",
+              "required": true,
+              "description": "Dashboard precisa do valor para KPIs"
+            },
+            {
+              "field": "status",
+              "enum": [
+                "OPEN",
+                "PAID",
+                "CANCELED"
+              ],
+              "description": "Dashboard filtra por status"
+            },
+            {
+              "field": "due_date",
+              "type": "date",
+              "required": true,
+              "description": "Dashboard usa para vencimentos"
+            }
+          ]
+        },
+        {
+          "name": "treasury-system",
+          "version": ">=1.0.0",
+          "contact": "treasury@empresa.com",
+          "expectations": [
+            {
+              "field": "amount",
+              "type": "number",
+              "required": true
+            },
+            {
+              "field": "currency",
+              "enum": [
+                "BRL"
+              ],
+              "required": true
+            },
+            {
+              "field": "supplier_id",
+              "required": true
+            }
+          ]
+        }
+      ],
+      "monitoring": {
+        "metrics": [
+          {
+            "name": "record_count",
+            "description": "Número de registros processados",
+            "type": "counter"
+          },
+          {
+            "name": "processing_latency",
+            "description": "Latência de processamento",
+            "type": "histogram"
+          },
+          {
+            "name": "error_rate",
+            "description": "Taxa de erros",
+            "type": "gauge"
+          },
+          {
+            "name": "freshness",
+            "description": "Idade dos dados",
+            "type": "gauge"
+          },
+          {
+            "name": "schema_validation_failures",
+            "description": "Falhas de validação de schema",
+            "type": "counter"
+          }
+        ],
+        "alerts": [
+          {
+            "name": "high_error_rate",
+            "condition": "error_rate > 0.05",
+            "severity": "critical"
+          },
+          {
+            "name": "stale_data",
+            "condition": "freshness > PT6H",
+            "severity": "warning"
+          },
+          {
+            "name": "schema_validation_failure",
+            "condition": "schema_validation_failures > 0",
+            "severity": "error"
+          },
+          {
+            "name": "availability_drop",
+            "condition": "availability < 99.0%",
+            "severity": "critical"
+          }
+        ]
+      },
+      "discovery": {
+        "lineage_fields": [
+          "source_event_id",
+          "source_system",
+          "processing_batch_id"
+        ],
+        "cross_domain_relationships": [
+          {
+            "field": "invoice_id",
+            "target_domains": [
+              "contas-a-pagar",
+              "contas-a-receber",
+              "logistica"
+            ],
+            "relationship_type": "reference"
+          }
+        ],
+        "searchable_fields": [
+          "source_event_id",
+          "source_system",
+          "processing_batch_id"
+        ],
+        "data_quality_metrics": []
+      }
+    },
+    {
+      "product_id": "contas-a-receber",
+      "name": "contas-a-receber",
+      "domain": "financeiro",
+      "owner": "finance-ar@empresa.com",
+      "version": "1.0.0",
+      "description": "",
+      "tags": [
+        "finance",
+        "ar",
+        "v1"
+      ],
+      "created_at": "2026-01-15T00:00:00Z",
+      "last_modified": "2026-01-15T00:00:00Z",
+      "schema": {
+        "registry": "http://schema-registry:8081",
+        "subject": "ar-invoices-v1",
+        "format": "avro",
+        "evolution_policy": "backward_compatible",
+        "breaking_changes": "require_major_version",
+        "deprecation_period": "P90D"
+      },
+      "sla": {
+        "freshness": "PT6H",
+        "availability": "99.0%",
+        "latency": "PT1S",
+        "throughput": "1000 msg/s"
+      },
+      "dataset_fields": [
+        {
+          "name": "invoice_id",
+          "type": "string",
+          "required": true,
+          "description": "Identificador único da fatura"
+        },
+        {
+          "name": "customer_id",
+          "type": "string",
+          "required": true,
+          "description": "ID do cliente"
+        },
+        {
+          "name": "source_event_id",
+          "type": "string",
+          "required": true,
+          "description": "ID do evento fonte compartilhado entre domínios"
+        },
+        {
+          "name": "source_system",
+          "type": "string",
+          "required": true,
+          "description": "Sistema de origem do evento"
+        },
+        {
+          "name": "processing_batch_id",
+          "type": "string",
+          "required": true,
+          "description": "ID do lote de processamento do domínio AR"
+        },
+        {
+          "name": "customer_type",
+          "type": "string",
+          "required": true,
+          "enum": [
+            "corporate",
+            "government",
+            "b2c"
+          ],
+          "description": "Tipo de cliente segundo classificação do domínio AR"
+        },
+        {
+          "name": "currency",
+          "type": "string",
+          "required": true,
+          "enum": [
+            "BRL"
+          ],
+          "description": "Moeda da transação (BRL para operações nacionais)"
+        },
+        {
+          "name": "gross_amount",
+          "type": "number",
+          "required": true,
+          "constraints": {
+            "minExclusive": 0
+          },
+          "description": "Valor da fatura após regras do domínio AR (descontos, juros)"
+        },
+        {
+          "name": "base_amount",
+          "type": "number",
+          "required": true,
+          "constraints": {
+            "minExclusive": 0
+          },
+          "description": "Valor bruto original do evento fonte"
+        },
+        {
+          "name": "issue_date",
+          "type": "date",
+          "required": true,
+          "description": "Data de emissão"
+        },
+        {
+          "name": "due_date",
+          "type": "date",
+          "required": true,
+          "description": "Data de vencimento"
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "required": true,
+          "enum": [
+            "OPEN",
+            "SETTLED",
+            "CANCELED"
+          ],
+          "description": "Status atual da fatura"
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime",
+          "required": true,
+          "description": "Última atualização"
+        },
+        {
+          "name": "domain",
+          "type": "string",
+          "required": true,
+          "description": "Identificador do domínio dono do produto"
+        },
+        {
+          "name": "product",
+          "type": "string",
+          "required": true,
+          "description": "Nome do produto de dados"
+        }
+      ],
+      "quality_rules": [
+        {
+          "id": "ar-gross-amount-positive",
+          "description": "gross_amount deve ser > 0",
+          "expression": "gross_amount > 0",
+          "severity": "error"
+        },
+        {
+          "id": "ar-currency-valid",
+          "description": "currency deve ser BRL",
+          "expression": "currency == 'BRL'",
+          "severity": "error"
+        },
+        {
+          "id": "ar-future-due-date",
+          "description": "due_date deve ser futura",
+          "expression": "due_date > issue_date",
+          "severity": "warning"
+        },
+        {
+          "id": "ar-valid-status",
+          "description": "status deve estar na lista permitida",
+          "expression": "status IN ['OPEN', 'SETTLED', 'CANCELED']",
+          "severity": "error"
+        },
+        {
+          "id": "ar-recent-updates",
+          "description": "updated_at não pode ser muito antigo",
+          "expression": "updated_at > NOW() - INTERVAL '30 days'",
+          "severity": "warning"
+        }
+      ],
+      "consumers": [
+        {
+          "name": "sales-dashboard",
+          "version": ">=1.0.0",
+          "contact": "sales-team@empresa.com",
+          "expectations": [
+            {
+              "field": "gross_amount",
+              "type": "number",
+              "required": true,
+              "description": "Dashboard precisa do valor para receita"
+            },
+            {
+              "field": "status",
+              "enum": [
+                "OPEN",
+                "SETTLED",
+                "CANCELED"
+              ],
+              "description": "Dashboard filtra por status"
+            },
+            {
+              "field": "customer_id",
+              "required": true,
+              "description": "Dashboard agrupa por cliente"
+            }
+          ]
+        },
+        {
+          "name": "billing-system",
+          "version": ">=1.0.0",
+          "contact": "billing@empresa.com",
+          "expectations": [
+            {
+              "field": "gross_amount",
+              "type": "number",
+              "required": true
+            },
+            {
+              "field": "currency",
+              "enum": [
+                "BRL"
+              ],
+              "required": true
+            },
+            {
+              "field": "customer_id",
+              "required": true
+            }
+          ]
+        }
+      ],
+      "monitoring": {
+        "metrics": [
+          {
+            "name": "record_count",
+            "description": "Número de registros processados",
+            "type": "counter"
+          },
+          {
+            "name": "processing_latency",
+            "description": "Latência de processamento",
+            "type": "histogram"
+          },
+          {
+            "name": "error_rate",
+            "description": "Taxa de erros",
+            "type": "gauge"
+          },
+          {
+            "name": "freshness",
+            "description": "Idade dos dados",
+            "type": "gauge"
+          },
+          {
+            "name": "schema_validation_failures",
+            "description": "Falhas de validação de schema",
+            "type": "counter"
+          }
+        ],
+        "alerts": [
+          {
+            "name": "high_error_rate",
+            "condition": "error_rate > 0.05",
+            "severity": "critical"
+          },
+          {
+            "name": "stale_data",
+            "condition": "freshness > PT6H",
+            "severity": "warning"
+          },
+          {
+            "name": "schema_validation_failure",
+            "condition": "schema_validation_failures > 0",
+            "severity": "error"
+          },
+          {
+            "name": "availability_drop",
+            "condition": "availability < 99.0%",
+            "severity": "critical"
+          }
+        ]
+      },
+      "discovery": {
+        "lineage_fields": [
+          "source_event_id",
+          "source_system",
+          "processing_batch_id"
+        ],
+        "cross_domain_relationships": [
+          {
+            "field": "invoice_id",
+            "target_domains": [
+              "contas-a-pagar",
+              "contas-a-receber",
+              "logistica"
+            ],
+            "relationship_type": "reference"
+          }
+        ],
+        "searchable_fields": [
+          "source_event_id",
+          "source_system",
+          "processing_batch_id"
+        ],
+        "data_quality_metrics": []
+      }
+    },
+    {
+      "product_id": "operacoes-logistica",
+      "name": "operacoes-logistica",
+      "domain": "logistica",
+      "owner": "logistics-team@empresa.com",
+      "version": "1.0.0",
+      "description": "",
+      "tags": [
+        "logistics",
+        "inventory",
+        "v1"
+      ],
+      "created_at": "2026-01-15T00:00:00Z",
+      "last_modified": "2026-01-15T00:00:00Z",
+      "schema": {
+        "registry": "http://schema-registry:8081",
+        "subject": "logistics-operations-v1",
+        "format": "avro",
+        "evolution_policy": "backward_compatible",
+        "breaking_changes": "require_major_version",
+        "deprecation_period": "P60D"
+      },
+      "sla": {
+        "freshness": "PT4H",
+        "availability": "99.0%",
+        "latency": "PT2S",
+        "throughput": "500 msg/s"
+      },
+      "dataset_fields": [
+        {
+          "name": "operation_id",
+          "type": "string",
+          "required": true,
+          "description": "ID único da operação logística"
+        },
+        {
+          "name": "source_event_id",
+          "type": "string",
+          "required": true,
+          "description": "ID do evento fonte compartilhado entre domínios"
+        },
+        {
+          "name": "source_system",
+          "type": "string",
+          "required": true,
+          "description": "Sistema de origem do evento"
+        },
+        {
+          "name": "processing_batch_id",
+          "type": "string",
+          "required": true,
+          "description": "ID do lote de processamento do domínio Logística"
+        },
+        {
+          "name": "operation_type",
+          "type": "string",
+          "required": true,
+          "enum": [
+            "recebimento",
+            "envio",
+            "devolucao",
+            "transferencia"
+          ],
+          "description": "Tipo da operação logística"
+        },
+        {
+          "name": "operation_date",
+          "type": "date",
+          "required": true,
+          "description": "Data da operação"
+        },
+        {
+          "name": "related_invoice_id",
+          "type": "string",
+          "required": false,
+          "description": "ID da fatura relacionada (cruzável com AP/AR)"
+        },
+        {
+          "name": "party_id",
+          "type": "string",
+          "required": true,
+          "description": "ID da parte (fornecedor para recebimento, cliente para envio)"
+        },
+        {
+          "name": "party_type",
+          "type": "string",
+          "required": true,
+          "enum": [
+            "supplier",
+            "customer",
+            "warehouse"
+          ],
+          "description": "Tipo da parte envolvida na operação"
+        },
+        {
+          "name": "product_sku",
+          "type": "string",
+          "required": true,
+          "description": "SKU do produto"
+        },
+        {
+          "name": "product_description",
+          "type": "string",
+          "required": true,
+          "description": "Descrição do produto"
+        },
+        {
+          "name": "quantity",
+          "type": "integer",
+          "required": true,
+          "constraints": {
+            "minExclusive": 0
+          },
+          "description": "Quantidade movimentada"
+        },
+        {
+          "name": "unit_price",
+          "type": "number",
+          "required": true,
+          "constraints": {
+            "minExclusive": 0
+          },
+          "description": "Preço unitário em BRL"
+        },
+        {
+          "name": "total_value",
+          "type": "number",
+          "required": true,
+          "constraints": {
+            "minExclusive": 0
+          },
+          "description": "Valor total da operação (quantity * unit_price)"
+        },
+        {
+          "name": "additional_costs",
+          "type": "number",
+          "required": true,
+          "description": "Custos adicionais do domínio (manuseio, frete, multas). Pode ser 0."
+        },
+        {
+          "name": "currency",
+          "type": "string",
+          "required": true,
+          "enum": [
+            "BRL"
+          ],
+          "description": "Moeda da operação"
+        },
+        {
+          "name": "warehouse_id",
+          "type": "string",
+          "required": true,
+          "description": "ID do armazém"
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "required": true,
+          "enum": [
+            "PENDING",
+            "PROCESSING",
+            "COMPLETED",
+            "CANCELLED"
+          ],
+          "description": "Status da operação"
+        },
+        {
+          "name": "carrier_id",
+          "type": "string",
+          "required": false,
+          "description": "ID da transportadora (para envios)"
+        },
+        {
+          "name": "tracking_number",
+          "type": "string",
+          "required": false,
+          "description": "Número de rastreamento"
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime",
+          "required": true,
+          "description": "Última atualização"
+        },
+        {
+          "name": "domain",
+          "type": "string",
+          "required": true,
+          "description": "Identificador do domínio dono do produto"
+        },
+        {
+          "name": "product",
+          "type": "string",
+          "required": true,
+          "description": "Nome do produto de dados"
+        }
+      ],
+      "quality_rules": [
+        {
+          "id": "log-quantity-positive",
+          "description": "quantity deve ser > 0",
+          "expression": "quantity > 0",
+          "severity": "error"
+        },
+        {
+          "id": "log-currency-valid",
+          "description": "currency deve ser BRL",
+          "expression": "currency == 'BRL'",
+          "severity": "error"
+        },
+        {
+          "id": "log-positive-values",
+          "description": "valores monetários devem ser positivos",
+          "expression": "unit_price > 0 AND total_value > 0",
+          "severity": "error"
+        },
+        {
+          "id": "log-future-operation-date",
+          "description": "operation_date não deve ser futura",
+          "expression": "operation_date <= CURRENT_DATE",
+          "severity": "warning"
+        },
+        {
+          "id": "log-consistent-calculation",
+          "description": "total_value deve igual quantity * unit_price",
+          "expression": "total_value = quantity * unit_price",
+          "severity": "error"
+        },
+        {
+          "id": "log-valid-status",
+          "description": "status deve estar na lista permitida",
+          "expression": "status IN ['PENDING', 'PROCESSING', 'COMPLETED', 'CANCELLED']",
+          "severity": "error"
+        },
+        {
+          "id": "log-recent-updates",
+          "description": "updated_at não pode ser muito antigo",
+          "expression": "updated_at > NOW() - INTERVAL '30 days'",
+          "severity": "warning"
+        }
+      ],
+      "consumers": [
+        {
+          "name": "supply-chain-dashboard",
+          "version": ">=1.0.0",
+          "contact": "supply-chain@empresa.com",
+          "expectations": [
+            {
+              "field": "total_value",
+              "type": "number",
+              "required": true,
+              "description": "Dashboard precisa do valor para métricas financeiras"
+            },
+            {
+              "field": "status",
+              "enum": [
+                "PENDING",
+                "PROCESSING",
+                "COMPLETED",
+                "CANCELLED"
+              ],
+              "description": "Dashboard filtra por status"
+            },
+            {
+              "field": "operation_date",
+              "type": "date",
+              "required": true,
+              "description": "Dashboard usa para análises temporais"
+            }
+          ]
+        },
+        {
+          "name": "finance-reconciliation",
+          "version": ">=1.0.0",
+          "contact": "finance-team@empresa.com",
+          "expectations": [
+            {
+              "field": "related_invoice_id",
+              "required": true,
+              "description": "Financeiro usa para cruzar com AP/AR"
+            },
+            {
+              "field": "total_value",
+              "type": "number",
+              "required": true
+            },
+            {
+              "field": "party_id",
+              "required": true
+            },
+            {
+              "field": "currency",
+              "enum": [
+                "BRL"
+              ],
+              "required": true
+            }
+          ]
+        }
+      ],
+      "monitoring": {
+        "metrics": [
+          {
+            "name": "record_count",
+            "description": "Número de operações processadas",
+            "type": "counter"
+          },
+          {
+            "name": "processing_latency",
+            "description": "Latência de processamento",
+            "type": "histogram"
+          },
+          {
+            "name": "error_rate",
+            "description": "Taxa de erros",
+            "type": "gauge"
+          },
+          {
+            "name": "freshness",
+            "description": "Idade dos dados",
+            "type": "gauge"
+          },
+          {
+            "name": "schema_validation_failures",
+            "description": "Falhas de validação de schema",
+            "type": "counter"
+          },
+          {
+            "name": "inventory_value",
+            "description": "Valor total do estoque movimentado",
+            "type": "gauge"
+          }
+        ],
+        "alerts": [
+          {
+            "name": "high_error_rate",
+            "condition": "error_rate > 0.05",
+            "severity": "critical"
+          },
+          {
+            "name": "stale_data",
+            "condition": "freshness > PT4H",
+            "severity": "warning"
+          },
+          {
+            "name": "schema_validation_failure",
+            "condition": "schema_validation_failures > 0",
+            "severity": "error"
+          },
+          {
+            "name": "availability_drop",
+            "condition": "availability < 99.0%",
+            "severity": "critical"
+          },
+          {
+            "name": "calculation_mismatch",
+            "condition": "calculation_errors > 0",
+            "severity": "error"
+          }
+        ]
+      },
+      "discovery": {
+        "lineage_fields": [
+          "source_event_id",
+          "source_system",
+          "processing_batch_id"
+        ],
+        "cross_domain_relationships": [
+          {
+            "field": "related_invoice_id",
+            "target_domains": [
+              "contas-a-pagar",
+              "contas-a-receber",
+              "logistica"
+            ],
+            "relationship_type": "reference"
+          }
+        ],
+        "searchable_fields": [
+          "source_event_id",
+          "source_system",
+          "processing_batch_id"
+        ],
+        "data_quality_metrics": []
+      }
+    }
+  ],
+  "domains": {
+    "financeiro": {
+      "domain_name": "financeiro",
+      "total_products": 2,
+      "total_consumers": 4,
+      "products": [
+        "contas-a-pagar",
+        "contas-a-receber"
+      ]
+    },
+    "logistica": {
+      "domain_name": "logistica",
+      "total_products": 1,
+      "total_consumers": 2,
+      "products": [
+        "operacoes-logistica"
+      ]
+    }
+  },
+  "search_indices": {
+    "by_domain": {
+      "financeiro": [
+        "contas-a-pagar",
+        "contas-a-receber"
+      ],
+      "logistica": [
+        "operacoes-logistica"
+      ]
+    },
+    "by_tags": {
+      "finance": [
+        "contas-a-pagar",
+        "contas-a-receber"
+      ],
+      "ap": [
+        "contas-a-pagar"
+      ],
+      "v1": [
+        "contas-a-pagar",
+        "contas-a-receber",
+        "operacoes-logistica"
+      ],
+      "ar": [
+        "contas-a-receber"
+      ],
+      "logistics": [
+        "operacoes-logistica"
+      ],
+      "inventory": [
+        "operacoes-logistica"
+      ]
+    },
+    "by_fields": {
+      "invoice_id": [
+        "contas-a-pagar",
+        "contas-a-receber"
+      ],
+      "supplier_id": [
+        "contas-a-pagar"
+      ],
+      "source_event_id": [
+        "contas-a-pagar",
+        "contas-a-receber",
+        "operacoes-logistica"
+      ],
+      "source_system": [
+        "contas-a-pagar",
+        "contas-a-receber",
+        "operacoes-logistica"
+      ],
+      "processing_batch_id": [
+        "contas-a-pagar",
+        "contas-a-receber",
+        "operacoes-logistica"
+      ],
+      "invoice_type": [
+        "contas-a-pagar"
+      ],
+      "currency": [
+        "contas-a-pagar",
+        "contas-a-receber",
+        "operacoes-logistica"
+      ],
+      "amount": [
+        "contas-a-pagar"
+      ],
+      "base_amount": [
+        "contas-a-pagar",
+        "contas-a-receber"
+      ],
+      "issue_date": [
+        "contas-a-pagar",
+        "contas-a-receber"
+      ],
+      "due_date": [
+        "contas-a-pagar",
+        "contas-a-receber"
+      ],
+      "status": [
+        "contas-a-pagar",
+        "contas-a-receber",
+        "operacoes-logistica"
+      ],
+      "updated_at": [
+        "contas-a-pagar",
+        "contas-a-receber",
+        "operacoes-logistica"
+      ],
+      "domain": [
+        "contas-a-pagar",
+        "contas-a-receber",
+        "operacoes-logistica"
+      ],
+      "product": [
+        "contas-a-pagar",
+        "contas-a-receber",
+        "operacoes-logistica"
+      ],
+      "customer_id": [
+        "contas-a-receber"
+      ],
+      "customer_type": [
+        "contas-a-receber"
+      ],
+      "gross_amount": [
+        "contas-a-receber"
+      ],
+      "operation_id": [
+        "operacoes-logistica"
+      ],
+      "operation_type": [
+        "operacoes-logistica"
+      ],
+      "operation_date": [
+        "operacoes-logistica"
+      ],
+      "related_invoice_id": [
+        "operacoes-logistica"
+      ],
+      "party_id": [
+        "operacoes-logistica"
+      ],
+      "party_type": [
+        "operacoes-logistica"
+      ],
+      "product_sku": [
+        "operacoes-logistica"
+      ],
+      "product_description": [
+        "operacoes-logistica"
+      ],
+      "quantity": [
+        "operacoes-logistica"
+      ],
+      "unit_price": [
+        "operacoes-logistica"
+      ],
+      "total_value": [
+        "operacoes-logistica"
+      ],
+      "additional_costs": [
+        "operacoes-logistica"
+      ],
+      "warehouse_id": [
+        "operacoes-logistica"
+      ],
+      "carrier_id": [
+        "operacoes-logistica"
+      ],
+      "tracking_number": [
+        "operacoes-logistica"
+      ]
+    },
+    "by_consumers": {
+      "finance-dashboard": [
+        "contas-a-pagar"
+      ],
+      "treasury-system": [
+        "contas-a-pagar"
+      ],
+      "sales-dashboard": [
+        "contas-a-receber"
+      ],
+      "billing-system": [
+        "contas-a-receber"
+      ],
+      "supply-chain-dashboard": [
+        "operacoes-logistica"
+      ],
+      "finance-reconciliation": [
+        "operacoes-logistica"
+      ]
+    }
+  }
+}

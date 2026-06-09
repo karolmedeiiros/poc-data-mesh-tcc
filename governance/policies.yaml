@@ -1,0 +1,559 @@
+apiVersion: v1
+kind: GovernancePolicies
+metadata:
+  name: data-mesh-governance
+  version: "1.0.0"
+  owner: "data-office@empresa.com"
+  created_at: "2026-01-15T00:00:00Z"
+  last_modified: "2026-01-15T00:00:00Z"
+  tags: ["governance", "data-mesh", "v1"]
+spec:
+  description: "Políticas corporativas de governança para Data Mesh"
+  
+  # Padrões Federados
+  standards:
+    naming:
+      convention: "snake_case"
+      required_fields: ["id", "created_at", "updated_at"]
+      max_field_name_length: 50
+      forbidden_patterns: ["temp_", "test_", "debug_"]
+    
+    quality:
+      max_error_rate: 0.05  # 5%
+      min_freshness: "P1D"   # produtos analíticos batch (output ports)
+      min_availability: "99.0%"
+      max_staleness: "P1D"
+      amount_tolerance: 0.01
+      allowed_currencies: ["BRL"]
+    
+    # Data Observability (QoS Avançado)
+    observability:
+      data_freshness:
+        enabled: true
+        threshold: "PT6H"
+        alert_threshold: "PT8H"
+        measurement_frequency: "PT1H"
+      
+      schema_drift:
+        enabled: true
+        check_frequency: "PT24H"
+        alert_on_changes: true
+        breaking_change_detection: true
+      
+      volume_anomalies:
+        enabled: true
+        baseline_window: "P7D"
+        deviation_threshold: 0.25  # 25%
+        alert_threshold: 0.50    # 50%
+      
+      quality_degradation:
+        enabled: true
+        quality_metrics: ["completeness", "accuracy", "validity"]
+        degradation_threshold: 0.10  # 10%
+        recovery_sla: "PT2H"
+      
+      lineage_tracking:
+        enabled: true
+        upstream_dependencies: true
+        downstream_impacts: true
+        change_propagation: true
+    
+    # Error Budgets (SRE Principles)
+    error_budgets:
+      monthly_budget: "99.9%"
+      weekly_budget: "99.5%"
+      daily_budget: "99.0%"
+      
+      burn_rate_alerts:
+        warning_threshold: 0.80  # 80% do budget consumido
+        critical_threshold: 0.95  # 95% do budget consumido
+      
+      outage_classification:
+        critical:
+          availability_impact: ">5%"
+          recovery_time: ">PT1H"
+          budget_impact: "high"
+        major:
+          availability_impact: "1-5%"
+          recovery_time: "PT15M-PT1H"
+          budget_impact: "medium"
+        minor:
+          availability_impact: "<1%"
+          recovery_time: "<PT15M"
+          budget_impact: "low"
+      
+      budget_calculation:
+        include_maintenance: false
+        include_planned_outages: false
+        measurement_window: "P30D"
+    
+    # Data Reliability Metrics
+    reliability:
+      mean_time_to_recovery: "PT1H"
+      mean_time_between_failures: "P30D"
+      data_loss_prevention: "zero_loss"
+      
+      recovery_objectives:
+        rto: "PT4H"  # Recovery Time Objective
+        rpo: "PT1H"  # Recovery Point Objective
+        
+      backup_strategy:
+        frequency: "PT6H"
+        retention: "P90D"
+        verification: "weekly"
+        
+      disaster_recovery:
+        site_recovery: "PT24H"
+        data_replication: "async"
+        failover_automation: true
+    
+    # Performance Metrics
+    performance:
+      query_performance:
+        response_time_p50: "PT2S"
+        response_time_p95: "PT5S"
+        response_time_p99: "PT10S"
+        timeout_threshold: "PT30S"
+      
+      batch_processing:
+        max_processing_time: "PT30M"
+        parallel_jobs: 4
+        resource_utilization: 0.80  # 80%
+        
+      streaming:
+        max_lag: "PT5S"
+        throughput_min: "1000 msg/s"
+        consumer_lag_threshold: "PT10S"
+        
+      scalability:
+        max_concurrent_users: 100
+        peak_load_multiplier: 2.0
+        auto_scaling_enabled: true
+    
+    security:
+      encryption: "AES-256"
+      access_control: "RBAC"
+      audit_retention: "P365D"
+      pii_fields: ["customer_id", "supplier_id", "email", "phone"]
+    
+    evolution:
+      backward_compatibility: true
+      breaking_changes: "require_major_version"
+      deprecation_period: "P90D"
+      notification_period: "P30D"
+    
+    documentation:
+      description_required: true
+      examples_required: true
+      changelog_required: true
+  
+  # Contratos Obrigatórios
+  required_contract_sections:
+    - metadata
+    - spec.product
+    - spec.dataset
+    - spec.quality
+    - spec.schema
+    - spec.tests
+    - spec.consumers
+    - spec.monitoring
+  
+  # Campos Obrigatórios para Produtos Analíticos (Output Ports)
+  # Esta malha publica apenas produtos analíticos agregados (consumer-aligned).
+  # Dados operacionais brutos permanecem como camada de entrada não publicada.
+  required_fields:
+    aggregate:
+      - "generated_at"   # quando o output port foi materializado (UTC)
+      - "domain"         # domínio dono do produto
+      - "product"        # nome do produto de dados
+      - "currency"       # padrão semântico ISO-4217
+    
+    measures:
+      - "count"          # alguma contagem (invoice_count, operation_count, ...)
+      - "total"          # alguma soma (total_amount, total_value, ...)
+  
+  # Regras de Qualidade Globais
+  global_quality_rules:
+    - id: "positive_amounts"
+      description: "Valores monetários devem ser positivos"
+      expression: "amount > 0"
+      applies_to: ["amount", "gross_amount", "total_amount", "net_amount"]
+      severity: "error"
+    
+    - id: "valid_currency"
+      description: "Moeda deve ser BRL (operações nacionais)"
+      expression: "currency == 'BRL'"
+      applies_to: ["currency"]
+      severity: "error"
+    
+    - id: "future_dates"
+      description: "Datas de vencimento devem ser futuras"
+      expression: "due_date > issue_date"
+      applies_to: ["due_date", "issue_date"]
+      severity: "warning"
+    
+    - id: "valid_status"
+      description: "Status deve estar na lista permitida"
+      expression: "status IN ['OPEN', 'PAID', 'SETTLED', 'CANCELED', 'CANCELLED', 'PENDING', 'PROCESSING', 'COMPLETED']"
+      applies_to: ["status"]
+      severity: "error"
+    
+    - id: "non_null_ids"
+      description: "IDs não podem ser nulos"
+      expression: "id IS NOT NULL AND id != ''"
+      applies_to: ["id", "invoice_id", "customer_id", "supplier_id", "operation_id"]
+      severity: "error"
+    
+    - id: "recent_updates"
+      description: "Registros devem ser atualizados recentemente (últimos 7 dias)"
+      expression: "updated_at >= NOW() - INTERVAL '7 days'"
+      applies_to: ["updated_at"]
+      severity: "warning"
+    
+    - id: "data_freshness_compliance"
+      description: "Dados devem estar dentro do SLA de freshness"
+      expression: "TIMESTAMPDIFF(HOUR, updated_at, NOW()) <= 6"
+      applies_to: ["updated_at"]
+      severity: "error"
+    
+    - id: "schema_compatibility"
+      description: "Schema deve manter compatibilidade backward"
+      expression: "schema_version_compatible == true"
+      applies_to: ["schema_version"]
+      severity: "critical"
+    
+    - id: "volume_consistency"
+      description: "Volume de dados deve estar dentro do esperado"
+      expression: "ABS(record_count - baseline_count) / baseline_count <= 0.25"
+      applies_to: ["record_count"]
+      severity: "warning"
+    
+    - id: "error_budget_compliance"
+      description: "Taxa de erro deve respeitar error budget"
+      expression: "error_rate <= 0.001"  # 0.1% para 99.9% SLA
+      applies_to: ["error_rate"]
+      severity: "critical"
+    
+    - id: "performance_sla"
+      description: "Tempo de resposta deve estar dentro do SLA"
+      expression: "response_time_p95 <= PT5S"
+      applies_to: ["response_time"]
+      severity: "warning"
+    
+      
+  # SLAs Globais
+  global_slas:
+    freshness:
+      default: "PT6H"
+      critical: "PT1H"
+      batch: "P1D"
+      real_time: "PT1M"
+    
+    availability:
+      default: "99.0%"
+      critical: "99.9%"
+      batch: "95.0%"
+      real_time: "99.5%"
+    
+    latency:
+      default: "PT1S"
+      critical: "PT100MS"
+      batch: "PT1M"
+      real_time: "PT50MS"
+    
+    throughput:
+      default: "1000 msg/s"
+      critical: "5000 msg/s"
+      batch: "100 msg/s"
+      real_time: "10000 msg/s"
+  
+  # Políticas de Evolução
+  evolution_policies:
+    backward_compatibility:
+      required: true
+      exceptions: ["emergency_fixes", "security_patches"]
+      approval_process: "data_office_review"
+    
+    breaking_changes:
+      approval_required: true
+      notification_period: "P30D"
+      rollback_plan: true
+      consumer_impact_analysis: true
+    
+    deprecation:
+      min_period: "P90D"
+      max_period: "P365D"
+      notification_required: true
+      migration_support: true
+  
+  # Monitoramento Obrigatório
+  required_monitoring:
+    metrics:
+      - name: "record_count"
+        type: "counter"
+        description: "Número de registros processados"
+        required: true
+      
+      - name: "processing_latency"
+        type: "histogram"
+        description: "Latência de processamento"
+        required: true
+      
+      - name: "error_rate"
+        type: "gauge"
+        description: "Taxa de erros"
+        required: true
+      
+      - name: "freshness"
+        type: "gauge"
+        description: "Idade dos dados"
+        required: true
+      
+      - name: "schema_validation_failures"
+        type: "counter"
+        description: "Falhas de validação de schema"
+        required: true
+    
+    alerts:
+      - name: "high_error_rate"
+        condition: "error_rate > 0.05"
+        severity: "critical"
+        notification: ["data_office", "product_team"]
+      
+      - name: "stale_data"
+        condition: "freshness > PT6H"
+        severity: "warning"
+        notification: ["product_team"]
+      
+      - name: "schema_validation_failure"
+        condition: "schema_validation_failures > 0"
+        severity: "error"
+        notification: ["data_office", "product_team"]
+      
+      - name: "availability_drop"
+        condition: "availability < 99.0%"
+        severity: "critical"
+        notification: ["data_office", "sre_team"]
+  
+  # Políticas de Segurança
+  security_policies:
+    data_classification:
+      - level: "public"
+        requirements: ["basic_logging"]
+      
+      - level: "internal"
+        requirements: ["rbac", "audit_log"]
+      
+      - level: "confidential"
+        requirements: ["encryption", "rbac", "audit_log", "data_masking"]
+      
+      - level: "restricted"
+        requirements: ["encryption", "rbac", "audit_log", "data_masking", "approval_required"]
+    
+    access_control:
+      principle: "least_privilege"
+      review_frequency: "P90D"
+      emergency_access: "break_glass"
+    
+    audit:
+      log_all_access: true
+      retention_period: "P365D"
+      tamper_protection: true
+  
+  # Políticas de Documentação
+  documentation_policies:
+    required_sections:
+      - "overview"
+      - "schema_description"
+      - "usage_examples"
+      - "quality_metrics"
+      - "contact_information"
+    
+    update_frequency:
+      schema_changes: "immediate"
+      quality_rules: "weekly"
+      contact_info: "monthly"
+    
+    approval:
+      major_changes: "data_office_review"
+      minor_changes: "product_team_approval"
+  
+  # Política de Interoperabilidade (Governança Federativa)
+  # Garante que produtos de dados de diferentes domínios possam ser combinados,
+  # consumidos e integrados sem fricção, respeitando autonomia dos domínios e
+  # padrões globais definidos pelo Data Office.
+  interoperability:
+    # Formatos abertos suportados pela malha
+    data_formats:
+      allowed: ["avro", "parquet", "json", "protobuf"]
+      preferred: "avro"
+      forbidden: ["proprietary", "xls", "csv_without_schema"]
+
+    # Schema Registry como ponto central de evolução interoperável
+    schema_registry:
+      required: true
+      endpoint_pattern: "^https?://.+"
+      compatibility_mode: "backward"
+      subject_naming: "{domain}-{product}-v{major}"
+
+    # Protocolos de exposição/consumo entre domínios
+    protocols:
+      sync:
+        allowed: ["http", "https", "grpc"]
+        require_tls: true
+      async:
+        allowed: ["kafka", "pulsar", "rabbitmq"]
+        require_schema_registry: true
+      batch:
+        allowed: ["s3", "gcs", "abfs"]
+
+    # ----------------------------------------------------------------------
+    # Master Entities — chaves de negócio globais governadas federativamente.
+    # Quando o backbone operacional é compartilhado entre domínios (ex.: ERP único),
+    # estas chaves representam entidades-mestre reais (faturas, clientes, fornecedores)
+    # e podem ser publicadas em múltiplos output ports para permitir reconciliação
+    # fina (entity-keyed analytical products), sob governança federada de formato
+    # e ciclo de vida.
+    # Importante: compartilhar a chave NÃO elimina divergências de vocabulário,
+    # regras de domínio, granularidade ou janela temporal — apenas viabiliza a
+    # detecção fatura-a-fatura. Continua sendo necessária a canonicalização semântica.
+    master_entities:
+      - id: "invoice"
+        canonical_field: "invoice_id"
+        format:
+          type: "string"
+          pattern: "^INV-[0-9]+$"
+          case_sensitive: true
+        issuing_authority: "billing-system"        # sistema-fonte autoritativo
+        lifecycle: "immutable_once_emitted"
+        published_in_products:
+          - "contas-a-pagar-invoice-keyed"
+          - "contas-a-receber-invoice-keyed"
+          - "operacoes-logistica-invoice-keyed"
+        cross_product_assertions:
+          # Mesmo invoice_id presente em AP e AR deve representar a MESMA fatura.
+          # Divergências em status/valor são esperadas (regras de domínio).
+          - "ap.invoice_id == ar.invoice_id => same_real_invoice"
+          - "logistics.related_invoice_id == ap.invoice_id => same_real_invoice"
+
+      - id: "customer"
+        canonical_field: "customer_id"
+        format:
+          type: "string"
+          pattern: "^CUS-[0-9]+$"
+          case_sensitive: true
+        issuing_authority: "crm-system"
+        lifecycle: "stable"
+        published_in_products:
+          - "contas-a-receber-invoice-keyed"
+
+      - id: "supplier"
+        canonical_field: "supplier_id"
+        format:
+          type: "string"
+          pattern: "^SUP-[0-9]+$"
+          case_sensitive: true
+        issuing_authority: "procurement-system"
+        lifecycle: "stable"
+        published_in_products:
+          - "contas-a-pagar-invoice-keyed"
+
+    # Identificadores globais compartilhados entre produtos analíticos federados
+    shared_identifiers:
+      required_fields:
+        - "domain"            # produto pertence a um domínio (Domain Ownership)
+        - "product"            # nome do produto de dados (descoberta no catálogo)
+        - "generated_at"      # timestamp de materialização (UTC)
+      # Dimensões usadas para junção entre produtos analíticos de domínios diferentes
+      cross_domain_keys:
+        - "issue_month"
+        - "operation_month"
+        - "status"
+        - "currency"
+      id_format:
+        type: "string"
+        pattern: "^[A-Za-z0-9_:|-]{1,64}$"
+        case_sensitive: true
+
+    # Padrões semânticos compartilhados (vocabulário comum)
+    semantic_standards:
+      datetime:
+        format: "ISO-8601"
+        timezone: "UTC"
+        field_type: "datetime"
+      date:
+        format: "YYYY-MM-DD"
+        field_type: "date"
+      currency:
+        standard: "ISO-4217"
+        allowed: ["BRL"]
+        field_name: "currency"
+      amount:
+        precision: 2
+        type: "number"
+        non_negative: true
+      language: "pt-BR"
+      encoding: "UTF-8"
+
+    # Convenções de nomenclatura federadas
+    naming_conventions:
+      fields: "snake_case"
+      datasets: "snake_case"
+      products: "kebab-case"
+      domains: "kebab-case"
+      max_identifier_length: 50
+
+    # Catálogo e descoberta (federação)
+    catalog:
+      registration_required: true
+      discoverability: "mesh-wide"
+      metadata_standard: "DCAT"
+      required_metadata:
+        - "owner"
+        - "domain"
+        - "version"
+        - "tags"
+        - "description"
+
+    # Linhagem federada entre produtos analíticos
+    federated_lineage:
+      required: true
+      propagation: "automatic"
+      # No nível analítico a linhagem usa metadados de catálogo.
+      trace_fields:
+        - "domain"
+        - "product"
+        - "generated_at"
+      # Linhagem upstream é declarada em metadata.upstream em cada contrato.
+      upstream_declaration: "metadata.upstream"
+
+    # Versionamento semântico interoperável
+    versioning:
+      scheme: "semver"
+      breaking_change: "major"
+      backward_compatible_addition: "minor"
+      bugfix: "patch"
+      deprecation_period: "P90D"
+
+    # Contratos de consumo padronizados (consumer-driven contracts)
+    consumer_contracts:
+      required: true
+      negotiation: "data_office_mediated"
+      change_notice_period: "P30D"
+
+  # Validação de Compliance
+  compliance_requirements:
+    frameworks:
+      - name: "LGPD"
+        requirements: ["data_minimization", "consent_management", "data_subject_rights"]
+      
+      - name: "SOX"
+        requirements: ["data_integrity", "audit_trail", "segregation_of_duties"]
+      
+      - name: "ISO_27001"
+        requirements: ["information_security", "risk_management", "continuous_improvement"]
+    
+    validation_frequency:
+      automated_checks: "daily"
+      manual_review: "monthly"
+      external_audit: "annually"

@@ -1,0 +1,93 @@
+{
+  "grain": "issue_month | canonical_status",
+  "products": {
+    "ap": {
+      "path": "domains/financeiro/contas-a-pagar/data/ap_analytical.jsonl",
+      "buckets": 3
+    },
+    "ar": {
+      "path": "domains/financeiro/contas-a-receber/data/ar_analytical.jsonl",
+      "buckets": 3
+    }
+  },
+  "summary": {
+    "total_buckets_analyzed": 3,
+    "divergence_types": {
+      "status_vocabulary": 1
+    },
+    "bucket_divergence_rate": 33.33,
+    "count_divergence_rate": 0.0,
+    "amount_divergence_rate": 0.0,
+    "critical_divergences": 0
+  },
+  "divergences": [
+    {
+      "issue_month": "2026-05",
+      "canonical_status": "PAID",
+      "ap": {
+        "invoice_count": 442,
+        "total_amount": 1107071.91,
+        "raw_statuses": [
+          "PAID"
+        ]
+      },
+      "ar": {
+        "invoice_count": 442,
+        "total_gross_amount": 1129031.8,
+        "raw_statuses": [
+          "SETTLED"
+        ]
+      },
+      "issues": [
+        {
+          "type": "status_vocabulary",
+          "ap_raw": [
+            "PAID"
+          ],
+          "ar_raw": [
+            "SETTLED"
+          ]
+        }
+      ]
+    }
+  ],
+  "root_cause_analysis": {
+    "status_vocabulary": [
+      {
+        "issue_month": "2026-05",
+        "canonical_status": "PAID",
+        "ap_raw": [
+          "PAID"
+        ],
+        "ar_raw": [
+          "SETTLED"
+        ],
+        "root_cause": "Domínios usam termos próprios para o mesmo conceito"
+      }
+    ],
+    "count_mismatch": [],
+    "amount_mismatch": [],
+    "missing_buckets": []
+  },
+  "mesh_insights": {
+    "domain_ownership_impact": "Cada domínio publica seu output port com regras próprias",
+    "data_product_alignment": "1/3 buckets canônicos divergem entre AP e AR analítico",
+    "federated_governance_effectiveness": "Vocabulário de status canonicalizado via política federada (2 mapeamentos ativos)"
+  },
+  "insights": {
+    "key_findings": [
+      "Buckets analisados: 3",
+      "Taxa de divergência por bucket: 33.33%",
+      "Divergência de contagem: 0.0%",
+      "Divergência de valores: 0.0%",
+      "Buckets críticos (ausentes): 0"
+    ],
+    "data_mesh_principles": [
+      "Domain Ownership: ✅ Cada domínio publica seu output port",
+      "Data as Product: ✅ Reconciliação opera sobre contratos publicados",
+      "Self-Service: ✅ Autonomia gera diferenças semânticas conhecidas",
+      "Federated Governance: ✅ Status canonicalizado por política compartilhada"
+    ],
+    "execution_timestamp": "2026-06-09T01:17:38.383223+00:00"
+  }
+}
