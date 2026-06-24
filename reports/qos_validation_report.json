@@ -1,49 +1,49 @@
 {
-  "execution_timestamp": "2026-02-22T22:54:38.660890+00:00",
+  "execution_timestamp": "2026-06-24T01:39:39.472913+00:00",
   "summary": {
     "total_products": 3,
-    "average_compliance": 100.0,
-    "fully_compliant_products": 3,
+    "average_compliance": 0.0,
+    "fully_compliant_products": 0,
     "partially_compliant_products": 0,
-    "non_compliant_products": 0
+    "non_compliant_products": 3
   },
   "results": [
     {
       "product": "contas-a-pagar",
       "domain": "financeiro",
-      "timestamp": "2026-02-22T22:54:38.581784+00:00",
+      "timestamp": "2026-06-24T01:39:39.423232+00:00",
       "sections": [
         {
           "section": "observability",
           "checks": [
             {
-              "check": "data_freshness_configured",
-              "status": "PASS",
-              "message": "Freshness configurado: PT6H / Alerta: PT8H"
+              "check": "data_freshness_enabled",
+              "status": "FAIL",
+              "message": "Data freshness não habilitado"
             },
             {
               "check": "schema_drift_enabled",
-              "status": "PASS",
-              "message": "Schema drift detection habilitado"
+              "status": "FAIL",
+              "message": "Schema drift não habilitado"
             },
             {
               "check": "volume_anomalies_enabled",
-              "status": "PASS",
-              "message": "Volume anomalies detection habilitado"
+              "status": "FAIL",
+              "message": "Volume anomalies não habilitado"
             },
             {
               "check": "quality_degradation_enabled",
-              "status": "PASS",
-              "message": "Quality degradation monitoring habilitado"
+              "status": "FAIL",
+              "message": "Quality degradation não habilitado"
             },
             {
               "check": "lineage_tracking_enabled",
-              "status": "PASS",
-              "message": "Lineage tracking habilitado"
+              "status": "FAIL",
+              "message": "Lineage tracking não habilitado"
             }
           ],
-          "overall_status": "PASS",
-          "score": 5,
+          "overall_status": "PARTIAL",
+          "score": 0,
           "max_score": 5
         },
         {
@@ -51,27 +51,27 @@
           "checks": [
             {
               "check": "monthly_budget_defined",
-              "status": "PASS",
-              "message": "Monthly budget: 99.9%"
+              "status": "FAIL",
+              "message": "Monthly budget não definido"
             },
             {
-              "check": "burn_rate_alerts_configured",
-              "status": "PASS",
-              "message": "Burn rate alerts: Warning=0.8, Critical=0.95"
+              "check": "burn_rate_alerts_defined",
+              "status": "FAIL",
+              "message": "Burn rate alerts não definidos"
             },
             {
-              "check": "outage_classification_complete",
-              "status": "PASS",
-              "message": "Outage classification completa (critical, major, minor)"
+              "check": "outage_classification_defined",
+              "status": "FAIL",
+              "message": "Outage classification não definida"
             },
             {
-              "check": "budget_calculation_configured",
-              "status": "PASS",
-              "message": "Budget calculation: Window=P30D"
+              "check": "budget_calculation_defined",
+              "status": "FAIL",
+              "message": "Budget calculation não definido"
             }
           ],
-          "overall_status": "PASS",
-          "score": 4,
+          "overall_status": "PARTIAL",
+          "score": 0,
           "max_score": 4
         },
         {
@@ -79,27 +79,27 @@
           "checks": [
             {
               "check": "recovery_metrics_defined",
-              "status": "PASS",
-              "message": "MTTR: PT1H, MTBF: P30D"
+              "status": "FAIL",
+              "message": "MTTR/MTBF não definidos"
             },
             {
               "check": "data_loss_prevention_defined",
-              "status": "PASS",
-              "message": "Data loss prevention: zero_loss"
+              "status": "FAIL",
+              "message": "Data loss prevention não definido"
             },
             {
               "check": "recovery_objectives_defined",
-              "status": "PASS",
-              "message": "RTO: PT4H, RPO: PT1H"
+              "status": "FAIL",
+              "message": "Recovery objectives não definidos"
             },
             {
               "check": "backup_strategy_defined",
-              "status": "PASS",
-              "message": "Backup: PT6H, Retention: P90D"
+              "status": "FAIL",
+              "message": "Backup strategy não definida"
             }
           ],
-          "overall_status": "PASS",
-          "score": 4,
+          "overall_status": "PARTIAL",
+          "score": 0,
           "max_score": 4
         },
         {
@@ -107,76 +107,76 @@
           "checks": [
             {
               "check": "query_performance_defined",
-              "status": "PASS",
-              "message": "Response time P95: PT5S"
+              "status": "FAIL",
+              "message": "Query performance não definido"
             },
             {
               "check": "batch_processing_defined",
-              "status": "PASS",
-              "message": "Max processing time: PT30M"
+              "status": "FAIL",
+              "message": "Batch processing não definido"
             },
             {
               "check": "streaming_defined",
-              "status": "PASS",
-              "message": "Min throughput: 1000 msg/s"
+              "status": "FAIL",
+              "message": "Streaming não definido"
             },
             {
               "check": "scalability_defined",
-              "status": "PASS",
-              "message": "Max concurrent users: 100"
+              "status": "FAIL",
+              "message": "Scalability não definido"
             }
           ],
-          "overall_status": "PASS",
-          "score": 4,
+          "overall_status": "PARTIAL",
+          "score": 0,
           "max_score": 4
         }
       ],
       "summary": {
         "total_sections": 4,
-        "passed_sections": 4,
-        "partial_sections": 0,
+        "passed_sections": 0,
+        "partial_sections": 4,
         "failed_sections": 0,
-        "overall_score": 17,
+        "overall_score": 0,
         "max_score": 16,
-        "compliance_percentage": 100.0
+        "compliance_percentage": 0.0
       }
     },
     {
       "product": "contas-a-receber",
       "domain": "financeiro",
-      "timestamp": "2026-02-22T22:54:38.616544+00:00",
+      "timestamp": "2026-06-24T01:39:39.439052+00:00",
       "sections": [
         {
           "section": "observability",
           "checks": [
             {
-              "check": "data_freshness_configured",
-              "status": "PASS",
-              "message": "Freshness configurado: PT6H / Alerta: PT8H"
+              "check": "data_freshness_enabled",
+              "status": "FAIL",
+              "message": "Data freshness não habilitado"
             },
             {
               "check": "schema_drift_enabled",
-              "status": "PASS",
-              "message": "Schema drift detection habilitado"
+              "status": "FAIL",
+              "message": "Schema drift não habilitado"
             },
             {
               "check": "volume_anomalies_enabled",
-              "status": "PASS",
-              "message": "Volume anomalies detection habilitado"
+              "status": "FAIL",
+              "message": "Volume anomalies não habilitado"
             },
             {
               "check": "quality_degradation_enabled",
-              "status": "PASS",
-              "message": "Quality degradation monitoring habilitado"
+              "status": "FAIL",
+              "message": "Quality degradation não habilitado"
             },
             {
               "check": "lineage_tracking_enabled",
-              "status": "PASS",
-              "message": "Lineage tracking habilitado"
+              "status": "FAIL",
+              "message": "Lineage tracking não habilitado"
             }
           ],
-          "overall_status": "PASS",
-          "score": 5,
+          "overall_status": "PARTIAL",
+          "score": 0,
           "max_score": 5
         },
         {
@@ -184,27 +184,27 @@
           "checks": [
             {
               "check": "monthly_budget_defined",
-              "status": "PASS",
-              "message": "Monthly budget: 99.9%"
+              "status": "FAIL",
+              "message": "Monthly budget não definido"
             },
             {
-              "check": "burn_rate_alerts_configured",
-              "status": "PASS",
-              "message": "Burn rate alerts: Warning=0.8, Critical=0.95"
+              "check": "burn_rate_alerts_defined",
+              "status": "FAIL",
+              "message": "Burn rate alerts não definidos"
             },
             {
-              "check": "outage_classification_complete",
-              "status": "PASS",
-              "message": "Outage classification completa (critical, major, minor)"
+              "check": "outage_classification_defined",
+              "status": "FAIL",
+              "message": "Outage classification não definida"
             },
             {
-              "check": "budget_calculation_configured",
-              "status": "PASS",
-              "message": "Budget calculation: Window=P30D"
+              "check": "budget_calculation_defined",
+              "status": "FAIL",
+              "message": "Budget calculation não definido"
             }
           ],
-          "overall_status": "PASS",
-          "score": 4,
+          "overall_status": "PARTIAL",
+          "score": 0,
           "max_score": 4
         },
         {
@@ -212,27 +212,27 @@
           "checks": [
             {
               "check": "recovery_metrics_defined",
-              "status": "PASS",
-              "message": "MTTR: PT1H, MTBF: P30D"
+              "status": "FAIL",
+              "message": "MTTR/MTBF não definidos"
             },
             {
               "check": "data_loss_prevention_defined",
-              "status": "PASS",
-              "message": "Data loss prevention: zero_loss"
+              "status": "FAIL",
+              "message": "Data loss prevention não definido"
             },
             {
               "check": "recovery_objectives_defined",
-              "status": "PASS",
-              "message": "RTO: PT4H, RPO: PT1H"
+              "status": "FAIL",
+              "message": "Recovery objectives não definidos"
             },
             {
               "check": "backup_strategy_defined",
-              "status": "PASS",
-              "message": "Backup: PT6H, Retention: P90D"
+              "status": "FAIL",
+              "message": "Backup strategy não definida"
             }
           ],
-          "overall_status": "PASS",
-          "score": 4,
+          "overall_status": "PARTIAL",
+          "score": 0,
           "max_score": 4
         },
         {
@@ -240,76 +240,76 @@
           "checks": [
             {
               "check": "query_performance_defined",
-              "status": "PASS",
-              "message": "Response time P95: PT5S"
+              "status": "FAIL",
+              "message": "Query performance não definido"
             },
             {
               "check": "batch_processing_defined",
-              "status": "PASS",
-              "message": "Max processing time: PT30M"
+              "status": "FAIL",
+              "message": "Batch processing não definido"
             },
             {
               "check": "streaming_defined",
-              "status": "PASS",
-              "message": "Min throughput: 1000 msg/s"
+              "status": "FAIL",
+              "message": "Streaming não definido"
             },
             {
               "check": "scalability_defined",
-              "status": "PASS",
-              "message": "Max concurrent users: 100"
+              "status": "FAIL",
+              "message": "Scalability não definido"
             }
           ],
-          "overall_status": "PASS",
-          "score": 4,
+          "overall_status": "PARTIAL",
+          "score": 0,
           "max_score": 4
         }
       ],
       "summary": {
         "total_sections": 4,
-        "passed_sections": 4,
-        "partial_sections": 0,
+        "passed_sections": 0,
+        "partial_sections": 4,
         "failed_sections": 0,
-        "overall_score": 17,
+        "overall_score": 0,
         "max_score": 16,
-        "compliance_percentage": 100.0
+        "compliance_percentage": 0.0
       }
     },
     {
       "product": "operacoes-logistica",
       "domain": "logistica",
-      "timestamp": "2026-02-22T22:54:38.660548+00:00",
+      "timestamp": "2026-06-24T01:39:39.471418+00:00",
       "sections": [
         {
           "section": "observability",
           "checks": [
             {
-              "check": "data_freshness_configured",
-              "status": "PASS",
-              "message": "Freshness configurado: PT6H / Alerta: PT8H"
+              "check": "data_freshness_enabled",
+              "status": "FAIL",
+              "message": "Data freshness não habilitado"
             },
             {
               "check": "schema_drift_enabled",
-              "status": "PASS",
-              "message": "Schema drift detection habilitado"
+              "status": "FAIL",
+              "message": "Schema drift não habilitado"
             },
             {
               "check": "volume_anomalies_enabled",
-              "status": "PASS",
-              "message": "Volume anomalies detection habilitado"
+              "status": "FAIL",
+              "message": "Volume anomalies não habilitado"
             },
             {
               "check": "quality_degradation_enabled",
-              "status": "PASS",
-              "message": "Quality degradation monitoring habilitado"
+              "status": "FAIL",
+              "message": "Quality degradation não habilitado"
             },
             {
               "check": "lineage_tracking_enabled",
-              "status": "PASS",
-              "message": "Lineage tracking habilitado"
+              "status": "FAIL",
+              "message": "Lineage tracking não habilitado"
             }
           ],
-          "overall_status": "PASS",
-          "score": 5,
+          "overall_status": "PARTIAL",
+          "score": 0,
           "max_score": 5
         },
         {
@@ -317,27 +317,27 @@
           "checks": [
             {
               "check": "monthly_budget_defined",
-              "status": "PASS",
-              "message": "Monthly budget: 99.9%"
+              "status": "FAIL",
+              "message": "Monthly budget não definido"
             },
             {
-              "check": "burn_rate_alerts_configured",
-              "status": "PASS",
-              "message": "Burn rate alerts: Warning=0.8, Critical=0.95"
+              "check": "burn_rate_alerts_defined",
+              "status": "FAIL",
+              "message": "Burn rate alerts não definidos"
             },
             {
-              "check": "outage_classification_complete",
-              "status": "PASS",
-              "message": "Outage classification completa (critical, major, minor)"
+              "check": "outage_classification_defined",
+              "status": "FAIL",
+              "message": "Outage classification não definida"
             },
             {
-              "check": "budget_calculation_configured",
-              "status": "PASS",
-              "message": "Budget calculation: Window=P30D"
+              "check": "budget_calculation_defined",
+              "status": "FAIL",
+              "message": "Budget calculation não definido"
             }
           ],
-          "overall_status": "PASS",
-          "score": 4,
+          "overall_status": "PARTIAL",
+          "score": 0,
           "max_score": 4
         },
         {
@@ -345,27 +345,27 @@
           "checks": [
             {
               "check": "recovery_metrics_defined",
-              "status": "PASS",
-              "message": "MTTR: PT1H, MTBF: P30D"
+              "status": "FAIL",
+              "message": "MTTR/MTBF não definidos"
             },
             {
               "check": "data_loss_prevention_defined",
-              "status": "PASS",
-              "message": "Data loss prevention: zero_loss"
+              "status": "FAIL",
+              "message": "Data loss prevention não definido"
             },
             {
               "check": "recovery_objectives_defined",
-              "status": "PASS",
-              "message": "RTO: PT4H, RPO: PT1H"
+              "status": "FAIL",
+              "message": "Recovery objectives não definidos"
             },
             {
               "check": "backup_strategy_defined",
-              "status": "PASS",
-              "message": "Backup: PT6H, Retention: P90D"
+              "status": "FAIL",
+              "message": "Backup strategy não definida"
             }
           ],
-          "overall_status": "PASS",
-          "score": 4,
+          "overall_status": "PARTIAL",
+          "score": 0,
           "max_score": 4
         },
         {
@@ -373,38 +373,38 @@
           "checks": [
             {
               "check": "query_performance_defined",
-              "status": "PASS",
-              "message": "Response time P95: PT5S"
+              "status": "FAIL",
+              "message": "Query performance não definido"
             },
             {
               "check": "batch_processing_defined",
-              "status": "PASS",
-              "message": "Max processing time: PT30M"
+              "status": "FAIL",
+              "message": "Batch processing não definido"
             },
             {
               "check": "streaming_defined",
-              "status": "PASS",
-              "message": "Min throughput: 1000 msg/s"
+              "status": "FAIL",
+              "message": "Streaming não definido"
             },
             {
               "check": "scalability_defined",
-              "status": "PASS",
-              "message": "Max concurrent users: 100"
+              "status": "FAIL",
+              "message": "Scalability não definido"
             }
           ],
-          "overall_status": "PASS",
-          "score": 4,
+          "overall_status": "PARTIAL",
+          "score": 0,
           "max_score": 4
         }
       ],
       "summary": {
         "total_sections": 4,
-        "passed_sections": 4,
-        "partial_sections": 0,
+        "passed_sections": 0,
+        "partial_sections": 4,
         "failed_sections": 0,
-        "overall_score": 17,
+        "overall_score": 0,
         "max_score": 16,
-        "compliance_percentage": 100.0
+        "compliance_percentage": 0.0
       }
     }
   ]

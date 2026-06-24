@@ -1,241 +1,48 @@
 {
-  "execution_timestamp": "2026-06-09T01:17:38.508188+00:00",
-  "data_layer": "analytical (output ports)",
-  "data_mesh_products": {
-    "contas-a-pagar": {
-      "name": "contas-a-pagar-analytical",
-      "domain": "financeiro",
-      "product_type": "analytical",
-      "version": "1.0.0"
-    },
-    "contas-a-receber": {
-      "name": "contas-a-receber-analytical",
-      "domain": "financeiro",
-      "product_type": "analytical",
-      "version": "1.0.0"
-    },
-    "logistica": {
-      "name": "operacoes-logistica-analytical",
-      "domain": "logistica",
-      "product_type": "analytical",
-      "version": "1.0.0"
-    }
-  },
-  "reconciliation_results": {
-    "intra_domain_ap_vs_ar": {
-      "grain": "issue_month | canonical_status",
-      "products": {
-        "ap": {
-          "path": "domains/financeiro/contas-a-pagar/data/ap_analytical.jsonl",
-          "buckets": 3
-        },
-        "ar": {
-          "path": "domains/financeiro/contas-a-receber/data/ar_analytical.jsonl",
-          "buckets": 3
-        }
-      },
-      "summary": {
-        "total_buckets_analyzed": 3,
-        "divergence_types": {
-          "status_vocabulary": 1
-        },
-        "bucket_divergence_rate": 33.33,
-        "count_divergence_rate": 0.0,
-        "amount_divergence_rate": 0.0,
-        "critical_divergences": 0
-      },
-      "divergences": [
-        {
-          "issue_month": "2026-05",
-          "canonical_status": "PAID",
-          "ap": {
-            "invoice_count": 442,
-            "total_amount": 1107071.91,
-            "raw_statuses": [
-              "PAID"
-            ]
-          },
-          "ar": {
-            "invoice_count": 442,
-            "total_gross_amount": 1129031.8,
-            "raw_statuses": [
-              "SETTLED"
-            ]
-          },
-          "issues": [
-            {
-              "type": "status_vocabulary",
-              "ap_raw": [
-                "PAID"
-              ],
-              "ar_raw": [
-                "SETTLED"
-              ]
-            }
-          ]
-        }
-      ],
-      "root_cause_analysis": {
-        "status_vocabulary": [
-          {
-            "issue_month": "2026-05",
-            "canonical_status": "PAID",
-            "ap_raw": [
-              "PAID"
-            ],
-            "ar_raw": [
-              "SETTLED"
-            ],
-            "root_cause": "Domínios usam termos próprios para o mesmo conceito"
-          }
-        ],
-        "count_mismatch": [],
-        "amount_mismatch": [],
-        "missing_buckets": []
-      },
-      "mesh_insights": {
-        "domain_ownership_impact": "Cada domínio publica seu output port com regras próprias",
-        "data_product_alignment": "1/3 buckets canônicos divergem entre AP e AR analítico",
-        "federated_governance_effectiveness": "Vocabulário de status canonicalizado via política federada (2 mapeamentos ativos)"
-      }
-    },
-    "cross_domain_logistics_vs_finance": {
-      "grain": "operation_month | counterpart_finance_product",
-      "products": {
-        "logistics": {
-          "path": "domains/logistica/data/logistics_analytical.jsonl"
-        },
-        "ap": {
-          "path": "domains/financeiro/contas-a-pagar/data/ap_analytical.jsonl"
-        },
-        "ar": {
-          "path": "domains/financeiro/contas-a-receber/data/ar_analytical.jsonl"
-        }
-      },
-      "summary": {
-        "grain": "operation_month | counterpart_finance_product",
-        "total_months_compared": 2,
-        "total_diverged_months": 2,
-        "overall_divergence_rate_pct": 100.0,
-        "ap_side": {
-          "months_compared": 1,
-          "diverged_months": 1,
-          "divergence_rate_pct": 100.0,
-          "counters": {
-            "volume_mismatch": 1,
-            "value_mismatch": 1
-          }
-        },
-        "ar_side": {
-          "months_compared": 1,
-          "diverged_months": 1,
-          "divergence_rate_pct": 100.0,
-          "counters": {
-            "volume_mismatch": 1,
-            "value_mismatch": 1
-          }
-        }
-      },
-      "comparisons": {
-        "logistics_recebimento_vs_ap": [
-          {
-            "month": "2026-05",
-            "logistics": {
-              "operation_count": 660,
-              "total_value": 1799745.63,
-              "linked_to_invoice": 599,
-              "link_rate": 0.9076
-            },
-            "finance": {
-              "invoice_count": 1999,
-              "total_amount": 5043304.11
-            },
-            "issues": [
-              {
-                "type": "volume_mismatch",
-                "logistics_count": 660,
-                "finance_count": 1999,
-                "diff_pct": 66.98
-              },
-              {
-                "type": "value_mismatch",
-                "logistics_value": 1799745.63,
-                "finance_value": 5043304.11,
-                "diff_pct": 64.31
-              }
-            ]
-          }
-        ],
-        "logistics_envio_vs_ar": [
-          {
-            "month": "2026-05",
-            "logistics": {
-              "operation_count": 568,
-              "total_value": 1638595.89,
-              "linked_to_invoice": 499,
-              "link_rate": 0.8785
-            },
-            "finance": {
-              "invoice_count": 1997,
-              "total_gross_amount": 5131127.21
-            },
-            "issues": [
-              {
-                "type": "volume_mismatch",
-                "logistics_count": 568,
-                "finance_count": 1997,
-                "diff_pct": 71.56
-              },
-              {
-                "type": "value_mismatch",
-                "logistics_value": 1638595.89,
-                "finance_value": 5131127.21,
-                "diff_pct": 68.07
-              }
-            ]
-          }
-        ]
-      },
-      "domain_insights": {
-        "logistics_finance_alignment": "AP: 1/1 meses divergem | AR: 1/1 meses divergem",
-        "business_process_gaps": "Volume diverge AP=1 | AR=1",
-        "data_quality_impact": "Valor diverge AP=1 | AR=1 (frete, manuseio, regras de domínio)"
-      }
-    }
-  },
-  "mesh_insights": {
-    "domain_ownership_impact": "Intra-domain: 33.33% dos buckets canônicos divergem entre AP e AR",
-    "cross_domain_alignment": "Cross-domain: 100.0% dos meses divergem entre Logística e Financeiro",
-    "data_product_autonomy": "Cada output port publica agregados próprios — divergências são naturais e governadas",
-    "federated_governance_effectiveness": "Status canonicalizado por política federada; tolerâncias macro definidas centralmente"
-  },
-  "recommendations": {
-    "immediate_actions": [
-      "Publicar o mapeamento canônico de status como artefato federado",
-      "Materializar dashboards de reconciliação sobre os output ports",
-      "Alertar quando a taxa de divergência ultrapassar tolerâncias federadas"
+  "timestamp": "2026-06-24T01:42:50.497944+00:00",
+  "summary": {
+    "total_products": 3,
+    "domains": [
+      "financeiro",
+      "logistica"
     ],
-    "strategic_initiatives": [
-      "Investigar buckets ausentes (indicador de drop na materialização)",
-      "Revisar tolerâncias VOLUME/VALUE conforme maturidade da malha",
-      "Expandir reconciliação para incluir consumer-aligned products"
-    ],
-    "governance_improvements": [
-      "Padronizar enums de status no schema do output port",
-      "Documentar regras de domínio que justificam divergências de valor",
-      "Definir SLAs de reconciliação cross-domain por grão temporal"
-    ]
+    "reconciliation_status": "CRITICAL",
+    "overall_convergence": 72.69999999999999
   },
-  "executive_summary": {
-    "key_findings": [
-      "Intra-domain: 33.33% dos buckets canônicos divergem",
-      "Cross-domain: 100.0% dos meses analíticos divergem",
-      "Divergências são naturais e esperadas: cada domínio aplica suas próprias regras de negócio no output port publicado"
+  "intra_domain": {
+    "analysis_type": "intra_domain",
+    "domains_compared": [
+      "financeiro"
     ],
-    "business_impact": {
-      "reconciliation_complexity": "Alta",
-      "cross_domain_alignment_needed": "Sim",
-      "data_mesh_maturity": "Nível 4 — produtos analíticos publicados com reconciliação federada"
-    }
-  }
+    "total_comparisons": 1997,
+    "divergences_found": {
+      "status_vocabulary_diff": 441,
+      "amount_business_rules_diff": 159,
+      "timing_diff": 23
+    },
+    "convergence_rate": 78.1,
+    "status": "PARTIAL_CONVERGENCE"
+  },
+  "cross_domain": {
+    "analysis_type": "cross_domain",
+    "domains_compared": [
+      "logistica",
+      "financeiro"
+    ],
+    "total_comparisons": 943,
+    "divergences_found": {
+      "granularity_one_to_many": 155,
+      "value_business_rules_diff": 909,
+      "month_window_diff": 398,
+      "referential_integrity": 0
+    },
+    "convergence_rate": 67.3,
+    "status": "NEEDS_ALIGNMENT"
+  },
+  "recommendations": [
+    "🔧 Padronizar vocabulário de status entre AP e AR (PAID vs SETTLED)",
+    "📏 Definir política de granularidade compartilhada entre Logística e Financeiro",
+    "📅 Alinhar janelas temporais de processamento cross-domain",
+    "🎯 Implementar KPIs de reconciliação automatizados com alertas"
+  ]
 }

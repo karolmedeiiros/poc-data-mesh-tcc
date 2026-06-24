@@ -1,8 +1,14 @@
 import json
 import os
-import yaml
+import sys
 from datetime import datetime, timezone
 from typing import Dict, List, Any
+
+# Adiciona a raiz do projeto ao path para importar odcs_adapter
+script_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(os.path.dirname(script_dir))
+sys.path.insert(0, project_root)
+from odcs_adapter import load_and_normalize
 
 class DataCatalog:
     """Catálogo de Descoberta de Produtos de Dados (Data Mesh Pattern)"""
@@ -28,9 +34,8 @@ class DataCatalog:
         }
     
     def add_product_from_contract(self, contract_path: str) -> None:
-        """Adiciona produto ao catálogo a partir do contrato"""
-        with open(contract_path, 'r', encoding='utf-8') as f:
-            contract = yaml.safe_load(f)
+        """Adiciona produto ao catálogo a partir do contrato (ODCS v3 — Bitol)"""
+        contract = load_and_normalize(contract_path)
         
         metadata = contract.get("metadata", {})
         spec = contract.get("spec", {})

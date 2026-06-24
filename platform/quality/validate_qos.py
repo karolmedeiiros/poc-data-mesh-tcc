@@ -1,8 +1,13 @@
 import json
 import os
+import sys
 from datetime import datetime, timezone
 from typing import Dict, List, Any
 import yaml
+
+# Adiciona a raiz do projeto ao path para importar odcs_adapter
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+from odcs_adapter import load_and_normalize
 
 class QoSValidator:
     """Validação avançada de QoS de Dados (Data Mesh - Livro)"""
@@ -13,8 +18,8 @@ class QoSValidator:
         self.domain = self.contract["metadata"]["domain"]
         
     def load_contract(self, path: str) -> Dict:
-        with open(path, "r", encoding="utf-8") as f:
-            return yaml.safe_load(f)
+        # Carrega contrato ODCS e normaliza para visão interna
+        return load_and_normalize(path)
     
     def validate_observability(self) -> Dict[str, Any]:
         """Valida configurações de Data Observability"""

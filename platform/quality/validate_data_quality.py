@@ -1,8 +1,15 @@
 import json
 import os
+import sys
 from datetime import datetime, timezone
 from typing import Dict, List, Any
 from decimal import Decimal
+
+# Adiciona a raiz do projeto ao path para importar odcs_adapter
+script_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(os.path.dirname(script_dir))
+sys.path.insert(0, project_root)
+from odcs_adapter import load_and_normalize
 
 class DataQualityValidator:
     """Validação runtime de qualidade de dados (Data Mesh Pattern)"""
@@ -14,9 +21,8 @@ class DataQualityValidator:
         self.quality_rules = self.contract.get("spec", {}).get("quality", {}).get("rules", [])
         
     def load_contract(self, path: str) -> Dict:
-        with open(path, "r", encoding="utf-8") as f:
-            import yaml
-            return yaml.safe_load(f)
+        # Contrato no padrão ODCS v3 (Bitol), normalizado para a visão interna.
+        return load_and_normalize(path)
     
     def validate_record(self, record: Dict) -> Dict[str, Any]:
         """Valida um único registro contra as regras de qualidade"""

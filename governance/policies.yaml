@@ -1,3 +1,10 @@
+# Políticas de Governança Federada (formato interno)
+# 
+# NOTA: Os contratos de dados deste repositório são escritos no padrão
+# Open Data Contract Standard (ODCS) v3 — Bitol. Este arquivo YAML
+# permanece no formato interno metadata/spec porque é consumido
+# diretamente pelos validadores de governança, que primeiro normalizam
+# os contratos ODCS via odcs_adapter.py.
 apiVersion: v1
 kind: GovernancePolicies
 metadata:
@@ -427,9 +434,9 @@ spec:
         issuing_authority: "billing-system"        # sistema-fonte autoritativo
         lifecycle: "immutable_once_emitted"
         published_in_products:
-          - "contas-a-pagar-invoice-keyed"
-          - "contas-a-receber-invoice-keyed"
-          - "operacoes-logistica-invoice-keyed"
+          - "contas-a-pagar"
+          - "contas-a-receber"
+          - "operacoes-logistica"
         cross_product_assertions:
           # Mesmo invoice_id presente em AP e AR deve representar a MESMA fatura.
           # Divergências em status/valor são esperadas (regras de domínio).
@@ -445,7 +452,7 @@ spec:
         issuing_authority: "crm-system"
         lifecycle: "stable"
         published_in_products:
-          - "contas-a-receber-invoice-keyed"
+          - "contas-a-receber"
 
       - id: "supplier"
         canonical_field: "supplier_id"
@@ -456,7 +463,7 @@ spec:
         issuing_authority: "procurement-system"
         lifecycle: "stable"
         published_in_products:
-          - "contas-a-pagar-invoice-keyed"
+          - "contas-a-pagar"
 
     # Identificadores globais compartilhados entre produtos analíticos federados
     shared_identifiers:

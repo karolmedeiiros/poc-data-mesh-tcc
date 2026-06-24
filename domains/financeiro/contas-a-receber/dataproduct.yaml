@@ -1,80 +1,184 @@
-apiVersion: v1
-kind: DataProductContract
-metadata:
-  name: contas-a-receber-invoice-keyed
-  domain: financeiro
-  product_type: analytical
-  output_port_kind: entity_keyed
-  master_entity: invoice
-  owner: "finance-ar@empresa.com"
-  version: "1.0.0"
-  tags: ["finance", "ar", "v1", "analytical", "entity-keyed", "invoice"]
-  created_at: "2026-01-15T00:00:00Z"
-  last_modified: "2026-01-15T00:00:00Z"
-  upstream:
-    - "contas-a-receber"
-spec:
-  product:
-    id: "dp-fin-ar-invoice-keyed"
-    description: "Output port analítico de Contas a Receber, chaveado por invoice_id."
-    sla:
-      freshness: "P1D"
-      availability: "99.0%"
-      latency: "PT5S"
-      throughput: "100 msg/s"
-  schema:
-    registry: "http://schema-registry:8081"
-    subject: "ar-invoice-keyed-v1"
-    format: "avro"
-    evolution:
-      policy: "backward_compatible"
-      breaking_changes: "require_major_version"
-      deprecation_period: "P90D"
-  dataset:
-    name: "ar_invoice_keyed"
-    primaryKey: ["invoice_id"]
-    fields:
-      - { name: invoice_id, type: string, required: true }
-      - { name: issue_month, type: string, required: true }
-      - { name: status, type: string, required: true, enum: ["OPEN", "SETTLED", "CANCELED"] }
-      - { name: customer_type, type: string, required: true, enum: ["corporate", "government", "b2c"] }
-      - { name: customer_id, type: string, required: true }
-      - { name: gross_amount, type: number, required: true }
-      - { name: base_amount, type: number, required: true }
-      - { name: currency, type: string, required: true, enum: ["BRL"] }
-      - { name: domain, type: string, required: true }
-      - { name: product, type: string, required: true }
-  quality:
-    rules:
-      - { id: "ar-k-invoice-id-format", description: "invoice_id deve casar com master_entity invoice", expression: "REGEXP_MATCH(invoice_id, '^INV-[0-9]+$')", severity: "error" }
-      - { id: "ar-k-positive-amount", description: "gross_amount > 0", expression: "gross_amount > 0", severity: "error" }
-      - { id: "ar-k-currency-brl", description: "currency BRL", expression: "currency == 'BRL'", severity: "error" }
-      - { id: "ar-k-valid-status", description: "status válido", expression: "status IN ['OPEN','SETTLED','CANCELED']", severity: "error" }
-  tests:
-    unit:
-      - { name: "id_format_ok", input: { "invoice_id": "INV-1001" }, expected: "valid" }
-    integration:
-      - { name: "invoice_id_unique", description: "primary key única", setup: "load_keyed_dataset", test: "assert_unique(invoice_id)", expected: "true" }
-  consumers:
-    - name: "cross-domain-reconciliation"
-      version: ">=1.0.0"
-      contact: "data-platform@empresa.com"
-      expectations:
-        - { field: "invoice_id", required: true }
-    - name: "credit-risk-engine"
-      version: ">=1.0.0"
-      contact: "risk@empresa.com"
-      expectations:
-        - { field: "customer_id", required: true }
-  monitoring:
-    metrics:
-      - { name: "record_count", type: "counter" }
-      - { name: "processing_latency", type: "histogram" }
-      - { name: "error_rate", type: "gauge" }
-      - { name: "freshness", type: "gauge" }
-      - { name: "schema_validation_failures", type: "counter" }
-    alerts:
-      - { name: "high_error_rate", condition: "error_rate > 0.05", severity: "critical" }
-      - { name: "stale_data", condition: "freshness > P1D", severity: "warning" }
-      - { name: "schema_validation_failure", condition: "schema_validation_failures > 0", severity: "error" }
-      - { name: "availability_drop", condition: "availability < 99.0%", severity: "critical" }
+# Open Data Contract Standard (ODCS) v3 — Bitol
+# https://bitol-io.github.io/open-data-contract-standard/
+apiVersion: v3.0.2
+kind: DataContract
+id: dp-fin-ar-invoice-keyed
+name: contas-a-receber
+version: "1.0.0"
+status: active
+domain: financeiro
+dataProduct: contas-a-receber
+tenant: empresa
+
+description:
+  purpose: "Output port analítico de Contas a Receber, chaveado por invoice_id."
+  usage: "Reconciliação fina fatura-a-fatura entre domínios (entity-keyed analytical product)."
+  limitations: "Mantém vocabulário e regras próprias do domínio financeiro (AR)."
+
+tags: ["finance", "ar", "v1", "analytical", "entity-keyed", "invoice"]
+
+schema:
+  - name: ar_invoice_keyed
+    physicalName: ar_invoice_keyed
+    physicalType: table
+    logicalType: object
+    description: "Output port analítico de Contas a Receber chaveado por invoice_id."
+    properties:
+      - name: invoice_id
+        logicalType: string
+        physicalType: string
+        required: true
+        unique: true
+        primaryKey: true
+        primaryKeyPosition: 1
+        description: "Master entity (federated)"
+      - name: issue_month
+        logicalType: string
+        physicalType: string
+        required: true
+      - name: status
+        logicalType: string
+        physicalType: string
+        required: true
+        logicalTypeOptions:
+          enum: ["OPEN", "SETTLED", "CANCELED"]
+      - name: customer_type
+        logicalType: string
+        physicalType: string
+        required: true
+        logicalTypeOptions:
+          enum: ["corporate", "government", "b2c"]
+      - name: customer_id
+        logicalType: string
+        physicalType: string
+        required: true
+      - name: gross_amount
+        logicalType: number
+        physicalType: number
+        required: true
+      - name: base_amount
+        logicalType: number
+        physicalType: number
+        required: true
+      - name: currency
+        logicalType: string
+        physicalType: string
+        required: true
+        logicalTypeOptions:
+          enum: ["BRL"]
+      - name: domain
+        logicalType: string
+        physicalType: string
+        required: true
+      - name: product
+        logicalType: string
+        physicalType: string
+        required: true
+      - name: source_event_id
+        logicalType: string
+        physicalType: string
+        required: true
+        description: "ID do evento fonte no sistema operacional"
+      - name: source_system
+        logicalType: string
+        physicalType: string
+        required: true
+        description: "Sistema de origem do evento"
+    quality:
+      - name: ar-k-invoice-id-format
+        description: "invoice_id deve casar com master_entity invoice"
+        dimension: conformity
+        type: text
+        severity: error
+        customProperties:
+          - property: expression
+            value: "REGEXP_MATCH(invoice_id, '^INV-[0-9]+$')"
+      - name: ar-k-positive-amount
+        description: "gross_amount > 0"
+        dimension: validity
+        type: text
+        severity: error
+        customProperties:
+          - property: expression
+            value: "gross_amount > 0"
+      - name: ar-k-currency-brl
+        description: "currency BRL"
+        dimension: conformity
+        type: text
+        severity: error
+        customProperties:
+          - property: expression
+            value: "currency == 'BRL'"
+      - name: ar-k-valid-status
+        description: "status válido"
+        dimension: validity
+        type: text
+        severity: error
+        customProperties:
+          - property: expression
+            value: "status IN ['OPEN','SETTLED','CANCELED']"
+
+slaDefaultElement: ar_invoice_keyed.invoice_id
+slaProperties:
+  - { property: freshness, value: "P1D", element: ar_invoice_keyed.invoice_id }
+  - { property: availability, value: "99.0%" }
+  - { property: latency, value: "PT5S" }
+  - { property: throughput, value: "100 msg/s" }
+
+team:
+  - username: "finance-ar@empresa.com"
+    role: owner
+
+customProperties:
+  - property: product_type
+    value: analytical
+  - property: output_port_kind
+    value: entity_keyed
+  - property: master_entity
+    value: invoice
+  - property: created_at
+    value: "2026-01-15T00:00:00Z"
+  - property: last_modified
+    value: "2026-01-15T00:00:00Z"
+  - property: upstream
+    value: ["contas-a-receber"]
+  - property: schema_registry
+    value:
+      registry: "http://schema-registry:8081"
+      subject: "ar-invoice-keyed-v1"
+      format: "avro"
+      evolution:
+        policy: "backward_compatible"
+        breaking_changes: "require_major_version"
+        deprecation_period: "P90D"
+  - property: tests
+    value:
+      unit:
+        - { name: "id_format_ok", input: { "invoice_id": "INV-1001" }, expected: "valid" }
+      integration:
+        - { name: "invoice_id_unique", description: "primary key única", setup: "load_keyed_dataset", test: "assert_unique(invoice_id)", expected: "true" }
+  - property: consumers
+    value:
+      - name: "cross-domain-reconciliation"
+        version: ">=1.0.0"
+        contact: "data-platform@empresa.com"
+        expectations:
+          - { field: "invoice_id", required: true }
+      - name: "credit-risk-engine"
+        version: ">=1.0.0"
+        contact: "risk@empresa.com"
+        expectations:
+          - { field: "customer_id", required: true }
+  - property: monitoring
+    value:
+      metrics:
+        - { name: "record_count", type: "counter" }
+        - { name: "processing_latency", type: "histogram" }
+        - { name: "error_rate", type: "gauge" }
+        - { name: "freshness", type: "gauge" }
+        - { name: "schema_validation_failures", type: "counter" }
+      alerts:
+        - { name: "high_error_rate", condition: "error_rate > 0.05", severity: "critical" }
+        - { name: "stale_data", condition: "freshness > P1D", severity: "warning" }
+        - { name: "schema_validation_failure", condition: "schema_validation_failures > 0", severity: "error" }
+        - { name: "availability_drop", condition: "availability < 99.0%", severity: "critical" }

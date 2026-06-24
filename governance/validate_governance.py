@@ -2,8 +2,32 @@ import yaml
 import json
 import os
 import re
+import sys
 from datetime import datetime, timezone
 from typing import Dict, List, Any
+
+# Adiciona a raiz do projeto ao path para importar odcs_adapter
+# Funciona independentemente de onde o script é executado (local, Codespaces, etc.)
+script_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(script_dir)
+
+# Verifica se odcs_adapter.py existe na raiz esperada
+odcs_adapter_path = os.path.join(project_root, 'odcs_adapter.py')
+if not os.path.exists(odcs_adapter_path):
+    # Tenta encontrar odcs_adapter.py em diretórios pais
+    current_dir = project_root
+    while current_dir != '/':
+        test_path = os.path.join(current_dir, 'odcs_adapter.py')
+        if os.path.exists(test_path):
+            project_root = current_dir
+            break
+        current_dir = os.path.dirname(current_dir)
+    else:
+        raise FileNotFoundError(f"odcs_adapter.py não encontrado. Procurado em: {odcs_adapter_path}")
+
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+from odcs_adapter import load_and_normalize
 
 def load_yaml(file_path: str) -> Dict[str, Any]:
     """Carrega arquivo YAML"""
@@ -349,7 +373,7 @@ def validate_contract_governance(contract_path: str, policies_path: str) -> Dict
     """Valida compliance de um contrato com as políticas de governança"""
     
     try:
-        contract = load_yaml(contract_path)
+        contract = load_and_normalize(contract_path)
         policies = load_yaml(policies_path)
     except Exception as e:
         return {

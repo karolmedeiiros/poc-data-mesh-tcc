@@ -1,11 +1,21 @@
-import yaml
+import os
+import sys
 import json
 from datetime import datetime
 
+# Adiciona a raiz do projeto ao path para importar odcs_adapter
+script_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(script_dir)
+sys.path.insert(0, project_root)
+from odcs_adapter import load_and_normalize
+
 def validate_contract(contract_path: str) -> dict:
-    """Valida se o contrato segue os padrões do livro"""
-    with open(contract_path, 'r') as f:
-        contract = yaml.safe_load(f)
+    """Valida se o contrato (ODCS v3 — Bitol) segue os padrões esperados.
+
+    O contrato é carregado no padrão ODCS e normalizado para a visão interna
+    metadata/spec usada pelas validações.
+    """
+    contract = load_and_normalize(contract_path)
     
     validation_result = {
         "contract": contract["metadata"]["name"],
