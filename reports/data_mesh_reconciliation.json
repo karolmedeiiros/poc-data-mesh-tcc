@@ -1,0 +1,57 @@
+{
+  "timestamp": "2026-07-21T03:28:37.829015+00:00",
+  "summary": {
+    "total_products": 3,
+    "domains": [
+      "logistica",
+      "financeiro"
+    ],
+    "reconciliation_status": "CRITICAL",
+    "overall_convergence": 50.7
+  },
+  "intra_domain": {
+    "analysis_type": "intra_domain",
+    "domains_compared": [
+      "financeiro"
+    ],
+    "total_comparisons": 2000,
+    "divergences_found": {
+      "status_vocabulary_diff": 0,
+      "amount_diff": 0,
+      "due_date_diff": 0,
+      "only_in_ap": 1,
+      "only_in_ar": 2,
+      "multiple_records": 0
+    },
+    "convergence_rate": 99.85000000000001,
+    "status": "PARTIAL_CONVERGENCE"
+  },
+  "cross_domain": {
+    "analysis_type": "cross_domain",
+    "domains_compared": [
+      "logistica",
+      "financeiro"
+    ],
+    "total_comparisons": 2000,
+    "divergences_found": {
+      "granularity_one_to_many": 940,
+      "value_aggregation_diff": 910,
+      "temporal_misalignment": 0,
+      "only_in_logistics": 0,
+      "only_in_finance": 2116,
+      "data_quality_issues": 0
+    },
+    "referential_integrity": {
+      "logistics_orphan_records": 0,
+      "finance_orphan_records": 2116,
+      "valid_references": 941,
+      "broken_references": 2116
+    },
+    "convergence_rate": 1.55,
+    "status": "NEEDS_ALIGNMENT"
+  },
+  "recommendations": [
+    "📏 Definir política de granularidade compartilhada entre Logística e Financeiro",
+    "💰 Mapear regras de negócio cross-domain: custos logísticos vs valor financeiro"
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "timestamp": "2026-07-21T03:41:44.240182+00:00",
+  "analysis_type": "cross_domain_divergences",
+  "domains_compared": [
+    "logistica",
+    "financeiro"
+  ],
+  "total_invoices": 2000,
+  "matched_invoices": 31,
+  "divergences": {
+    "granularity_one_to_many": 940,
+    "value_aggregation_diff": 910,
+    "temporal_misalignment": 0,
+    "only_in_logistics": 0,
+    "only_in_finance": 2116,
+    "data_quality_issues": 0
+  },
+  "convergence_metrics": {
+    "convergence_rate": 1.55,
+    "coverage_logistics": 100.0,
+    "coverage_finance": 47.05,
+    "referential_integrity_rate": 47.05
+  },
+  "referential_integrity": {
+    "logistics_orphan_records": 0,
+    "finance_orphan_records": 2116,
+    "valid_references": 941,
+    "broken_references": 2116
+  },
+  "recommendations": [
+    "📏 Documentar política de granularidade: N operações por fatura é esperado",
+    "💰 Mapear regras de negócio cross-domain: custos logísticos vs valor financeiro",
+    "🔗 Implementar validação de integridade referencial em tempo real",
+    "📈 Estabelecer SLAs de reconciliação cross-domain com monitoramento"
+  ]
+}

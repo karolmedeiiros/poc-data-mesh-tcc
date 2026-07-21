@@ -1,0 +1,190 @@
+# Open Data Contract Standard (ODCS) v3 — Bitol
+# https://bitol-io.github.io/open-data-contract-standard/
+apiVersion: v3.0.2
+kind: DataContract
+id: dp-log-ops-invoice
+name: operacoes-logistica
+version: "1.0.0"
+status: active
+domain: logistica
+dataProduct: operacoes-logistica
+tenant: empresa
+
+description:
+  purpose: "Output port analítico de Logística, chaveado por invoice_id (apenas operações ligadas a faturas)."
+  usage: "Reconciliação fina fatura-a-fatura entre domínios (entity analytical product)."
+  limitations: "Agrega N operações por fatura; mantém vocabulário e regras próprias do domínio de logística."
+
+tags: ["logistics", "v1", "analytical", "entity", "invoice"]
+
+schema:
+  - name: logistics_invoice
+    physicalName: logistics_invoice
+    physicalType: table
+    logicalType: object
+    description: "Output port analítico de Logística chaveado por invoice_id."
+    properties:
+      - name: invoice_id
+        logicalType: string
+        physicalType: string
+        required: true
+        unique: true
+        primaryKey: true
+        primaryKeyPosition: 1
+        description: "Master entity (federated), pode ter N operações"
+      - name: qtd_operacoes
+        logicalType: integer
+        physicalType: integer
+        required: true
+        logicalTypeOptions:
+          minimum: 1
+      - name: valor_base
+        logicalType: number
+        physicalType: number
+        required: true
+        description: "Custo base do item/serviço logístico. Semântica específica do domínio Logística; não corresponde ao valor_base dos produtos financeiros (AP/AR)."
+      - name: valor_frete
+        logicalType: number
+        physicalType: number
+        required: true
+        description: "Custo de frete da operação"
+      - name: valor_seguro
+        logicalType: number
+        physicalType: number
+        required: true
+        description: "Custo de seguro da operação"
+      - name: valor_imposto
+        logicalType: number
+        physicalType: number
+        required: true
+        description: "Valor de impostos da operação"
+      - name: valor_total
+        logicalType: number
+        physicalType: number
+        required: true
+        description: "Soma de valor_base + valor_frete + valor_seguro + valor_imposto"
+      - name: dsc_tipo_operacao
+        logicalType: array
+        physicalType: array
+        required: true
+      - name: status
+        logicalType: array
+        physicalType: array
+        required: true
+      - name: qtd_meses_operacao
+        logicalType: array
+        physicalType: array
+        required: true
+      - name: dsc_moeda
+        logicalType: string
+        physicalType: string
+        required: true
+        logicalTypeOptions:
+          enum: ["BRL"]
+      - name: dsc_dominio
+        logicalType: string
+        physicalType: string
+        required: true
+      - name: dsc_produto
+        logicalType: string
+        physicalType: string
+        required: true
+      - name: dt_versao
+        logicalType: string
+        physicalType: string
+        required: true
+        description: "Timestamp de geração do output port analítico (ISO 8601)"
+    quality:
+      - name: log-k-invoice-id-format
+        description: "invoice_id deve casar com master_entity invoice"
+        dimension: conformity
+        type: text
+        severity: error
+        customProperties:
+          - property: expression
+            value: "REGEXP_MATCH(invoice_id, '^INV-[0-9]+$')"
+      - name: log-k-positive-count
+        description: "qtd_operacoes >= 1"
+        dimension: validity
+        type: text
+        severity: error
+        customProperties:
+          - property: expression
+            value: "qtd_operacoes >= 1"
+      - name: log-k-currency-brl
+        description: "moeda BRL"
+        dimension: conformity
+        type: text
+        severity: error
+        customProperties:
+          - property: expression
+            value: "dsc_moeda == 'BRL'"
+      - name: log-k-valid-status
+        description: "status válido em pelo menos uma operação"
+        dimension: validity
+        type: text
+        severity: error
+        customProperties:
+          - property: expression
+            value: "ANY(status, s => s IN ['PENDENTE','EM_PROCESSAMENTO','CONCLUIDO','CANCELADO'])"
+
+slaDefaultElement: logistics_invoice.invoice_id
+slaProperties:
+  - { property: freshness, value: "P1D", element: logistics_invoice.invoice_id }
+  - { property: availability, value: "99.0%" }
+  - { property: latency, value: "PT5S" }
+  - { property: throughput, value: "100 msg/s" }
+
+team:
+  - username: "logistics-team@empresa.com"
+    role: owner
+
+customProperties:
+  - property: product_type
+    value: analytical
+  - property: output_port_kind
+    value: entity
+  - property: master_entity
+    value: invoice
+  - property: created_at
+    value: "2026-01-15T00:00:00Z"
+  - property: last_modified
+    value: "2026-01-15T00:00:00Z"
+  - property: upstream
+    value: ["operacoes-logistica"]
+  - property: schema_registry
+    value:
+      registry: "http://schema-registry:8081"
+      subject: "logistics-invoice-v1"
+      format: "avro"
+      evolution:
+        policy: "backward_compatible"
+        breaking_changes: "require_major_version"
+        deprecation_period: "P90D"
+  - property: tests
+    value:
+      unit:
+        - { name: "id_format_ok", input: { "invoice_id": "INV-1001" }, expected: "valid" }
+      integration:
+        - { name: "invoice_id_unique", description: "primary key única", setup: "load_dataset", test: "assert_unique(invoice_id)", expected: "true" }
+  - property: consumers
+    value:
+      - name: "cross-domain-reconciliation"
+        version: ">=1.0.0"
+        contact: "data-platform@empresa.com"
+        expectations:
+          - { field: "invoice_id", required: true }
+          - { field: "valor_total", type: "number", required: true }
+  - property: monitoring
+    value:
+      metrics:
+        - { name: "record_count", type: "counter" }
+        - { name: "processing_latency", type: "histogram" }
+        - { name: "error_rate", type: "gauge" }
+        - { name: "freshness", type: "gauge" }
+        - { name: "schema_validation_failures", type: "counter" }
+      alerts:
+        - { name: "high_error_rate", condition: "error_rate > 0.05", severity: "critical" }
+        - { name: "stale_data", condition: "freshness > P1D", severity: "warning" }
+        - { name: "schema_validation_failure", condition: "schema_validation_failures > 0", severity: "error" }
+        - { name: "availability_drop", condition: "availability < 99.0%", severity: "critical" }

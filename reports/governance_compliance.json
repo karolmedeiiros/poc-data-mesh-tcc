@@ -1,0 +1,256 @@
+{
+  "validation_summary": {
+    "total_contracts": 3,
+    "compliant_contracts": 3,
+    "validation_timestamp": "2026-07-21T03:29:26.018649+00:00",
+    "policies_version": "1.0.0"
+  },
+  "contracts": [
+    {
+      "contract": "contas-a-pagar",
+      "version": "1.0.0",
+      "timestamp": "2026-07-21T03:29:25.934670+00:00",
+      "compliance": {
+        "required_sections": {
+          "metadata": "PASS",
+          "spec.product": "PASS",
+          "spec.dataset": "PASS",
+          "spec.quality": "PASS",
+          "spec.schema": "PASS",
+          "spec.tests": "PASS",
+          "spec.consumers": "PASS",
+          "spec.monitoring": "PASS"
+        },
+        "slas": {
+          "sla_policy_config": "PASS",
+          "sla_defined": "PASS",
+          "freshness_compliance": "PASS",
+          "availability_compliance": "PASS"
+        },
+        "quality_rules": {
+          "quality_rules_defined": "PASS",
+          "quality_rule_positive_amounts": "PASS",
+          "quality_rule_valid_currency": "PASS",
+          "quality_rule_future_dates": "PASS",
+          "quality_rule_valid_status": "PASS",
+          "quality_rule_non_null_ids": "PASS",
+          "quality_rule_recent_updates": "PASS",
+          "quality_rule_data_freshness_compliance": "PASS",
+          "quality_rule_schema_compatibility": "PASS",
+          "quality_rule_volume_consistency": "PASS",
+          "quality_rule_error_budget_compliance": "PASS",
+          "quality_rule_performance_sla": "PASS"
+        },
+        "required_fields": {
+          "dataset_fields_defined": "PASS",
+          "required_field_dt_versao": "PASS",
+          "required_field_dsc_dominio": "PASS",
+          "required_field_dsc_produto": "PASS",
+          "required_field_dsc_moeda": "PASS",
+          "master_entity_declared": "PASS",
+          "master_entity_field_invoice_id": "PASS"
+        },
+        "monitoring": {
+          "monitoring_defined": "PASS",
+          "monitoring_metric_record_count": "PASS",
+          "monitoring_metric_processing_latency": "PASS",
+          "monitoring_metric_error_rate": "PASS",
+          "monitoring_metric_freshness": "PASS",
+          "monitoring_metric_schema_validation_failures": "PASS",
+          "monitoring_alert_high_error_rate": "PASS",
+          "monitoring_alert_stale_data": "PASS",
+          "monitoring_alert_schema_validation_failure": "PASS",
+          "monitoring_alert_availability_drop": "PASS"
+        },
+        "interoperability": {
+          "interoperability_policy_defined": "PASS",
+          "interop_data_format_open": "PASS",
+          "interop_schema_registry": "PASS",
+          "interop_schema_compatibility": "PASS",
+          "interop_shared_id_dsc_dominio": "PASS",
+          "interop_shared_id_dsc_produto": "PASS",
+          "interop_shared_id_dt_versao": "PASS",
+          "interop_cross_domain_key_present": "PASS",
+          "interop_currency_standard": "PASS",
+          "interop_datetime_type": "PASS",
+          "interop_naming_convention": "PASS",
+          "interop_catalog_metadata": "PASS",
+          "interop_federated_lineage": "PASS",
+          "interop_semver": "PASS",
+          "interop_consumer_contracts": "PASS"
+        }
+      },
+      "compliant": true,
+      "summary": {
+        "total_checks": 56,
+        "passed_checks": 56,
+        "failed_checks": 0,
+        "compliance_percentage": 100.0
+      }
+    },
+    {
+      "contract": "contas-a-receber",
+      "version": "1.0.0",
+      "timestamp": "2026-07-21T03:29:25.976984+00:00",
+      "compliance": {
+        "required_sections": {
+          "metadata": "PASS",
+          "spec.product": "PASS",
+          "spec.dataset": "PASS",
+          "spec.quality": "PASS",
+          "spec.schema": "PASS",
+          "spec.tests": "PASS",
+          "spec.consumers": "PASS",
+          "spec.monitoring": "PASS"
+        },
+        "slas": {
+          "sla_policy_config": "PASS",
+          "sla_defined": "PASS",
+          "freshness_compliance": "PASS",
+          "availability_compliance": "PASS"
+        },
+        "quality_rules": {
+          "quality_rules_defined": "PASS",
+          "quality_rule_positive_amounts": "PASS",
+          "quality_rule_valid_currency": "PASS",
+          "quality_rule_future_dates": "PASS",
+          "quality_rule_valid_status": "PASS",
+          "quality_rule_non_null_ids": "PASS",
+          "quality_rule_recent_updates": "PASS",
+          "quality_rule_data_freshness_compliance": "PASS",
+          "quality_rule_schema_compatibility": "PASS",
+          "quality_rule_volume_consistency": "PASS",
+          "quality_rule_error_budget_compliance": "PASS",
+          "quality_rule_performance_sla": "PASS"
+        },
+        "required_fields": {
+          "dataset_fields_defined": "PASS",
+          "required_field_dt_versao": "PASS",
+          "required_field_dsc_dominio": "PASS",
+          "required_field_dsc_produto": "PASS",
+          "required_field_dsc_moeda": "PASS",
+          "master_entity_declared": "PASS",
+          "master_entity_field_invoice_id": "PASS"
+        },
+        "monitoring": {
+          "monitoring_defined": "PASS",
+          "monitoring_metric_record_count": "PASS",
+          "monitoring_metric_processing_latency": "PASS",
+          "monitoring_metric_error_rate": "PASS",
+          "monitoring_metric_freshness": "PASS",
+          "monitoring_metric_schema_validation_failures": "PASS",
+          "monitoring_alert_high_error_rate": "PASS",
+          "monitoring_alert_stale_data": "PASS",
+          "monitoring_alert_schema_validation_failure": "PASS",
+          "monitoring_alert_availability_drop": "PASS"
+        },
+        "interoperability": {
+          "interoperability_policy_defined": "PASS",
+          "interop_data_format_open": "PASS",
+          "interop_schema_registry": "PASS",
+          "interop_schema_compatibility": "PASS",
+          "interop_shared_id_dsc_dominio": "PASS",
+          "interop_shared_id_dsc_produto": "PASS",
+          "interop_shared_id_dt_versao": "PASS",
+          "interop_cross_domain_key_present": "PASS",
+          "interop_currency_standard": "PASS",
+          "interop_datetime_type": "PASS",
+          "interop_naming_convention": "PASS",
+          "interop_catalog_metadata": "PASS",
+          "interop_federated_lineage": "PASS",
+          "interop_semver": "PASS",
+          "interop_consumer_contracts": "PASS"
+        }
+      },
+      "compliant": true,
+      "summary": {
+        "total_checks": 56,
+        "passed_checks": 56,
+        "failed_checks": 0,
+        "compliance_percentage": 100.0
+      }
+    },
+    {
+      "contract": "operacoes-logistica",
+      "version": "1.0.0",
+      "timestamp": "2026-07-21T03:29:26.018524+00:00",
+      "compliance": {
+        "required_sections": {
+          "metadata": "PASS",
+          "spec.product": "PASS",
+          "spec.dataset": "PASS",
+          "spec.quality": "PASS",
+          "spec.schema": "PASS",
+          "spec.tests": "PASS",
+          "spec.consumers": "PASS",
+          "spec.monitoring": "PASS"
+        },
+        "slas": {
+          "sla_policy_config": "PASS",
+          "sla_defined": "PASS",
+          "freshness_compliance": "PASS",
+          "availability_compliance": "PASS"
+        },
+        "quality_rules": {
+          "quality_rules_defined": "PASS",
+          "quality_rule_positive_amounts": "PASS",
+          "quality_rule_valid_currency": "PASS",
+          "quality_rule_future_dates": "PASS",
+          "quality_rule_valid_status": "PASS",
+          "quality_rule_non_null_ids": "PASS",
+          "quality_rule_recent_updates": "PASS",
+          "quality_rule_data_freshness_compliance": "PASS",
+          "quality_rule_schema_compatibility": "PASS",
+          "quality_rule_volume_consistency": "PASS",
+          "quality_rule_error_budget_compliance": "PASS",
+          "quality_rule_performance_sla": "PASS"
+        },
+        "required_fields": {
+          "dataset_fields_defined": "PASS",
+          "required_field_dt_versao": "PASS",
+          "required_field_dsc_dominio": "PASS",
+          "required_field_dsc_produto": "PASS",
+          "required_field_dsc_moeda": "PASS",
+          "master_entity_declared": "PASS",
+          "master_entity_field_invoice_id": "PASS"
+        },
+        "monitoring": {
+          "monitoring_defined": "PASS",
+          "monitoring_metric_record_count": "PASS",
+          "monitoring_metric_processing_latency": "PASS",
+          "monitoring_metric_error_rate": "PASS",
+          "monitoring_metric_freshness": "PASS",
+          "monitoring_metric_schema_validation_failures": "PASS",
+          "monitoring_alert_high_error_rate": "PASS",
+          "monitoring_alert_stale_data": "PASS",
+          "monitoring_alert_schema_validation_failure": "PASS",
+          "monitoring_alert_availability_drop": "PASS"
+        },
+        "interoperability": {
+          "interoperability_policy_defined": "PASS",
+          "interop_data_format_open": "PASS",
+          "interop_schema_registry": "PASS",
+          "interop_schema_compatibility": "PASS",
+          "interop_shared_id_dsc_dominio": "PASS",
+          "interop_shared_id_dsc_produto": "PASS",
+          "interop_shared_id_dt_versao": "PASS",
+          "interop_cross_domain_key_present": "PASS",
+          "interop_currency_standard": "PASS",
+          "interop_datetime_type": "PASS",
+          "interop_naming_convention": "PASS",
+          "interop_catalog_metadata": "PASS",
+          "interop_federated_lineage": "PASS",
+          "interop_semver": "PASS",
+          "interop_consumer_contracts": "PASS"
+        }
+      },
+      "compliant": true,
+      "summary": {
+        "total_checks": 56,
+        "passed_checks": 56,
+        "failed_checks": 0,
+        "compliance_percentage": 100.0
+      }
+    }
+  ]
+}
