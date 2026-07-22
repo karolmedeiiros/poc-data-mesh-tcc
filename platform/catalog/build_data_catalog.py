@@ -4,10 +4,7 @@ import sys
 from datetime import datetime, timezone
 from typing import Dict, List, Any
 
-# Adiciona a raiz do projeto ao path para importar odcs_adapter
-script_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.dirname(os.path.dirname(script_dir))
-sys.path.insert(0, project_root)
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from odcs_adapter import load_and_normalize
 
 class DataCatalog:
@@ -90,8 +87,8 @@ class DataCatalog:
             }
         }
         
-        # Extrair campos de lineage
-        lineage_fields = ["source_event_id", "source_system", "processing_batch_id"]
+        # Extrair campos de lineage cross-domain (conforme governance/policies.yaml)
+        lineage_fields = ["invoice_id", "mes_emissao", "status", "dsc_moeda"]
         for field in product["dataset_fields"]:
             field_name = field.get("name", "")
             if field_name in lineage_fields:
@@ -236,9 +233,9 @@ class DataCatalog:
         print("🔍 Construindo catálogo de produtos de dados...")
         
         contracts = [
-            "domains/financeiro/contas-a-pagar/dataproduct.yaml",
-            "domains/financeiro/contas-a-receber/dataproduct.yaml",
-            "domains/logistica/dataproduct.yaml"
+            "domains/financeiro/contas-a-pagar/data_contract.yaml",
+            "domains/financeiro/contas-a-receber/data_contract.yaml",
+            "domains/logistica/data_contract.yaml"
         ]
         
         for contract_file in contracts:
@@ -295,13 +292,6 @@ class DataCatalog:
                     invoice_products.append(product["name"])
                     break
         print(f"📋 Produtos com invoice_id: {invoice_products}")
-        
-        # Buscar produtos com source_event
-        source_event_products = []
-        for product in self.catalog["products"]:
-            if "source_event_id" in product["discovery"]["lineage_fields"]:
-                source_event_products.append(product["name"])
-        print(f"🔗 Produtos com source_event: {source_event_products}")
         
         # Exibir lineage de um produto
         if self.catalog["products"]:

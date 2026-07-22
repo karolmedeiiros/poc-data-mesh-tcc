@@ -1,0 +1,181 @@
+# Open Data Contract Standard (ODCS) v3 — Bitol
+# https://bitol-io.github.io/open-data-contract-standard/
+apiVersion: v3.0.2
+kind: DataContract
+id: dp-fin-ap-invoice
+name: contas-a-pagar
+version: "1.0.0"
+status: active
+domain: financeiro
+dataProduct: contas-a-pagar
+tenant: empresa
+
+description:
+  purpose: "Output port analítico de Contas a Pagar, chaveado por invoice_id (master entity)."
+  usage: "Reconciliação fina fatura-a-fatura entre domínios (entity analytical product)."
+  limitations: "Mantém vocabulário e regras próprias do domínio financeiro (AP)."
+
+tags: ["finance", "ap", "v1", "analytical", "entity", "invoice"]
+
+schema:
+  - name: ap_invoice
+    physicalName: ap_invoice
+    physicalType: table
+    logicalType: object
+    description: "Output port analítico de Contas a Pagar chaveado por invoice_id."
+    properties:
+      - name: invoice_id
+        logicalType: string
+        physicalType: string
+        required: true
+        unique: true
+        primaryKey: true
+        primaryKeyPosition: 1
+        description: "Master entity (federated)"
+      - name: mes_emissao
+        logicalType: string
+        physicalType: string
+        required: true
+      - name: status
+        logicalType: string
+        physicalType: string
+        required: true
+        logicalTypeOptions:
+          enum: ["ABERTO", "PAGO", "CANCELADO"]
+      - name: tipo_fatura
+        logicalType: string
+        physicalType: string
+        required: true
+      - name: id_fornecedor
+        logicalType: string
+        physicalType: string
+        required: true
+      - name: valor_liquido
+        logicalType: number
+        physicalType: number
+        required: true
+      - name: valor_base
+        logicalType: number
+        physicalType: number
+        required: true
+        description: "Valor original da fatura antes de retenções, juros e descontos. Semântica específica do domínio AP; não deve ser comparado diretamente com valor_base de outros domínios."
+      - name: dsc_moeda
+        logicalType: string
+        physicalType: string
+        required: true
+        logicalTypeOptions:
+          enum: ["BRL"]
+      - name: dsc_dominio
+        logicalType: string
+        physicalType: string
+        required: true
+      - name: dsc_produto
+        logicalType: string
+        physicalType: string
+        required: true
+      - name: dt_versao
+        logicalType: string
+        physicalType: string
+        required: true
+        description: "Timestamp de geração do output port analítico (ISO 8601)"
+    quality:
+      - name: ap-k-invoice-id-format
+        description: "invoice_id deve casar com master_entity invoice"
+        dimension: conformity
+        type: text
+        severity: error
+        customProperties:
+          - property: expression
+            value: "REGEXP_MATCH(invoice_id, '^INV-[0-9]+$')"
+      - name: ap-k-positive-amount
+        description: "valor_liquido > 0"
+        dimension: validity
+        type: text
+        severity: error
+        customProperties:
+          - property: expression
+            value: "valor_liquido > 0"
+      - name: ap-k-currency-brl
+        description: "moeda BRL"
+        dimension: conformity
+        type: text
+        severity: error
+        customProperties:
+          - property: expression
+            value: "dsc_moeda == 'BRL'"
+      - name: ap-k-valid-status
+        description: "status válido"
+        dimension: validity
+        type: text
+        severity: error
+        customProperties:
+          - property: expression
+            value: "status IN ['ABERTO','PAGO','CANCELADO']"
+
+slaDefaultElement: ap_invoice.invoice_id
+slaProperties:
+  - { property: freshness, value: "P1D", element: ap_invoice.invoice_id }
+  - { property: availability, value: "99.0%" }
+  - { property: latency, value: "PT5S" }
+  - { property: throughput, value: "100 msg/s" }
+
+team:
+  - username: "finance-ap@empresa.com"
+    role: owner
+
+customProperties:
+  - property: product_type
+    value: analytical
+  - property: output_port_kind
+    value: entity
+  - property: master_entity
+    value: invoice
+  - property: created_at
+    value: "2026-01-15T00:00:00Z"
+  - property: last_modified
+    value: "2026-01-15T00:00:00Z"
+  - property: upstream
+    value: ["contas-a-pagar"]
+  - property: schema_registry
+    value:
+      registry: "http://schema-registry:8081"
+      subject: "ap-invoice-v1"
+      format: "avro"
+      evolution:
+        policy: "backward_compatible"
+        breaking_changes: "require_major_version"
+        deprecation_period: "P90D"
+  - property: tests
+    value:
+      unit:
+        - { name: "id_format_ok", input: { "invoice_id": "INV-1001" }, expected: "valid" }
+        - { name: "currency_brl", input: { "currency": "BRL" }, expected: "valid" }
+      integration:
+        - { name: "invoice_id_unique", description: "primary key única", setup: "load_dataset", test: "assert_unique(invoice_id)", expected: "true" }
+  - property: consumers
+    value:
+      - name: "cross-domain-reconciliation"
+        version: ">=1.0.0"
+        contact: "data-platform@empresa.com"
+        expectations:
+          - { field: "invoice_id", required: true }
+          - { field: "valor_liquido", type: "number", required: true }
+      - name: "finance-master-data"
+        version: ">=1.0.0"
+        contact: "mdm@empresa.com"
+        expectations:
+          - { field: "invoice_id", required: true }
+          - { field: "id_fornecedor", required: true }
+  - property: monitoring
+    value:
+      metrics:
+        - { name: "record_count", type: "counter" }
+        - { name: "processing_latency", type: "histogram" }
+        - { name: "error_rate", type: "gauge" }
+        - { name: "freshness", type: "gauge" }
+        - { name: "schema_validation_failures", type: "counter" }
+      alerts:
+        - { name: "high_error_rate", condition: "error_rate > 0.05", severity: "critical" }
+        - { name: "stale_data", condition: "freshness > P1D", severity: "warning" }
+        - { name: "schema_validation_failure", condition: "schema_validation_failures > 0", severity: "error" }
+        - { name: "availability_drop", condition: "availability < 99.0%", severity: "critical" }

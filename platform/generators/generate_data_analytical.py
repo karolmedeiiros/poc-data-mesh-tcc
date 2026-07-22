@@ -1,18 +1,29 @@
-"""Gera os datasets analíticos (output ports) de cada produto de dados.
+"""Gera os output ports (datasets publicados) de cada produto de dados.
 
 Padrão Data Mesh (datamesh-architecture.com):
-- Entrada: dados operacionais brutos em `<domain>/<product>/operational/*.jsonl`
-- Saída : output port publicado em `<domain>/<product>/data/*_analytical.jsonl`
+- Entrada: dados operacionais brutos em `operational/<domain>/<product>/*.jsonl`
+- Saída : output port entity em `<domain>/<product>/data/*.jsonl`
 
-Cada produto agrega seus próprios dados operacionais conforme regras do domínio,
-sem depender de transformações centrais (autonomia + governança federativa).
+Cada produto transforma seus próprios dados operacionais conforme as regras do
+domínio (ETL descentralizado), publicando uma linha por `invoice_id` para
+permitir reconciliação fatura-a-fatura entre produtos — sem depender de
+transformações centrais (autonomia + governança federativa).
+
+As regras de negócio de cada domínio (retenção de impostos no AP, descontos/juros
+no AR, cálculo de valores na Logística e o vocabulário de status) são aplicadas
+AQUI, na transformação analítica. A camada operacional guarda apenas o evento
+bruto compartilhado (base_amount, base_status), servindo como base de dados única.
 """
 
 import json
 import os
+import random
 from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Any, Dict, Iterable, List
+
+# Semente fixa para reprodutibilidade das regras estocásticas de domínio.
+random.seed(7)
 
 
 def read_jsonl(path: str) -> List[Dict[str, Any]]:
@@ -45,186 +56,141 @@ def month_of(date_str: str) -> str:
     return date_str[:7]
 
 
-def aggregate_ap(operational: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """Output port analítico de Contas a Pagar.
+# ----------------------------------------------------------------------------
+# Regras de negócio por domínio (aplicadas na camada analítica).
+# Cada função recebe o evento bruto (base_amount/base_status) e devolve o valor
+# ou status já no vocabulário do domínio. As divergências entre produtos são,
+# portanto, geradas AQUI — a camada operacional permanece uma base única.
+# ----------------------------------------------------------------------------
 
-    Agregado por (mês de emissão, status, tipo de fatura): volume e valor total.
-    """
-    buckets: Dict[tuple, Dict[str, Any]] = defaultdict(
-        lambda: {"invoice_count": 0, "total_amount": 0.0, "total_base_amount": 0.0, "unique_suppliers": set()}
-    )
-
-    for row in operational:
-        key = (month_of(row.get("issue_date", "")), row.get("status"), row.get("invoice_type"))
-        b = buckets[key]
-        b["invoice_count"] += 1
-        b["total_amount"] += float(row.get("amount", 0) or 0)
-        b["total_base_amount"] += float(row.get("base_amount", 0) or 0)
-        if row.get("supplier_id"):
-            b["unique_suppliers"].add(row["supplier_id"])
-
-    generated_at = now_iso()
-    output: List[Dict[str, Any]] = []
-    for (issue_month, status, invoice_type), b in sorted(buckets.items()):
-        count = b["invoice_count"]
-        output.append({
-            "issue_month": issue_month,
-            "status": status,
-            "invoice_type": invoice_type,
-            "invoice_count": count,
-            "supplier_count": len(b["unique_suppliers"]),
-            "total_amount": round(b["total_amount"], 2),
-            "total_base_amount": round(b["total_base_amount"], 2),
-            "avg_amount": round(b["total_amount"] / count, 2) if count else 0.0,
-            "currency": "BRL",
-            "domain": "contas-a-pagar",
-            "product": "contas-a-pagar",
-            "generated_at": generated_at,
-        })
-    return output
+def calcula_valor_liquido_ap(base_amount: float, invoice_type: str) -> float:
+    """Regra de negócio AP: retenção de impostos e taxa administrativa."""
+    # Regra 1: Retenção de ISS/PIS/COFINS em serviços de alto valor (> R$3000)
+    if invoice_type == "servico" and base_amount > 3000:
+        tax_rate = 0.1475  # 14.75% total
+        return round(base_amount * (1 - tax_rate), 2)
+    # Regra 2: Aluguel com taxa administrativa eventual (0.2% em 30% dos casos)
+    if invoice_type == "aluguel" and random.random() < 0.30:
+        return round(base_amount * 1.002, 2)
+    # Demais tipos preservam o valor base
+    return round(base_amount, 2)
 
 
-def aggregate_ar(operational: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """Output port analítico de Contas a Receber.
-
-    Agregado por (mês de emissão, status, tipo de cliente).
-    """
-    buckets: Dict[tuple, Dict[str, Any]] = defaultdict(
-        lambda: {"invoice_count": 0, "total_gross_amount": 0.0, "total_base_amount": 0.0, "unique_customers": set()}
-    )
-
-    for row in operational:
-        key = (month_of(row.get("issue_date", "")), row.get("status"), row.get("customer_type"))
-        b = buckets[key]
-        b["invoice_count"] += 1
-        b["total_gross_amount"] += float(row.get("gross_amount", 0) or 0)
-        b["total_base_amount"] += float(row.get("base_amount", 0) or 0)
-        if row.get("customer_id"):
-            b["unique_customers"].add(row["customer_id"])
-
-    generated_at = now_iso()
-    output: List[Dict[str, Any]] = []
-    for (issue_month, status, customer_type), b in sorted(buckets.items()):
-        count = b["invoice_count"]
-        output.append({
-            "issue_month": issue_month,
-            "status": status,
-            "customer_type": customer_type,
-            "invoice_count": count,
-            "customer_count": len(b["unique_customers"]),
-            "total_gross_amount": round(b["total_gross_amount"], 2),
-            "total_base_amount": round(b["total_base_amount"], 2),
-            "avg_gross_amount": round(b["total_gross_amount"] / count, 2) if count else 0.0,
-            "currency": "BRL",
-            "domain": "contas-a-receber",
-            "product": "contas-a-receber",
-            "generated_at": generated_at,
-        })
-    return output
+def calcula_valor_bruto_ar(base_amount: float, customer_type: str) -> float:
+    """Regra de negócio AR: desconto de pontualidade e juros por atraso."""
+    # Regra 1: Cliente corporate pode receber desconto de 2% (8% dos casos)
+    if customer_type == "corporate" and random.random() < 0.08:
+        return round(base_amount * 0.98, 2)
+    # Regra 2: Cliente government pode sofrer juros de 1% (10% dos casos)
+    if customer_type == "government" and random.random() < 0.10:
+        return round(base_amount * 1.01, 2)
+    # Cliente b2c e demais preservam o valor base
+    return round(base_amount, 2)
 
 
-def aggregate_logistics(operational: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """Output port analítico de Logística.
+def status_ap(base_status: str) -> str:
+    """Vocabulário de status do domínio AP (em português)."""
+    return {
+        "paid": "PAGO",
+        "cancelled": "CANCELADO",
+        "open": "ABERTO",
+    }.get(base_status, "ABERTO")
 
-    Agregado por (mês da operação, tipo de operação, status).
-    """
-    buckets: Dict[tuple, Dict[str, Any]] = defaultdict(
-        lambda: {"operation_count": 0, "total_value": 0.0, "linked_to_invoice": 0, "unique_parties": set()}
-    )
 
-    for row in operational:
-        op_date = row.get("operation_date") or row.get("updated_at", "")
-        key = (month_of(op_date), row.get("operation_type"), row.get("status"))
-        b = buckets[key]
-        b["operation_count"] += 1
-        b["total_value"] += float(row.get("total_value", 0) or 0)
-        if row.get("related_invoice_id"):
-            b["linked_to_invoice"] += 1
-        if row.get("party_id"):
-            b["unique_parties"].add(row["party_id"])
+def status_ar(base_status: str) -> str:
+    """Vocabulário de status do domínio AR (em português)."""
+    return {
+        "paid": "LIQUIDADO",
+        "cancelled": "CANCELADO",
+        "open": "ABERTO",
+    }.get(base_status, "ABERTO")
 
-    generated_at = now_iso()
-    output: List[Dict[str, Any]] = []
-    for (operation_month, operation_type, status), b in sorted(buckets.items()):
-        count = b["operation_count"]
-        output.append({
-            "operation_month": operation_month,
-            "operation_type": operation_type,
-            "status": status,
-            "operation_count": count,
-            "party_count": len(b["unique_parties"]),
-            "linked_to_invoice_count": b["linked_to_invoice"],
-            "linked_to_invoice_rate": round(b["linked_to_invoice"] / count, 4) if count else 0.0,
-            "total_value": round(b["total_value"], 2),
-            "avg_value": round(b["total_value"] / count, 2) if count else 0.0,
-            "currency": "BRL",
-            "domain": "logistica",
-            "product": "operacoes-logistica",
-            "generated_at": generated_at,
-        })
-    return output
+
+def status_logistics(base_status: str) -> str:
+    """Vocabulário de status do domínio Logística (em português)."""
+    return {
+        "pending": "PENDENTE",
+        "processing": "EM_PROCESSAMENTO",
+        "completed": "CONCLUIDO",
+        "cancelled": "CANCELADO",
+    }.get(base_status, "PENDENTE")
 
 
 # ----------------------------------------------------------------------------
-# Entity-keyed output ports (chave compartilhada `invoice_id`).
+# entity output ports (chave compartilhada `invoice_id`).
 # Cada domínio publica UMA linha por fatura/operação ligada à fatura,
 # mantendo seu próprio vocabulário e regras de cálculo. Permite reconciliação
 # fatura-a-fatura entre produtos sob a master_entity `invoice` da política
 # federada — preservando, por desenho, divergências de domínio.
 # ----------------------------------------------------------------------------
 
-def keyed_ap(operational: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def ap(operational: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     generated_at = now_iso()
     out: List[Dict[str, Any]] = []
     for row in operational:
         invoice_id = row.get("invoice_id")
         if not invoice_id:
             continue
+        base_amount = float(row.get("base_amount", 0) or 0)
+        invoice_type = row.get("invoice_type")
         out.append({
             "invoice_id": invoice_id,
-            "issue_month": month_of(row.get("issue_date", "")),
-            "status": row.get("status"),
-            "invoice_type": row.get("invoice_type"),
-            "supplier_id": row.get("supplier_id"),
-            "amount": float(row.get("amount", 0) or 0),
-            "base_amount": float(row.get("base_amount", 0) or 0),
-            "currency": row.get("currency", "BRL"),
-            "domain": "contas-a-pagar",
-            "product": "contas-a-pagar-invoice-keyed",
-            "generated_at": generated_at,
+            "mes_emissao": month_of(row.get("issue_date", "")),
+            "status": status_ap(row.get("base_status")),
+            "tipo_fatura": invoice_type,
+            "id_fornecedor": row.get("supplier_id"),
+            "valor_liquido": calcula_valor_liquido_ap(base_amount, invoice_type),
+            "valor_base": base_amount,
+            "dsc_moeda": row.get("currency", "BRL"),
+            "dsc_dominio": "financeiro",
+            "dsc_produto": "contas-a-pagar",
+            "dt_versao": generated_at,
         })
     return out
 
 
-def keyed_ar(operational: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def ar(operational: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     generated_at = now_iso()
     out: List[Dict[str, Any]] = []
     for row in operational:
         invoice_id = row.get("invoice_id")
         if not invoice_id:
             continue
+        base_amount = float(row.get("base_amount", 0) or 0)
+        customer_type = row.get("customer_type")
         out.append({
             "invoice_id": invoice_id,
-            "issue_month": month_of(row.get("issue_date", "")),
-            "status": row.get("status"),
-            "customer_type": row.get("customer_type"),
-            "customer_id": row.get("customer_id"),
-            "gross_amount": float(row.get("gross_amount", 0) or 0),
-            "base_amount": float(row.get("base_amount", 0) or 0),
-            "currency": row.get("currency", "BRL"),
-            "domain": "contas-a-receber",
-            "product": "contas-a-receber-invoice-keyed",
-            "generated_at": generated_at,
+            "mes_emissao": month_of(row.get("issue_date", "")),
+            "status": status_ar(row.get("base_status")),
+            "tipo_cliente": customer_type,
+            "id_cliente": row.get("customer_id"),
+            "valor_bruto": calcula_valor_bruto_ar(base_amount, customer_type),
+            "valor_base": base_amount,
+            "dsc_moeda": row.get("currency", "BRL"),
+            "dsc_dominio": "financeiro",
+            "dsc_produto": "contas-a-receber",
+            "dt_versao": generated_at,
         })
     return out
 
 
-def keyed_logistics(operational: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """Logística agrupa por invoice_id (uma fatura pode ter N operações)."""
+def logistics(operational: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Logística agrupa por invoice_id (uma fatura pode ter N operações).
+
+    Cada operação logística decompõe o seu valor total em:
+    - valor_base (custo do item/serviço)
+    - valor_frete
+    - valor_seguro
+    - valor_imposto
+    Garantindo que: valor_total = valor_base + valor_frete + valor_seguro + valor_imposto.
+    """
     generated_at = now_iso()
     buckets: Dict[str, Dict[str, Any]] = defaultdict(lambda: {
         "operation_count": 0,
-        "total_value": 0.0,
+        "valor_base": 0.0,
+        "valor_frete": 0.0,
+        "valor_seguro": 0.0,
+        "valor_imposto": 0.0,
         "operation_types": set(),
         "statuses": set(),
         "operation_months": set(),
@@ -235,25 +201,50 @@ def keyed_logistics(operational: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             continue
         b = buckets[invoice_id]
         b["operation_count"] += 1
-        b["total_value"] += float(row.get("total_value", 0) or 0)
+        # Cálculo do valor bruto da operação
+        quantity = float(row.get("quantity", 0) or 0)
+        unit_price = float(row.get("unit_price", 0) or 0)
+        line_total = round(quantity * unit_price, 2)
+
+        # Decomposição do valor total em componentes (regras de negócio Logística)
+        base = round(line_total * 0.70, 2)
+        freight = round(line_total * 0.15, 2)
+        insurance = round(line_total * 0.05, 2)
+        # Imposto é o residual para garantir soma exata
+        tax = round(line_total - base - freight - insurance, 2)
+
+        b["valor_base"] += base
+        b["valor_frete"] += freight
+        b["valor_seguro"] += insurance
+        b["valor_imposto"] += tax
+
         b["operation_types"].add(row.get("operation_type", ""))
-        b["statuses"].add(row.get("status", ""))
+        b["statuses"].add(status_logistics(row.get("base_status", "")))
         op_date = row.get("operation_date") or row.get("updated_at", "")
         b["operation_months"].add(month_of(op_date))
 
     out: List[Dict[str, Any]] = []
     for invoice_id, b in sorted(buckets.items()):
+        valor_base = round(b["valor_base"], 2)
+        valor_frete = round(b["valor_frete"], 2)
+        valor_seguro = round(b["valor_seguro"], 2)
+        valor_imposto = round(b["valor_imposto"], 2)
+        valor_total = round(valor_base + valor_frete + valor_seguro + valor_imposto, 2)
         out.append({
             "invoice_id": invoice_id,
-            "operation_count": b["operation_count"],
-            "total_value": round(b["total_value"], 2),
-            "operation_types": sorted(b["operation_types"]),
-            "statuses": sorted(b["statuses"]),
-            "operation_months": sorted(b["operation_months"]),
-            "currency": "BRL",
-            "domain": "logistica",
-            "product": "operacoes-logistica-invoice-keyed",
-            "generated_at": generated_at,
+            "qtd_operacoes": b["operation_count"],
+            "valor_base": valor_base,
+            "valor_frete": valor_frete,
+            "valor_seguro": valor_seguro,
+            "valor_imposto": valor_imposto,
+            "valor_total": valor_total,
+            "dsc_tipo_operacao": sorted(b["operation_types"]),
+            "status": sorted(b["statuses"]),
+            "qtd_meses_operacao": sorted(b["operation_months"]),
+            "dsc_moeda": "BRL",
+            "dsc_dominio": "logistica",
+            "dsc_produto": "operacoes-logistica",
+            "dt_versao": generated_at,
         })
     return out
 
@@ -261,27 +252,21 @@ def keyed_logistics(operational: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 PRODUCTS = [
     {
         "name": "contas-a-pagar",
-        "operational": "domains/financeiro/contas-a-pagar/operational/ap_natural.jsonl",
-        "analytical": "domains/financeiro/contas-a-pagar/data/ap_analytical.jsonl",
-        "aggregator": aggregate_ap,
-        "keyed": "domains/financeiro/contas-a-pagar/data/ap.jsonl",
-        "keyed_builder": keyed_ap,
+        "operational": "operational/financeiro/contas-a-pagar/ap_natural.jsonl",
+        "keyed": "domains/financeiro/contas-a-pagar/data/contas_a_pagar.jsonl",
+        "keyed_builder": ap,
     },
     {
         "name": "contas-a-receber",
-        "operational": "domains/financeiro/contas-a-receber/operational/ar_natural.jsonl",
-        "analytical": "domains/financeiro/contas-a-receber/data/ar_analytical.jsonl",
-        "aggregator": aggregate_ar,
-        "keyed": "domains/financeiro/contas-a-receber/data/ar.jsonl",
-        "keyed_builder": keyed_ar,
+        "operational": "operational/financeiro/contas-a-receber/ar_natural.jsonl",
+        "keyed": "domains/financeiro/contas-a-receber/data/contas_a_receber.jsonl",
+        "keyed_builder": ar,
     },
     {
         "name": "operacoes-logistica",
-        "operational": "domains/logistica/operational/logistics_natural.jsonl",
-        "analytical": "domains/logistica/data/logistics_analytical.jsonl",
-        "aggregator": aggregate_logistics,
+        "operational": "operational/logistica/logistics_natural.jsonl",
         "keyed": "domains/logistica/data/logistics.jsonl",
-        "keyed_builder": keyed_logistics,
+        "keyed_builder": logistics,
     },
 ]
 
@@ -294,16 +279,12 @@ def main() -> None:
             print(f"  ! {product['name']}: operacional vazio em {product['operational']}")
             continue
 
-        analytical = product["aggregator"](operational)
-        write_jsonl(product["analytical"], analytical)
-
         keyed = product["keyed_builder"](operational)
         write_jsonl(product["keyed"], keyed)
 
         print(
             f"  - {product['name']}: {len(operational)} operacionais "
-            f"-> {len(analytical)} agregados ({product['analytical']}) "
-            f"| {len(keyed)} entity-keyed ({product['keyed']})"
+            f"-> {len(keyed)} entity ({product['keyed']})"
         )
 
 

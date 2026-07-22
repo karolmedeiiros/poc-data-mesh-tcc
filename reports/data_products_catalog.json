@@ -2,7 +2,7 @@
   "catalog_metadata": {
     "name": "Enterprise Data Products Catalog",
     "version": "1.0.0",
-    "last_updated": "2026-06-24T01:39:56.276557+00:00",
+    "last_updated": "2026-07-21T01:47:26.764257+00:00",
     "total_products": 3,
     "domains": [
       "financeiro",
@@ -23,14 +23,14 @@
         "ap",
         "v1",
         "analytical",
-        "entity-keyed",
+        "entity",
         "invoice"
       ],
       "created_at": "2026-01-15T00:00:00Z",
       "last_modified": "2026-01-15T00:00:00Z",
       "schema": {
         "registry": "http://schema-registry:8081",
-        "subject": "ap-invoice-keyed-v1",
+        "subject": "ap-invoice-v1",
         "format": "avro",
         "evolution_policy": "backward_compatible",
         "breaking_changes": "require_major_version",
@@ -50,7 +50,7 @@
           "description": "Master entity (federated)"
         },
         {
-          "name": "issue_month",
+          "name": "mes_emissao",
           "type": "string",
           "required": true
         },
@@ -59,33 +59,33 @@
           "type": "string",
           "required": true,
           "enum": [
-            "OPEN",
-            "PAID",
-            "CANCELED"
+            "ABERTO",
+            "PAGO",
+            "CANCELADO"
           ]
         },
         {
-          "name": "invoice_type",
+          "name": "tipo_fatura",
           "type": "string",
           "required": true
         },
         {
-          "name": "supplier_id",
+          "name": "id_fornecedor",
           "type": "string",
           "required": true
         },
         {
-          "name": "amount",
+          "name": "valor_liquido",
           "type": "number",
           "required": true
         },
         {
-          "name": "base_amount",
+          "name": "valor_base",
           "type": "number",
           "required": true
         },
         {
-          "name": "currency",
+          "name": "dsc_moeda",
           "type": "string",
           "required": true,
           "enum": [
@@ -93,26 +93,20 @@
           ]
         },
         {
-          "name": "domain",
+          "name": "dsc_dominio",
           "type": "string",
           "required": true
         },
         {
-          "name": "product",
+          "name": "dsc_produto",
           "type": "string",
           "required": true
         },
         {
-          "name": "source_event_id",
+          "name": "dt_versao",
           "type": "string",
           "required": true,
-          "description": "ID do evento fonte no sistema operacional"
-        },
-        {
-          "name": "source_system",
-          "type": "string",
-          "required": true,
-          "description": "Sistema de origem do evento"
+          "description": "Timestamp de geração do output port analítico (ISO 8601)"
         }
       ],
       "quality_rules": [
@@ -124,21 +118,21 @@
         },
         {
           "id": "ap-k-positive-amount",
-          "description": "amount > 0",
+          "description": "valor_liquido > 0",
           "severity": "error",
-          "expression": "amount > 0"
+          "expression": "valor_liquido > 0"
         },
         {
           "id": "ap-k-currency-brl",
-          "description": "currency BRL",
+          "description": "moeda BRL",
           "severity": "error",
-          "expression": "currency == 'BRL'"
+          "expression": "dsc_moeda == 'BRL'"
         },
         {
           "id": "ap-k-valid-status",
           "description": "status válido",
           "severity": "error",
-          "expression": "status IN ['OPEN','PAID','CANCELED']"
+          "expression": "status IN ['ABERTO','PAGO','CANCELADO']"
         }
       ],
       "consumers": [
@@ -152,7 +146,7 @@
               "required": true
             },
             {
-              "field": "amount",
+              "field": "valor_liquido",
               "type": "number",
               "required": true
             }
@@ -168,7 +162,7 @@
               "required": true
             },
             {
-              "field": "supplier_id",
+              "field": "id_fornecedor",
               "required": true
             }
           ]
@@ -222,8 +216,10 @@
       },
       "discovery": {
         "lineage_fields": [
-          "source_event_id",
-          "source_system"
+          "invoice_id",
+          "mes_emissao",
+          "status",
+          "dsc_moeda"
         ],
         "cross_domain_relationships": [
           {
@@ -237,8 +233,10 @@
           }
         ],
         "searchable_fields": [
-          "source_event_id",
-          "source_system"
+          "invoice_id",
+          "mes_emissao",
+          "status",
+          "dsc_moeda"
         ],
         "data_quality_metrics": []
       }
@@ -255,14 +253,14 @@
         "ar",
         "v1",
         "analytical",
-        "entity-keyed",
+        "entity",
         "invoice"
       ],
       "created_at": "2026-01-15T00:00:00Z",
       "last_modified": "2026-01-15T00:00:00Z",
       "schema": {
         "registry": "http://schema-registry:8081",
-        "subject": "ar-invoice-keyed-v1",
+        "subject": "ar-invoice-v1",
         "format": "avro",
         "evolution_policy": "backward_compatible",
         "breaking_changes": "require_major_version",
@@ -282,7 +280,7 @@
           "description": "Master entity (federated)"
         },
         {
-          "name": "issue_month",
+          "name": "mes_emissao",
           "type": "string",
           "required": true
         },
@@ -291,13 +289,13 @@
           "type": "string",
           "required": true,
           "enum": [
-            "OPEN",
-            "SETTLED",
-            "CANCELED"
+            "ABERTO",
+            "LIQUIDADO",
+            "CANCELADO"
           ]
         },
         {
-          "name": "customer_type",
+          "name": "tipo_cliente",
           "type": "string",
           "required": true,
           "enum": [
@@ -307,22 +305,22 @@
           ]
         },
         {
-          "name": "customer_id",
+          "name": "id_cliente",
           "type": "string",
           "required": true
         },
         {
-          "name": "gross_amount",
+          "name": "valor_bruto",
           "type": "number",
           "required": true
         },
         {
-          "name": "base_amount",
+          "name": "valor_base",
           "type": "number",
           "required": true
         },
         {
-          "name": "currency",
+          "name": "dsc_moeda",
           "type": "string",
           "required": true,
           "enum": [
@@ -330,26 +328,20 @@
           ]
         },
         {
-          "name": "domain",
+          "name": "dsc_dominio",
           "type": "string",
           "required": true
         },
         {
-          "name": "product",
+          "name": "dsc_produto",
           "type": "string",
           "required": true
         },
         {
-          "name": "source_event_id",
+          "name": "dt_versao",
           "type": "string",
           "required": true,
-          "description": "ID do evento fonte no sistema operacional"
-        },
-        {
-          "name": "source_system",
-          "type": "string",
-          "required": true,
-          "description": "Sistema de origem do evento"
+          "description": "Timestamp de geração do output port analítico (ISO 8601)"
         }
       ],
       "quality_rules": [
@@ -361,21 +353,21 @@
         },
         {
           "id": "ar-k-positive-amount",
-          "description": "gross_amount > 0",
+          "description": "valor_bruto > 0",
           "severity": "error",
-          "expression": "gross_amount > 0"
+          "expression": "valor_bruto > 0"
         },
         {
           "id": "ar-k-currency-brl",
-          "description": "currency BRL",
+          "description": "moeda BRL",
           "severity": "error",
-          "expression": "currency == 'BRL'"
+          "expression": "dsc_moeda == 'BRL'"
         },
         {
           "id": "ar-k-valid-status",
           "description": "status válido",
           "severity": "error",
-          "expression": "status IN ['OPEN','SETTLED','CANCELED']"
+          "expression": "status IN ['ABERTO','LIQUIDADO','CANCELADO']"
         }
       ],
       "consumers": [
@@ -396,7 +388,7 @@
           "contact": "risk@empresa.com",
           "expectations": [
             {
-              "field": "customer_id",
+              "field": "id_cliente",
               "required": true
             }
           ]
@@ -450,8 +442,10 @@
       },
       "discovery": {
         "lineage_fields": [
-          "source_event_id",
-          "source_system"
+          "invoice_id",
+          "mes_emissao",
+          "status",
+          "dsc_moeda"
         ],
         "cross_domain_relationships": [
           {
@@ -465,8 +459,10 @@
           }
         ],
         "searchable_fields": [
-          "source_event_id",
-          "source_system"
+          "invoice_id",
+          "mes_emissao",
+          "status",
+          "dsc_moeda"
         ],
         "data_quality_metrics": []
       }
@@ -482,14 +478,14 @@
         "logistics",
         "v1",
         "analytical",
-        "entity-keyed",
+        "entity",
         "invoice"
       ],
       "created_at": "2026-01-15T00:00:00Z",
       "last_modified": "2026-01-15T00:00:00Z",
       "schema": {
         "registry": "http://schema-registry:8081",
-        "subject": "logistics-invoice-keyed-v1",
+        "subject": "logistics-invoice-v1",
         "format": "avro",
         "evolution_policy": "backward_compatible",
         "breaking_changes": "require_major_version",
@@ -509,7 +505,7 @@
           "description": "Master entity (federated), pode ter N operações"
         },
         {
-          "name": "operation_count",
+          "name": "qtd_operacoes",
           "type": "integer",
           "required": true,
           "constraints": {
@@ -517,27 +513,27 @@
           }
         },
         {
-          "name": "total_value",
+          "name": "valor_total",
           "type": "number",
           "required": true
         },
         {
-          "name": "operation_types",
+          "name": "dsc_tipo_operacao",
           "type": "array",
           "required": true
         },
         {
-          "name": "statuses",
+          "name": "status",
           "type": "array",
           "required": true
         },
         {
-          "name": "operation_months",
+          "name": "qtd_meses_operacao",
           "type": "array",
           "required": true
         },
         {
-          "name": "currency",
+          "name": "dsc_moeda",
           "type": "string",
           "required": true,
           "enum": [
@@ -545,26 +541,20 @@
           ]
         },
         {
-          "name": "domain",
+          "name": "dsc_dominio",
           "type": "string",
           "required": true
         },
         {
-          "name": "product",
+          "name": "dsc_produto",
           "type": "string",
           "required": true
         },
         {
-          "name": "source_event_id",
+          "name": "dt_versao",
           "type": "string",
           "required": true,
-          "description": "ID do evento fonte no sistema operacional"
-        },
-        {
-          "name": "source_system",
-          "type": "string",
-          "required": true,
-          "description": "Sistema de origem do evento"
+          "description": "Timestamp de geração do output port analítico (ISO 8601)"
         }
       ],
       "quality_rules": [
@@ -576,21 +566,21 @@
         },
         {
           "id": "log-k-positive-count",
-          "description": "operation_count >= 1",
+          "description": "qtd_operacoes >= 1",
           "severity": "error",
-          "expression": "operation_count >= 1"
+          "expression": "qtd_operacoes >= 1"
         },
         {
           "id": "log-k-currency-brl",
-          "description": "currency BRL",
+          "description": "moeda BRL",
           "severity": "error",
-          "expression": "currency == 'BRL'"
+          "expression": "dsc_moeda == 'BRL'"
         },
         {
           "id": "log-k-valid-status",
           "description": "status válido em pelo menos uma operação",
           "severity": "error",
-          "expression": "ANY(statuses, s => s IN ['PENDING','PROCESSING','COMPLETED','CANCELLED'])"
+          "expression": "ANY(status, s => s IN ['PENDENTE','EM_PROCESSAMENTO','CONCLUIDO','CANCELADO'])"
         }
       ],
       "consumers": [
@@ -604,7 +594,7 @@
               "required": true
             },
             {
-              "field": "total_value",
+              "field": "valor_total",
               "type": "number",
               "required": true
             }
@@ -659,8 +649,9 @@
       },
       "discovery": {
         "lineage_fields": [
-          "source_event_id",
-          "source_system"
+          "invoice_id",
+          "status",
+          "dsc_moeda"
         ],
         "cross_domain_relationships": [
           {
@@ -674,8 +665,9 @@
           }
         ],
         "searchable_fields": [
-          "source_event_id",
-          "source_system"
+          "invoice_id",
+          "status",
+          "dsc_moeda"
         ],
         "data_quality_metrics": []
       }
@@ -728,7 +720,7 @@
         "contas-a-receber",
         "operacoes-logistica"
       ],
-      "entity-keyed": [
+      "entity": [
         "contas-a-pagar",
         "contas-a-receber",
         "operacoes-logistica"
@@ -751,74 +743,67 @@
         "contas-a-receber",
         "operacoes-logistica"
       ],
-      "issue_month": [
+      "mes_emissao": [
         "contas-a-pagar",
         "contas-a-receber"
       ],
       "status": [
         "contas-a-pagar",
-        "contas-a-receber"
+        "contas-a-receber",
+        "operacoes-logistica"
       ],
-      "invoice_type": [
+      "tipo_fatura": [
         "contas-a-pagar"
       ],
-      "supplier_id": [
+      "id_fornecedor": [
         "contas-a-pagar"
       ],
-      "amount": [
+      "valor_liquido": [
         "contas-a-pagar"
       ],
-      "base_amount": [
+      "valor_base": [
         "contas-a-pagar",
         "contas-a-receber"
       ],
-      "currency": [
+      "dsc_moeda": [
         "contas-a-pagar",
         "contas-a-receber",
         "operacoes-logistica"
       ],
-      "domain": [
+      "dsc_dominio": [
         "contas-a-pagar",
         "contas-a-receber",
         "operacoes-logistica"
       ],
-      "product": [
+      "dsc_produto": [
         "contas-a-pagar",
         "contas-a-receber",
         "operacoes-logistica"
       ],
-      "source_event_id": [
+      "dt_versao": [
         "contas-a-pagar",
         "contas-a-receber",
         "operacoes-logistica"
       ],
-      "source_system": [
-        "contas-a-pagar",
-        "contas-a-receber",
-        "operacoes-logistica"
-      ],
-      "customer_type": [
+      "tipo_cliente": [
         "contas-a-receber"
       ],
-      "customer_id": [
+      "id_cliente": [
         "contas-a-receber"
       ],
-      "gross_amount": [
+      "valor_bruto": [
         "contas-a-receber"
       ],
-      "operation_count": [
+      "qtd_operacoes": [
         "operacoes-logistica"
       ],
-      "total_value": [
+      "valor_total": [
         "operacoes-logistica"
       ],
-      "operation_types": [
+      "dsc_tipo_operacao": [
         "operacoes-logistica"
       ],
-      "statuses": [
-        "operacoes-logistica"
-      ],
-      "operation_months": [
+      "qtd_meses_operacao": [
         "operacoes-logistica"
       ]
     },

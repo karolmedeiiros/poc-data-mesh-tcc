@@ -1,4 +1,4 @@
-"""Reconciliação fatura-a-fatura sobre output ports entity-keyed.
+"""Reconciliação fatura-a-fatura sobre output ports entity.
 
 Demonstração da tese:
   "Compartilhar a chave (invoice_id) entre produtos é necessário para
@@ -6,7 +6,7 @@ Demonstração da tese:
    de vocabulário, regras de domínio, granularidade e janela temporal
    persistem mesmo com a chave casada."
 
-Lê os 3 output ports entity-keyed publicados (sob a master_entity `invoice` da
+Lê os 3 output ports entity publicados (sob a master_entity `invoice` da
 política federada) e executa a junção. Reporta:
 
   • Cobertura: % de invoice_ids presentes em cada par de produtos
@@ -27,18 +27,17 @@ from typing import Any, Dict, List
 
 import yaml
 
-AP_PATH = "domains/financeiro/contas-a-pagar/data/ap.jsonl"
-AR_PATH = "domains/financeiro/contas-a-receber/data/ar.jsonl"
+AP_PATH = "domains/financeiro/contas-a-pagar/data/contas_a_pagar.jsonl"
+AR_PATH = "domains/financeiro/contas-a-receber/data/contas_a_receber.jsonl"
 LOG_PATH = "domains/logistica/data/logistics.jsonl"
 POLICIES_PATH = "governance/policies.yaml"
 REPORT_PATH = "reports/invoice_keyed_reconciliation.json"
 
 STATUS_CANONICAL = {
-    "OPEN": "OPEN",
-    "PAID": "PAID",
-    "SETTLED": "PAID",
-    "CANCELED": "CANCELED",
-    "CANCELLED": "CANCELED",
+    "ABERTO": "ABERTO",
+    "PAGO": "PAGO",
+    "LIQUIDADO": "PAGO",
+    "CANCELADO": "CANCELADO",
 }
 
 AMOUNT_TOLERANCE_PCT = 0.05  # 5% (retenções fiscais, descontos)
@@ -83,8 +82,8 @@ def reconcile_ap_vs_ar(ap_idx: Dict[str, Dict[str, Any]], ar_idx: Dict[str, Dict
         ap = ap_idx[inv_id]
         ar = ar_idx[inv_id]
 
-        ap_status_raw = ap.get("status", "")
-        ar_status_raw = ar.get("status", "")
+        ap_status_raw = ap.get("situacao", "")
+        ar_status_raw = ar.get("situacao", "")
         ap_canon = canonical_status(ap_status_raw)
         ar_canon = canonical_status(ar_status_raw)
 
@@ -104,8 +103,8 @@ def reconcile_ap_vs_ar(ap_idx: Dict[str, Dict[str, Any]], ar_idx: Dict[str, Dict
 
         # Valor: AP grava `amount` (líquido), AR grava `gross_amount` (bruto).
         # São naturalmente diferentes por desenho de domínio.
-        ap_amount = float(ap.get("amount", 0) or 0)
-        ar_gross = float(ar.get("gross_amount", 0) or 0)
+        ap_amount = float(ap.get("valor_liquido", 0) or 0)
+        ar_gross = float(ar.get("valor_bruto", 0) or 0)
         if max(ap_amount, ar_gross) > 0:
             diff_pct = abs(ap_amount - ar_gross) / max(ap_amount, ar_gross)
             if diff_pct > AMOUNT_TOLERANCE_PCT:
@@ -120,13 +119,13 @@ def reconcile_ap_vs_ar(ap_idx: Dict[str, Dict[str, Any]], ar_idx: Dict[str, Dict
                     })
 
         # Mês de emissão: pode divergir por janela de processamento
-        if ap.get("issue_month") != ar.get("issue_month"):
+        if ap.get("mes_emissao") != ar.get("mes_emissao"):
             counters["issue_month_diff"] += 1
             if len(persistent_divergences["issue_month_diff"]) < 50:
                 persistent_divergences["issue_month_diff"].append({
                     "invoice_id": inv_id,
-                    "ap_issue_month": ap.get("issue_month"),
-                    "ar_issue_month": ar.get("issue_month"),
+                    "ap_issue_month": ap.get("mes_emissao"),
+                    "ar_issue_month": ar.get("mes_emissao"),
                 })
 
     return {
@@ -174,33 +173,33 @@ def reconcile_logistics_vs_finance(
             if len(referential["logistics_pointing_to_missing_invoice"]) < 50:
                 referential["logistics_pointing_to_missing_invoice"].append({
                     "invoice_id": inv_id,
-                    "operation_count": log.get("operation_count"),
-                    "total_value": log.get("total_value"),
+                    "operation_count": log.get("qtd_operacoes"),
+                    "total_value": log.get("valor_total"),
                 })
             continue
 
         # Granularidade: logística agrega N operações por fatura
-        if int(log.get("operation_count", 0) or 0) > 1:
+        if int(log.get("qtd_operacoes", 0) or 0) > 1:
             counters["granularity_one_to_many"] += 1
             if len(granularity["one_to_many_examples"]) < 30:
                 granularity["one_to_many_examples"].append({
                     "invoice_id": inv_id,
-                    "operation_count": log["operation_count"],
-                    "operation_types": log.get("operation_types", []),
-                    "statuses": log.get("statuses", []),
+                    "operation_count": log["qtd_operacoes"],
+                    "operation_types": log.get("tipos_operacao", []),
+                    "statuses": log.get("situacoes", []),
                 })
 
         # Valor: comparar com a contraparte financeira correta
-        log_value = float(log.get("total_value", 0) or 0)
+        log_value = float(log.get("valor_total", 0) or 0)
         ap = ap_idx.get(inv_id)
         ar = ar_idx.get(inv_id)
         finance_value = None
         finance_side = None
         if ap is not None:
-            finance_value = float(ap.get("amount", 0) or 0)
+            finance_value = float(ap.get("valor_liquido", 0) or 0)
             finance_side = "ap"
         elif ar is not None:
-            finance_value = float(ar.get("gross_amount", 0) or 0)
+            finance_value = float(ar.get("valor_bruto", 0) or 0)
             finance_side = "ar"
 
         if finance_value is not None and max(log_value, finance_value) > 0:
@@ -218,8 +217,8 @@ def reconcile_logistics_vs_finance(
                     })
 
         # Mês: logística pode operar em outro mês
-        log_months = set(log.get("operation_months", []))
-        finance_month = (ap or ar).get("issue_month") if (ap or ar) else None
+        log_months = set(log.get("meses_operacao", []))
+        finance_month = (ap or ar).get("mes_emissao") if (ap or ar) else None
         if finance_month and log_months and finance_month not in log_months:
             counters["month_window_diff"] += 1
             if len(persistent["month_window_diff"]) < 50:
@@ -318,7 +317,7 @@ def main() -> None:
     with open(REPORT_PATH, "w", encoding="utf-8") as f:
         json.dump(report, f, ensure_ascii=False, indent=2)
 
-    print("🔑 Reconciliação fatura-a-fatura (output ports entity-keyed)")
+    print("🔑 Reconciliação fatura-a-fatura (output ports entity)")
     print("=" * 65)
     print(f"📦 AP keyed             : {intra['ap_total']} faturas")
     print(f"📦 AR keyed             : {intra['ar_total']} faturas")

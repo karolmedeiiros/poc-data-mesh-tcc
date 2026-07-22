@@ -1,6 +1,6 @@
 # Data Mesh PoC — Inconsistências entre Produtos de Dados
 
-Implementação dos quatro princípios do Data Mesh (Dehghani, 2022) com foco em **demonstrar como inconsistências surgem naturalmente** entre produtos de dados autônomos, mesmo com governança federada e QoS avançado.
+Implementação dos quatro princípios do Data Mesh (Dehghani, 2022) com foco em **demonstrar como inconsistências surgem naturalmente** entre produtos de dados autônomos, mesmo com governança federada.
 
 > Referências: *Data Mesh — Delivering Data-Driven Value at Scale* (Zhamak Dehghani, O'Reilly 2022) e [datamesh-architecture.com](https://www.datamesh-architecture.com/).
 
@@ -16,23 +16,23 @@ tcc-data-mesh/
 ├── domains/                          ← Princípio 1 · Domain Ownership
 │   ├── financeiro/                    ← Domínio Financeiro
 │   │   ├── contas-a-pagar/              ← Subdomínio Contas a Pagar
-│   │   │   ├── dataproduct.yaml         Data Contract do produto ANALÍTICO publicado (output port)
+│   │   │   ├── dataproduct.yaml         Data Contract do produto entity publicado (output port)
 │   │   │   ├── operational/             Camada de entrada (dados brutos, não publicados)
 │   │   │   │   └── ap_natural.jsonl
-│   │   │   └── data/                    Output Port analítico publicado
-│   │   │       └── ap_analytical.jsonl
+│   │   │   └── data/                    Output Port entity publicado
+│   │   │       └── ap.jsonl
 │   │   └── contas-a-receber/            ← Subdomínio Contas a Receber
 │   │       ├── dataproduct.yaml
 │   │       ├── operational/
 │   │       │   └── ar_natural.jsonl
 │   │       └── data/
-│   │           └── ar_analytical.jsonl
+│   │           └── ar.jsonl
 │   └── logistica/
 │       ├── dataproduct.yaml
 │       ├── operational/
 │       │   └── logistics_natural.jsonl
 │       └── data/
-│           └── logistics_analytical.jsonl
+│           └── logistics.jsonl
 │
 ├── governance/                       ← Princípio 4 · Federated Governance
 │   ├── policies.yaml                    Políticas globais (SLAs, quality, security, QoS)
@@ -43,20 +43,18 @@ tcc-data-mesh/
 │   ├── generators/                      Geração de dados sintéticos por domínio
 │   │   ├── generate_data_natural.py     Gera operacional AP e AR com regras de domínio
 │   │   ├── generate_logistics.py        Gera operacional Logística com cross-domain linkage
-│   │   └── generate_data_analytical.py  Deriva output ports analíticos (data/) a partir do operacional
-│   ├── quality/                         Validação de qualidade e QoS
-│   │   ├── validate_data_quality.py     Runtime validation contra regras do contrato
-│   │   └── validate_qos.py             Observability, Error Budgets, Reliability, Performance
+│   │   └── generate_data_analytical.py  Deriva output ports entity (data/) a partir do operacional
+│   ├── quality/                         Validação de qualidade
+│   │   └── validate_data_quality.py     Runtime validation contra regras do contrato
 │   ├── catalog/                         Data Discovery
 │   │   └── build_data_catalog.py        Catálogo federado com lineage e busca
-│   └── reconciliation/                  Análise sobre a camada analítica publicada
+│   └── reconciliation/                  Análise sobre os output ports entity publicados
 │       ├── reconcile_data_mesh.py       Orquestrador macro (intra + cross-domain)
 │       ├── detect_natural_divergences.py   AP vs AR por (issue_month | status canônico)
 │       └── detect_cross_domain_divergences.py  Logística vs Financeiro por mês
 │
 ├── reports/                          ← Observability (outputs)
 │   ├── governance_compliance.json
-│   ├── qos_validation_report.json
 │   ├── data_quality_validation.json
 │   ├── data_mesh_reconciliation.json
 │   └── ...
@@ -72,49 +70,49 @@ tcc-data-mesh/
 | `domains/` | Domain Ownership + Data as a Product | Dehghani cap. 8-9; datamesh-architecture.com §Domain |
 | `governance/` | Federated Computational Governance | Dehghani cap. 15; datamesh-architecture.com §Governance |
 | `platform/` | Self-Serve Data Platform | Dehghani cap. 14; datamesh-architecture.com §Platform |
-| `reports/` | Observability / Monitoring | Dehghani cap. 12 (QoS); datamesh-architecture.com §Data Product |
+| `reports/` | Observability / Monitoring | Dehghani cap. 12; datamesh-architecture.com §Data Product |
 
 ---
 
 ## Domínios e Produtos de Dados
 
-Cada domínio publica **um único produto de dados analítico** (output port agregado), seguindo o padrão [datamesh-architecture.com](https://www.datamesh-architecture.com/). A pasta `operational/` contém apenas a **camada de entrada bruta** (não publicada como produto); a pasta `data/` contém o **output port analítico** descrito por `dataproduct.yaml`.
+Cada domínio publica **um único produto de dados analítico** chaveado pela *master entity* `invoice_id` (output port *entity*), seguindo o padrão [datamesh-architecture.com](https://www.datamesh-architecture.com/). A pasta `operational/` contém apenas a **camada de entrada bruta** (não publicada como produto); a pasta `data/` contém o **output port** descrito por `dataproduct.yaml`.
 
-### financeiro/contas-a-pagar — Contas a Pagar (Analytical)
+### financeiro/contas-a-pagar — Contas a Pagar (entity)
 - **Owner**: finance-ap@empresa.com
-- **Contrato**: `domains/financeiro/contas-a-pagar/dataproduct.yaml` (`product_type: analytical`)
-- **Output port**: `domains/financeiro/contas-a-pagar/data/ap_analytical.jsonl`
-- **Grão**: `issue_month | status | invoice_type`
-- **Medidas**: `invoice_count`, `supplier_count`, `total_amount`, `avg_amount`
+- **Contrato**: `domains/financeiro/contas-a-pagar/dataproduct.yaml` (`product_type: analytical`, `output_port_kind: entity_keyed`)
+- **Output port**: `domains/financeiro/contas-a-pagar/data/ap.jsonl`
+- **Grão**: `invoice_id` (1 linha por fatura — master entity)
+- **Campos**: `amount`, `base_amount`, `status`, `invoice_type`, `supplier_id`, `issue_month`
 - **Entrada (não publicada)**: `operational/ap_natural.jsonl`
 
-### financeiro/contas-a-receber — Contas a Receber (Analytical)
+### financeiro/contas-a-receber — Contas a Receber (entity)
 - **Owner**: finance-ar@empresa.com
-- **Contrato**: `domains/financeiro/contas-a-receber/dataproduct.yaml` (`product_type: analytical`)
-- **Output port**: `domains/financeiro/contas-a-receber/data/ar_analytical.jsonl`
-- **Grão**: `issue_month | status | customer_type`
-- **Medidas**: `invoice_count`, `customer_count`, `total_gross_amount`, `avg_gross_amount`
+- **Contrato**: `domains/financeiro/contas-a-receber/dataproduct.yaml` (`product_type: analytical`, `output_port_kind: entity_keyed`)
+- **Output port**: `domains/financeiro/contas-a-receber/data/ar.jsonl`
+- **Grão**: `invoice_id` (1 linha por fatura — master entity)
+- **Campos**: `gross_amount`, `base_amount`, `status`, `customer_type`, `customer_id`, `issue_month`
 - **Entrada (não publicada)**: `operational/ar_natural.jsonl`
 
-### logistica — Operações Logísticas (Analytical)
+### logistica — Operações Logísticas (entity)
 - **Owner**: logistics-team@empresa.com
-- **Contrato**: `domains/logistica/dataproduct.yaml` (`product_type: analytical`)
-- **Output port**: `domains/logistica/data/logistics_analytical.jsonl`
-- **Grão**: `operation_month | operation_type | status`
-- **Medidas**: `operation_count`, `party_count`, `total_value`, `linked_to_invoice_rate`
+- **Contrato**: `domains/logistica/dataproduct.yaml` (`product_type: analytical`, `output_port_kind: entity_keyed`)
+- **Output port**: `domains/logistica/data/logistics.jsonl`
+- **Grão**: `invoice_id` (1 linha por fatura, agregando N operações vinculadas)
+- **Campos**: `operation_count`, `total_value`, `operation_types`, `statuses`, `operation_months`
 - **Entrada (não publicada)**: `operational/logistics_natural.jsonl` (referência faturas via `related_invoice_id`)
 
 ---
 
-## Output Ports Entity-Keyed (Master Entity `invoice`)
+## Output Ports entity (Master Entity `invoice`)
 
-Cada domínio publica **um segundo output port** chaveado pela master entity federada `invoice_id`, governada por `governance/policies.yaml > master_entities`. Esses produtos viabilizam reconciliação fina (fatura-a-fatura) **sem violar autonomia de domínio**: cada produto mantém vocabulário e regras próprias.
+O output port de cada domínio é chaveado pela master entity federada `invoice_id`, governada por `governance/policies.yaml > master_entities`. Esses produtos viabilizam reconciliação fina (fatura-a-fatura) **sem violar autonomia de domínio**: cada produto mantém vocabulário e regras próprias.
 
 | Produto | Contrato | Dataset | Linhas |
 |---|---|---|---|
-| `contas-a-pagar` | `dataproduct.yaml` | `data/ap_invoice_keyed.jsonl` | 1 por fatura |
-| `contas-a-receber` | `dataproduct.yaml` | `data/ar_invoice_keyed.jsonl` | 1 por fatura |
-| `operacoes-logistica` | `dataproduct.yaml` | `data/logistics_invoice_keyed.jsonl` | 1 por fatura (agrega N operações) |
+| `contas-a-pagar` | `dataproduct.yaml` | `data/ap.jsonl` | 1 por fatura |
+| `contas-a-receber` | `dataproduct.yaml` | `data/ar.jsonl` | 1 por fatura |
+| `operacoes-logistica` | `dataproduct.yaml` | `data/logistics.jsonl` | 1 por fatura (agrega N operações) |
 
 **Tese provada por `platform/reconciliation/reconcile_by_invoice.py`**:
 Compartilhar a chave é *necessário* para reconciliação fina, mas *insuficiente* para alinhamento. Ver tabela em "Resultados Esperados".
@@ -144,9 +142,9 @@ Estrutura ODCS vs visão interna:
 
 ```bash
 # Setup
-python3 -m venv .venv
+python -m venv .venv
 source .venv/bin/activate
-pip3 install -r requirements.txt
+pip install -r requirements.txt
 
 # 1. Gerar dados operacionais (financeiro)
 python3 platform/generators/generate_data_natural.py
@@ -154,29 +152,29 @@ python3 platform/generators/generate_data_natural.py
 # 2. Gerar dados operacionais (logística, lê AP/AR para cross-domain linkage)
 python3 platform/generators/generate_logistics.py
 
-# 2.1 Derivar output ports analíticos (data/) a partir do operacional
+# 2.1 Derivar output ports entity (data/) a partir do operacional
 python3 platform/generators/generate_data_analytical.py
 
 # 3. Governança Federada
 python3 governance/validate_governance.py
 python3 governance/validate_contracts.py
 
-# 4. QoS Avançado
-python3 platform/quality/validate_qos.py
-
-# 5. Qualidade de Dados
+# 4. Qualidade de Dados
 python3 platform/quality/validate_data_quality.py
 
-# 6. Catálogo Federado
+# 5. Catálogo Federado
 python3 platform/catalog/build_data_catalog.py
 
-# 7. Reconciliação macro (sobre output ports analytical agregados)
+# 6. Reconciliação intra e cross-domain (sobre output ports entity por invoice_id)
 python3 platform/reconciliation/reconcile_data_mesh.py
 python3 platform/reconciliation/detect_natural_divergences.py
 python3 platform/reconciliation/detect_cross_domain_divergences.py
 
-# 8. Reconciliação fina por master entity invoice (output ports entity-keyed)
-python platform/reconciliation/reconcile_by_invoice.py
+# 7. Reconciliação fina por master entity invoice (output ports entity)
+python3 platform/reconciliation/reconcile_by_invoice.py
+
+# 8. Governança Computacional (valida inconsistências reais entre contratos e dados)
+python3 governance/validate_computational_governance.py
 ```
 
 ---
@@ -185,18 +183,18 @@ python platform/reconciliation/reconcile_by_invoice.py
 
 | Validação | Resultado |
 |---|---|
-| Governance Compliance | 100 % (6/6 produtos analytical + entity-keyed) |
-| QoS Advanced | 100 % (17/17 checks por produto) |
-| Data Quality | 100 % válidos (~9 360 registros pelos 6 datasets) |
+| Governance Compliance | 100 % (3/3 produtos entity) |
+| Data Quality | 100 % válidos (~4 940 registros pelos 3 datasets entity) |
+| Computational Governance | FAIL (detecta inconsistências cross-domain e schema drift) |
 
-### Reconciliação macro (output ports agregados por bucket)
+### Reconciliação por bucket canônico (sobre os output ports entity)
 
 | Métrica | Resultado |
 |---|---|
 | Divergência Intra-Domain (AP vs AR, por bucket canônico) | ~33 % (vocabulário de status PAID vs SETTLED) |
 | Divergência Cross-Domain (Logística vs Financeiro, por mês) | ~100 % (cobertura parcial de vínculo + regras próprias) |
 
-### Reconciliação fina (output ports entity-keyed por `invoice_id`)
+### Reconciliação fina (output ports entity por `invoice_id`)
 
 **Tese: compartilhar a chave é necessário mas insuficiente.**
 

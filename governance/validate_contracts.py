@@ -3,10 +3,7 @@ import sys
 import json
 from datetime import datetime
 
-# Adiciona a raiz do projeto ao path para importar odcs_adapter
-script_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.dirname(script_dir)
-sys.path.insert(0, project_root)
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from odcs_adapter import load_and_normalize
 
 def validate_contract(contract_path: str) -> dict:
@@ -106,9 +103,9 @@ def validate_contract(contract_path: str) -> dict:
 
 def main():
     contracts = [
-        "domains/financeiro/contas-a-pagar/dataproduct.yaml",
-        "domains/financeiro/contas-a-receber/dataproduct.yaml",
-        "domains/logistica/dataproduct.yaml"
+        "domains/financeiro/contas-a-pagar/data_contract.yaml",
+        "domains/financeiro/contas-a-receber/data_contract.yaml",
+        "domains/logistica/data_contract.yaml"
     ]
     
     results = []

@@ -52,68 +52,22 @@ def generate_source_event(event_id: str, base_issue: date) -> dict:
     }
 
 class LogisticsOperationsProduct:
-    """Data Product: Operações Logísticas (Domain: Logística)"""
+    """Data Product: Operações Logísticas (Domain: Logística).
+
+    A camada operacional apenas registra o evento bruto (quantity, unit_price,
+    base_status) e os atributos dimensionais (operation_type, party_id). As regras
+    de negócio (cálculo de total_value, custos adicionais, vocabulário de status)
+    são aplicadas na transformação analítica (generate_data_analytical.py).
+    """
     
     def __init__(self):
         self.domain = "logistica"
         self.product_name = "operacoes-logistica"
-        
-    def calculate_total_value(self, quantity: int, unit_price: float, operation_type: str) -> float:
-        """Regras de negócio do domínio Logística.
-        
-        total_value = quantity * unit_price (sempre).
-        Custos adicionais (frete, manuseio) são registrados separadamente.
-        """
-        return round(quantity * unit_price, 2)
-    
-    def calculate_additional_costs(self, quantity: int, unit_price: float, operation_type: str) -> float:
-        """Custos adicionais do domínio Logística (separados do total_value)"""
-        
-        # Regra 1: Recebimento pode ter taxa de manuseio
-        if operation_type == "recebimento" and random.random() < 0.15:
-            return round(quantity * unit_price * 0.02, 2)  # 2% manuseio
-        
-        # Regra 2: Envio pode ter frete
-        elif operation_type == "envio" and random.random() < 0.20:
-            return round(random.uniform(10, 80), 2)  # Frete fixo
-        
-        # Regra 3: Devolução pode ter multa
-        elif operation_type == "devolucao" and random.random() < 0.15:
-            return round(quantity * unit_price * -0.05, 2)  # Desconto por devolução
-        
-        return 0.0
-    
-    def determine_status(self, base_status: str, operation_type: str) -> str:
-        """Regras de status do domínio Logística"""
-        
-        if base_status == "pending":
-            return "PENDING"
-        elif base_status == "processing":
-            return "PROCESSING"
-        elif base_status == "completed":
-            return "COMPLETED"
-        elif base_status == "cancelled":
-            return "CANCELLED"
-        else:
-            return "PENDING"
-    
+
     def generate_operation(self, operation_id: str, base_data: dict,
                            related_invoice_id: str = None,
                            party_id: str = None, party_type: str = None) -> dict:
-        """Gera operação segundo regras do produto Logística"""
-        
-        # Aplica regras de negócio do domínio
-        total_value = self.calculate_total_value(
-            base_data["quantity"], 
-            base_data["unit_price"], 
-            base_data["operation_type"]
-        )
-        additional_costs = self.calculate_additional_costs(
-            base_data["quantity"],
-            base_data["unit_price"],
-            base_data["operation_type"]
-        )
-        status = self.determine_status(base_data["base_status"], base_data["operation_type"])
+        """Gera o registro operacional bruto do produto Logística (sem regras de negócio)."""
         
         # Timestamp do domínio Logística
         now = datetime.now(timezone.utc)
@@ -139,10 +93,10 @@ class LogisticsOperationsProduct:
         ]
         sku_idx = random.randint(0, len(product_skus) - 1)
         
-        # Transportadoras (apenas para envios)
+        # Transportadoras (apenas para envios concluídos no evento base)
         carrier_id = None
         tracking_number = None
-        if base_data["operation_type"] == "envio" and status == "COMPLETED":
+        if base_data["operation_type"] == "envio" and base_data["base_status"] == "completed":
             carrier_id = f"CAR-{random.randint(1, 10)}"
             tracking_number = f"TRK-{random.randint(100000, 999999)}"
         
@@ -160,16 +114,12 @@ class LogisticsOperationsProduct:
             "product_description": product_descriptions[sku_idx],
             "quantity": base_data["quantity"],
             "unit_price": base_data["unit_price"],
-            "total_value": total_value,
-            "additional_costs": additional_costs,
             "currency": "BRL",
             "warehouse_id": f"WH-{random.randint(1, 5)}",
-            "status": status,
+            "base_status": base_data["base_status"],
             "carrier_id": carrier_id,
             "tracking_number": tracking_number,
             "updated_at": iso_dt(log_updated),
-            "domain": self.domain,
-            "product": self.product_name
         }
 
 def main(seed: int = 7, n_independent: int = 300) -> None:
@@ -189,8 +139,8 @@ def main(seed: int = 7, n_independent: int = 300) -> None:
     op_counter = 1000
 
     # --- Parte 1: Operações vinculadas a faturas reais ---
-    ap_rows = read_jsonl("domains/financeiro/contas-a-pagar/operational/ap_natural.jsonl") if os.path.exists("domains/financeiro/contas-a-pagar/operational/ap_natural.jsonl") else []
-    ar_rows = read_jsonl("domains/financeiro/contas-a-receber/operational/ar_natural.jsonl") if os.path.exists("domains/financeiro/contas-a-receber/operational/ar_natural.jsonl") else []
+    ap_rows = read_jsonl("operational/financeiro/contas-a-pagar/ap_natural.jsonl") if os.path.exists("operational/financeiro/contas-a-pagar/ap_natural.jsonl") else []
+    ar_rows = read_jsonl("operational/financeiro/contas-a-receber/ar_natural.jsonl") if os.path.exists("operational/financeiro/contas-a-receber/ar_natural.jsonl") else []
 
     # Recebimentos vinculados a ~30% das faturas AP
     ap_sample = random.sample(ap_rows, min(int(len(ap_rows) * 0.30), len(ap_rows)))
@@ -252,11 +202,11 @@ def main(seed: int = 7, n_independent: int = 300) -> None:
             logistics_rows.append(operation)
 
     random.shuffle(logistics_rows)
-    write_jsonl("domains/logistica/operational/logistics_natural.jsonl", logistics_rows)
+    write_jsonl("operational/logistica/logistics_natural.jsonl", logistics_rows)
 
     linked = sum(1 for r in logistics_rows if r.get("related_invoice_id"))
     print("Gerado (Logística - regras naturais):")
-    print(f"- domains/logistica/operational/logistics_natural.jsonl (rows={len(logistics_rows)})")
+    print(f"- operational/logistica/logistics_natural.jsonl (rows={len(logistics_rows)})")
     print(f"- Operações vinculadas a faturas: {linked}")
     print(f"- Operações independentes: {len(logistics_rows) - linked}")
 

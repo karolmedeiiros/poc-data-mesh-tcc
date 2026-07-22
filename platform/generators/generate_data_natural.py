@@ -36,53 +36,24 @@ def generate_source_event(event_id: str, base_issue: date) -> dict:
     }
 
 class AccountsPayableProduct:
-    """Data Product: Contas a Pagar (Domain: contas-a-pagar)"""
+    """Data Product: Contas a Pagar (Domain: contas-a-pagar).
+
+    A camada operacional apenas registra o evento bruto (base_amount, base_status)
+    e os atributos dimensionais do domínio (invoice_type, supplier_id). As regras
+    de negócio (retenção de impostos, vocabulário de status) são aplicadas na
+    transformação analítica (generate_data_analytical.py).
+    """
     
     def __init__(self):
         self.domain = "contas-a-pagar"
         self.product_name = "contas-a-pagar"
-        
-    def calculate_amount(self, base_amount: float, invoice_type: str) -> float:
-        """Regras de negócio do domínio AP"""
-        
-        # Regra 1: Retenção de impostos na fonte para serviços de alto valor
-        if invoice_type == "servico" and base_amount > 3000:
-            # AP retém ISS/PIS/COFINS apenas acima de R$3000
-            tax_rate = 0.1475  # 14.75% total
-            return round(base_amount * (1 - tax_rate), 2)
-        
-        # Regra 2: Material de escritório sem retenção
-        elif invoice_type == "material":
-            return round(base_amount, 2)
-        
-        # Regra 3: Aluguel com taxa administrativa eventual
-        elif invoice_type == "aluguel" and random.random() < 0.30:
-            # AP inclui taxa administrativa de 0.2%
-            admin_fee = base_amount * 0.002
-            return round(base_amount + admin_fee, 2)
-        
-        return round(base_amount, 2)
-    
-    def determine_status(self, base_status: str, payment_terms: str) -> str:
-        """Regras de status do domínio AP"""
-        
-        if base_status == "paid":
-            return "PAID"  # AP usa "PAID"
-        elif base_status == "cancelled":
-            return "CANCELED"
-        else:
-            return "OPEN"
 
     def generate_invoice(self, invoice_id: str, base_data: dict) -> dict:
-        """Gera invoice segundo regras do produto AP"""
+        """Gera o registro operacional bruto do produto AP (sem regras de negócio)."""
         
-        # Tipos de invoice do domínio AP
+        # Tipos de invoice do domínio AP (atributo dimensional, não é regra)
         invoice_types = ["fornecedor", "servico", "material", "aluguel", "imposto"]
         invoice_type = random.choice(invoice_types)
-        
-        # Aplica regras de negócio do domínio (cada domínio usa seu vocabulário)
-        amount = self.calculate_amount(base_data["base_amount"], invoice_type)
-        status = self.determine_status(base_data["base_status"], "standard")
         
         # Timestamp do domínio AP (batch processing)
         now = datetime.now(timezone.utc)
@@ -96,66 +67,32 @@ class AccountsPayableProduct:
             "supplier_id": f"SUP-{random.randint(1, 50)}",
             "invoice_type": invoice_type,
             "currency": "BRL",
-            "amount": amount,
             "base_amount": base_data["base_amount"],
+            "base_status": base_data["base_status"],
             "issue_date": iso_d(base_data["issue_date"]),
             "due_date": iso_d(base_data["due_date"]),
-            "status": status,
-            "updated_at": iso_dt(ap_updated),
-            "domain": self.domain,
-            "product": self.product_name
+            "updated_at": iso_dt(ap_updated)
         }
 
 class AccountsReceivableProduct:
-    """Data Product: Contas a Receber (Domain: contas-a-receber)"""
+    """Data Product: Contas a Receber (Domain: contas-a-receber).
+
+    A camada operacional apenas registra o evento bruto (base_amount, base_status)
+    e os atributos dimensionais do domínio (customer_type, customer_id). As regras
+    de negócio (desconto de pontualidade, juros, vocabulário de status) são
+    aplicadas na transformação analítica (generate_data_analytical.py).
+    """
     
     def __init__(self):
         self.domain = "contas-a-receber"
         self.product_name = "contas-a-receber"
-        
-    def calculate_amount(self, base_amount: float, customer_type: str) -> float:
-        """Regras de negócio do domínio AR"""
-        
-        # Regra 1: Clientes corporativos têm desconto de pontualidade
-        if customer_type == "corporate":
-            if random.random() < 0.08:  # 8% pagam em dia com desconto
-                discount = base_amount * 0.02  # 2% de desconto
-                return round(base_amount - discount, 2)
-        
-        # Regra 2: Clientes government têm juros por atraso
-        elif customer_type == "government":
-            if random.random() < 0.10:  # 10% aplica juros (raro)
-                interest_rate = 0.01  # 1% de juros
-                return round(base_amount * (1 + interest_rate), 2)
-            else:
-                return round(base_amount, 2)  # Sem juros na maioria
-        
-        # Regra 3: Cliente B2C sem alterações
-        elif customer_type == "b2c":
-            return round(base_amount, 2)
-        
-        return round(base_amount, 2)
-    
-    def determine_status(self, base_status: str, customer_type: str) -> str:
-        """Regras de status do domínio AR"""
-        
-        if base_status == "paid":
-            return "SETTLED"  # AR usa "SETTLED"
-        elif base_status == "cancelled":
-            return "CANCELED"
-        else:
-            return "OPEN"
 
     def generate_invoice(self, invoice_id: str, base_data: dict) -> dict:
-        """Gera invoice segundo regras do produto AR"""
+        """Gera o registro operacional bruto do produto AR (sem regras de negócio)."""
         
-        # Tipos de cliente do domínio AR
+        # Tipos de cliente do domínio AR (atributo dimensional, não é regra)
         customer_types = ["corporate", "government", "b2c"]
         customer_type = random.choice(customer_types)
-        
-        # Aplica regras de negócio do domínio (cada domínio usa seu vocabulário)
-        amount = self.calculate_amount(base_data["base_amount"], customer_type)
-        status = self.determine_status(base_data["base_status"], customer_type)
         
         # Timestamp do domínio AR (near real-time)
         now = datetime.now(timezone.utc)
@@ -169,14 +106,11 @@ class AccountsReceivableProduct:
             "customer_id": f"CUS-{random.randint(1, 50)}",
             "customer_type": customer_type,
             "currency": "BRL",
-            "gross_amount": amount,
             "base_amount": base_data["base_amount"],
+            "base_status": base_data["base_status"],
             "issue_date": iso_d(base_data["issue_date"]),
             "due_date": iso_d(base_data["due_date"]),
-            "status": status,
-            "updated_at": iso_dt(ar_updated),
-            "domain": self.domain,
-            "product": self.product_name
+            "updated_at": iso_dt(ar_updated)
         }
 
 def main(seed: int = 7, n: int = 2000) -> None:
@@ -221,12 +155,12 @@ def main(seed: int = 7, n: int = 2000) -> None:
         if ar_invoice:
             ar_rows.append(ar_invoice)
 
-    write_jsonl("domains/financeiro/contas-a-pagar/operational/ap_natural.jsonl", ap_rows)
-    write_jsonl("domains/financeiro/contas-a-receber/operational/ar_natural.jsonl", ar_rows)
+    write_jsonl("operational/financeiro/contas-a-pagar/ap_natural.jsonl", ap_rows)
+    write_jsonl("operational/financeiro/contas-a-receber/ar_natural.jsonl", ar_rows)
 
     print("Gerado (Data natural - regras naturais):")
-    print(f"- domains/financeiro/contas-a-pagar/operational/ap_natural.jsonl (rows={len(ap_rows)})")
-    print(f"- domains/financeiro/contas-a-receber/operational/ar_natural.jsonl (rows={len(ar_rows)})")
+    print(f"- operational/financeiro/contas-a-pagar/ap_natural.jsonl (rows={len(ap_rows)})")
+    print(f"- operational/financeiro/contas-a-receber/ar_natural.jsonl (rows={len(ar_rows)})")
 
 if __name__ == "__main__":
     main()

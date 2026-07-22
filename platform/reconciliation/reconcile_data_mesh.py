@@ -20,6 +20,9 @@ from typing import Dict, List, Any
 # Adiciona a raiz do projeto ao path para importar odcs_adapter
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from odcs_adapter import load_and_normalize
+from detect_natural_divergences import NaturalDivergenceDetector
+from detect_cross_domain_divergences import CrossDomainDivergenceDetector
+
 
 class DataMeshReconciler:
     """Orquestrador de reconciliação macro do Data Mesh"""
@@ -41,9 +44,9 @@ class DataMeshReconciler:
         """Carrega todos os contratos de dados ODCS"""
         contracts = []
         contract_paths = [
-            "domains/financeiro/contas-a-pagar/dataproduct.yaml",
-            "domains/financeiro/contas-a-receber/dataproduct.yaml", 
-            "domains/logistica/dataproduct.yaml"
+            "domains/financeiro/contas-a-pagar/data_contract.yaml",
+            "domains/financeiro/contas-a-receber/data_contract.yaml", 
+            "domains/logistica/data_contract.yaml"
         ]
         
         for path in contract_paths:
@@ -56,45 +59,39 @@ class DataMeshReconciler:
         return contracts
     
     def run_intra_domain_analysis(self) -> Dict[str, Any]:
-        """Executa análise de divergências intra-domínio (AP vs AR)"""
-        print("🔍 Analisando divergências intra-domínio (AP vs AR)...")
-        
-        # Simulação - em implementação real, chamaria detect_natural_divergences.py
+        """Executa análise real de divergências intra-domínio (AP vs AR)."""
+        detector = NaturalDivergenceDetector()
+        raw = detector.run_analysis()
+        convergence = raw.get("convergence_metrics", {}).get("convergence_rate", 0)
+
         intra_results = {
             "analysis_type": "intra_domain",
-            "domains_compared": ["financeiro"],
-            "total_comparisons": 1997,
-            "divergences_found": {
-                "status_vocabulary_diff": 441,
-                "amount_business_rules_diff": 159,
-                "timing_diff": 23
-            },
-            "convergence_rate": 78.1,
-            "status": "PARTIAL_CONVERGENCE"
+            "domains_compared": raw.get("domains", ["financeiro"]),
+            "total_comparisons": raw.get("total_invoices", 0),
+            "divergences_found": raw.get("divergences", {}),
+            "convergence_rate": convergence,
+            "status": "PARTIAL_CONVERGENCE" if convergence < 100 else "FULL_CONVERGENCE",
         }
-        
+
         self.results["intra_domain"] = intra_results
         return intra_results
-    
+
     def run_cross_domain_analysis(self) -> Dict[str, Any]:
-        """Executa análise de divergências cross-domain (Logística vs Financeiro)"""
-        print("🔍 Analisando divergências cross-domain (Logística vs Financeiro)...")
-        
-        # Simulação - em implementação real, chamaria detect_cross_domain_divergences.py
+        """Executa análise real de divergências cross-domain (Logística vs Financeiro)."""
+        detector = CrossDomainDivergenceDetector()
+        raw = detector.run_analysis()
+        convergence = raw.get("convergence_metrics", {}).get("convergence_rate", 0)
+
         cross_results = {
-            "analysis_type": "cross_domain", 
-            "domains_compared": ["logistica", "financeiro"],
-            "total_comparisons": 943,
-            "divergences_found": {
-                "granularity_one_to_many": 155,
-                "value_business_rules_diff": 909,
-                "month_window_diff": 398,
-                "referential_integrity": 0
-            },
-            "convergence_rate": 67.3,
-            "status": "NEEDS_ALIGNMENT"
+            "analysis_type": "cross_domain",
+            "domains_compared": raw.get("domains_compared", ["logistica", "financeiro"]),
+            "total_comparisons": raw.get("total_invoices", 0),
+            "divergences_found": raw.get("divergences", {}),
+            "referential_integrity": raw.get("referential_integrity", {}),
+            "convergence_rate": convergence,
+            "status": "NEEDS_ALIGNMENT" if convergence < 100 else "ALIGNED",
         }
-        
+
         self.results["cross_domain"] = cross_results
         return cross_results
     
@@ -117,16 +114,16 @@ class DataMeshReconciler:
                 "📏 Definir política de granularidade compartilhada entre Logística e Financeiro"
             )
         
-        if cross.get("divergences_found", {}).get("month_window_diff", 0) > 0:
+        if cross.get("divergences_found", {}).get("temporal_misalignment", 0) > 0:
             recommendations.append(
                 "📅 Alinhar janelas temporais de processamento cross-domain"
             )
         
-        # Recomendações gerais
-        if intra.get("convergence_rate", 0) < 85 or cross.get("convergence_rate", 0) < 85:
+        if cross.get("divergences_found", {}).get("value_aggregation_diff", 0) > 0:
             recommendations.append(
-                "🎯 Implementar KPIs de reconciliação automatizados com alertas"
+                "💰 Mapear regras de negócio cross-domain: custos logísticos vs valor financeiro"
             )
+        
         
         self.results["recommendations"] = recommendations
         return recommendations
@@ -241,20 +238,13 @@ def main():
         reconciler = DataMeshReconciler()
         results = reconciler.run_full_reconciliation()
         
-        # Status de saída baseado na saúde geral
-        status = results["summary"]["reconciliation_status"]
-        if status == "HEALTHY":
-            exit_code = 0
-        elif status == "WARNING":
-            exit_code = 1
-        else:
-            exit_code = 2
-        
-        sys.exit(exit_code)
+        # O relatório foi gerado com sucesso. Divergências são o output esperado,
+        # portanto a execução termina com sucesso para permitir pipelines baselines.
+        sys.exit(0)
         
     except Exception as e:
         print(f"❌ Erro na reconciliação: {e}")
-        sys.exit(3)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -170,10 +170,11 @@ spec:
   # Dados operacionais brutos permanecem como camada de entrada não publicada.
   required_fields:
     aggregate:
-      - "generated_at"   # quando o output port foi materializado (UTC)
-      - "domain"         # domínio dono do produto
-      - "product"        # nome do produto de dados
-      - "currency"       # padrão semântico ISO-4217
+      - "dt_versao"     # quando o output port foi materializado (UTC)
+      - "dsc_dominio"   # domínio dono do produto
+      - "dsc_produto"   # nome do produto de dados
+      - "dsc_moeda"     # padrão semântico ISO-4217
+
     
     measures:
       - "count"          # alguma contagem (invoice_count, operation_count, ...)
@@ -341,7 +342,35 @@ spec:
         condition: "availability < 99.0%"
         severity: "critical"
         notification: ["data_office", "sre_team"]
-  
+
+  # Governança Computacional (validação automatizada de artefatos reais)
+  computational_governance:
+    description: "Validação computacional de inconsistências entre contratos e dados publicados"
+    enabled: true
+    severity: "error"
+    
+    checks:
+      schema_enforcement:
+        enabled: true
+        description: "Campos declarados no contrato devem estar presentes nos dados e vice-versa"
+        validate_required_fields: true
+        validate_no_extra_fields: true
+        validate_enum_constraints: true
+      
+      master_entity_integrity:
+        enabled: true
+        description: "Master entities devem seguir formato e unicidade federadas"
+        validate_format: true
+        validate_uniqueness: true
+      
+      cross_domain_consistency:
+        enabled: true
+        description: "Valores de entidades mestre devem ser comparáveis entre domínios"
+        compare_status_vocabulary: true
+        compare_amounts: true
+        compare_temporal_window: true
+        amount_tolerance: 0.01
+
   # Políticas de Segurança
   security_policies:
     data_classification:
@@ -419,7 +448,7 @@ spec:
     # Quando o backbone operacional é compartilhado entre domínios (ex.: ERP único),
     # estas chaves representam entidades-mestre reais (faturas, clientes, fornecedores)
     # e podem ser publicadas em múltiplos output ports para permitir reconciliação
-    # fina (entity-keyed analytical products), sob governança federada de formato
+    # fina (entity analytical products), sob governança federada de formato
     # e ciclo de vida.
     # Importante: compartilhar a chave NÃO elimina divergências de vocabulário,
     # regras de domínio, granularidade ou janela temporal — apenas viabiliza a
@@ -473,10 +502,15 @@ spec:
         - "generated_at"      # timestamp de materialização (UTC)
       # Dimensões usadas para junção entre produtos analíticos de domínios diferentes
       cross_domain_keys:
-        - "issue_month"
-        - "operation_month"
+        - "dsc_dominio"       # produto pertence a um domínio (Domain Ownership)
+        - "dsc_produto"       # nome do produto de dados (descoberta no catálogo)
+        - "dt_versao"         # timestamp de materialização (UTC)
+      # Dimensões usadas para junção entre produtos analíticos de domínios diferentes
+      cross_domain_keys:
+        - "mes_emissao"
+        - "qtd_meses_operacao"
         - "status"
-        - "currency"
+        - "dsc_moeda"
       id_format:
         type: "string"
         pattern: "^[A-Za-z0-9_:|-]{1,64}$"
@@ -487,14 +521,15 @@ spec:
       datetime:
         format: "ISO-8601"
         timezone: "UTC"
-        field_type: "datetime"
+        field_type: "string"        # ISO-8601 armazenado como string
+        field_name: "dt_versao"     # campo canônico de materialização (UTC)
       date:
         format: "YYYY-MM-DD"
         field_type: "date"
       currency:
         standard: "ISO-4217"
         allowed: ["BRL"]
-        field_name: "currency"
+        field_name: "dsc_moeda"
       amount:
         precision: 2
         type: "number"
@@ -526,11 +561,11 @@ spec:
     federated_lineage:
       required: true
       propagation: "automatic"
-      # No nível analítico a linhagem usa metadados de catálogo.
+      # No nível analítico a linhagem usa os campos canônicos da malha.
       trace_fields:
-        - "domain"
-        - "product"
-        - "generated_at"
+        - "dsc_dominio"
+        - "dsc_produto"
+        - "dt_versao"
       # Linhagem upstream é declarada em metadata.upstream em cada contrato.
       upstream_declaration: "metadata.upstream"
 

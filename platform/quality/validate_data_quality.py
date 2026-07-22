@@ -5,10 +5,7 @@ from datetime import datetime, timezone
 from typing import Dict, List, Any
 from decimal import Decimal
 
-# Adiciona a raiz do projeto ao path para importar odcs_adapter
-script_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.dirname(os.path.dirname(script_dir))
-sys.path.insert(0, project_root)
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from odcs_adapter import load_and_normalize
 
 class DataQualityValidator:
@@ -72,7 +69,7 @@ class DataQualityValidator:
         try:
             # Implementação simplificada de validação
             if rule_id == "ap-amount-positive" or rule_id == "ar-gross-amount-positive" or rule_id == "log-quantity-positive":
-                field_name = "amount" if "amount" in record else ("gross_amount" if "gross_amount" in record else "quantity")
+                field_name = "valor_liquido" if "valor_liquido" in record else ("valor_bruto" if "valor_bruto" in record else "quantity")
                 if field_name in record:
                     value = float(record[field_name])
                     if value <= 0:
@@ -81,8 +78,8 @@ class DataQualityValidator:
                         result["field_value"] = value
             
             elif rule_id == "ap-currency-valid" or rule_id == "ar-currency-valid" or rule_id == "log-currency-valid":
-                if "currency" in record:
-                    currency = record["currency"]
+                if "moeda" in record:
+                    currency = record["moeda"]
                     if currency != "BRL":
                         result["status"] = "FAIL" if severity == "error" else "WARN"
                         result["message"] = f"Currency deve ser BRL, mas é {currency}"
@@ -98,27 +95,27 @@ class DataQualityValidator:
                         result["field_value"] = f"due={record['due_date']}, issue={record['issue_date']}"
             
             elif rule_id == "log-consistent-calculation":
-                if "quantity" in record and "unit_price" in record and "total_value" in record:
+                if "quantity" in record and "unit_price" in record and "valor_total" in record:
                     quantity = float(record["quantity"])
                     unit_price = float(record["unit_price"])
-                    total_value = float(record["total_value"])
+                    total_value = float(record["valor_total"])
                     expected = quantity * unit_price
                     if abs(total_value - expected) > 0.01:  # Tolerância de 1 centavo
                         result["status"] = "FAIL" if severity == "error" else "WARN"
-                        result["message"] = f"total_value ({total_value}) != quantity ({quantity}) * unit_price ({unit_price}) = {expected}"
+                        result["message"] = f"valor_total ({total_value}) != quantity ({quantity}) * unit_price ({unit_price}) = {expected}"
                         result["field_value"] = total_value
             
             elif rule_id == "log-positive-values":
-                if "unit_price" in record and "total_value" in record:
+                if "unit_price" in record and "valor_total" in record:
                     unit_price = float(record["unit_price"])
-                    total_value = float(record["total_value"])
+                    total_value = float(record["valor_total"])
                     if unit_price <= 0 or total_value <= 0:
                         result["status"] = "FAIL" if severity == "error" else "WARN"
-                        result["message"] = f"Valores devem ser positivos: unit_price={unit_price}, total_value={total_value}"
-                        result["field_value"] = f"unit_price={unit_price}, total_value={total_value}"
+                        result["message"] = f"Valores devem ser positivos: unit_price={unit_price}, valor_total={total_value}"
+                        result["field_value"] = f"unit_price={unit_price}, valor_total={total_value}"
             
             elif rule_id == "non_null_ids":
-                id_fields = ["invoice_id", "operation_id", "customer_id", "supplier_id", "party_id"]
+                id_fields = ["invoice_id", "operation_id", "id_cliente", "id_fornecedor", "party_id"]
                 for field in id_fields:
                     if field in record:
                         value = record[field]
@@ -131,11 +128,22 @@ class DataQualityValidator:
             elif rule_id == "valid_status":
                 if "status" in record:
                     status = record["status"]
-                    valid_statuses = ["OPEN", "PAID", "SETTLED", "CANCELED", "CANCELLED", "PENDING", "PROCESSING", "COMPLETED"]
-                    if status not in valid_statuses:
-                        result["status"] = "FAIL" if severity == "error" else "WARN"
-                        result["message"] = f"Status inválido: {status}"
-                        result["field_value"] = status
+                    # Para logística, status é um array
+                    if isinstance(status, list):
+                        # Valida cada status no array
+                        for s in status:
+                            if s not in ["ABERTO", "PAGO", "LIQUIDADO", "CANCELADO", "PENDENTE", "EM_PROCESSAMENTO", "CONCLUIDO"]:
+                                result["status"] = "FAIL" if severity == "error" else "WARN"
+                                result["message"] = f"Status inválido: {s}"
+                                result["field_value"] = s
+                                break
+                    else:
+                        # Para AP/AR, status é string
+                        valid_statuses = ["ABERTO", "PAGO", "LIQUIDADO", "CANCELADO", "PENDENTE", "EM_PROCESSAMENTO", "CONCLUIDO"]
+                        if status not in valid_statuses:
+                            result["status"] = "FAIL" if severity == "error" else "WARN"
+                            result["message"] = f"Status inválido: {status}"
+                            result["field_value"] = status
             
         except Exception as e:
             result["status"] = "ERROR"
@@ -145,7 +153,6 @@ class DataQualityValidator:
     
     def validate_dataset(self, data_path: str) -> Dict[str, Any]:
         """Valida um dataset completo e gera métricas de qualidade"""
-        print(f"Validando qualidade do dataset: {data_path}")
         
         records = []
         with open(data_path, "r", encoding="utf-8") as f:
@@ -236,9 +243,9 @@ def validate_all_products():
     
     # Mapeamento de contratos para datasets
     contract_data_mapping = [
-        ("domains/financeiro/contas-a-pagar/dataproduct.yaml", "domains/financeiro/contas-a-pagar/data/ap.jsonl"),
-        ("domains/financeiro/contas-a-receber/dataproduct.yaml", "domains/financeiro/contas-a-receber/data/ar.jsonl"),
-        ("domains/logistica/dataproduct.yaml", "domains/logistica/data/logistics.jsonl"),
+        ("domains/financeiro/contas-a-pagar/data_contract.yaml", "domains/financeiro/contas-a-pagar/data/contas_a_pagar.jsonl"),
+        ("domains/financeiro/contas-a-receber/data_contract.yaml", "domains/financeiro/contas-a-receber/data/contas_a_receber.jsonl"),
+        ("domains/logistica/data_contract.yaml", "domains/logistica/data/logistics.jsonl"),
     ]
     
     all_results = []

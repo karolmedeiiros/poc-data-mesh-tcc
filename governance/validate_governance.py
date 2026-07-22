@@ -6,27 +6,7 @@ import sys
 from datetime import datetime, timezone
 from typing import Dict, List, Any
 
-# Adiciona a raiz do projeto ao path para importar odcs_adapter
-# Funciona independentemente de onde o script é executado (local, Codespaces, etc.)
-script_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.dirname(script_dir)
-
-# Verifica se odcs_adapter.py existe na raiz esperada
-odcs_adapter_path = os.path.join(project_root, 'odcs_adapter.py')
-if not os.path.exists(odcs_adapter_path):
-    # Tenta encontrar odcs_adapter.py em diretórios pais
-    current_dir = project_root
-    while current_dir != '/':
-        test_path = os.path.join(current_dir, 'odcs_adapter.py')
-        if os.path.exists(test_path):
-            project_root = current_dir
-            break
-        current_dir = os.path.dirname(current_dir)
-    else:
-        raise FileNotFoundError(f"odcs_adapter.py não encontrado. Procurado em: {odcs_adapter_path}")
-
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from odcs_adapter import load_and_normalize
 
 def load_yaml(file_path: str) -> Dict[str, Any]:
@@ -175,8 +155,8 @@ def check_quality_rules(contract: Dict, policies: Dict) -> Dict[str, str]:
 def check_required_fields(contract: Dict, policies: Dict) -> Dict[str, str]:
     """Verifica campos obrigatórios conforme `output_port_kind`.
 
-    - aggregate (default)  : exige `aggregate` + `measures` (count, total)
-    - entity_keyed         : exige `aggregate` + campo de master_entity declarada
+    - aggregate (default)         : exige `aggregate` + `measures` (count, total)
+    - entity / entity_keyed       : exige `aggregate` + campo de master_entity declarada
     """
     results: Dict[str, str] = {}
     required_fields = policies["spec"]["required_fields"]
@@ -195,7 +175,7 @@ def check_required_fields(contract: Dict, policies: Dict) -> Dict[str, str]:
     for field in required_fields.get("aggregate", []):
         results[f"required_field_{field}"] = "PASS" if field in field_set else "FAIL"
 
-    if kind == "entity_keyed":
+    if kind in ("entity", "entity_keyed"):
         # Para output ports keyed por master entity, validar que o campo da
         # entidade-mestre declarada está presente.
         master_entity_id = metadata.get("master_entity")
@@ -321,10 +301,12 @@ def check_interoperability(contract: Dict, policies: Dict) -> Dict[str, str]:
         # Se não há campo de moeda, regra não se aplica
         results["interop_currency_standard"] = "PASS"
 
-    # 7) Tipo datetime conforme padrão semântico (campo de timestamp deve ser datetime).
-    # Aceita generated_at (produtos analíticos) ou updated_at (legado operacional).
-    expected_dt_type = get_nested(interop, ["semantic_standards", "datetime", "field_type"], "datetime")
-    dt_candidates = [name for name in ("generated_at", "updated_at") if name in field_by_name]
+    # 7) Tipo datetime conforme padrão semântico (campo de timestamp de materialização).
+    # A malha usa dt_versao (ISO-8601 armazenado como string) como campo canônico;
+    # aceita também generated_at/updated_at para compatibilidade.
+    expected_dt_type = get_nested(interop, ["semantic_standards", "datetime", "field_type"], "string")
+    dt_field_name = get_nested(interop, ["semantic_standards", "datetime", "field_name"], "dt_versao")
+    dt_candidates = [name for name in (dt_field_name, "generated_at", "updated_at") if name in field_by_name]
     if dt_candidates:
         results["interop_datetime_type"] = (
             "PASS" if any(field_by_name[name].get("type") == expected_dt_type for name in dt_candidates) else "FAIL"
@@ -441,9 +423,9 @@ def main():
     
     # Lista de contratos para validar
     contracts = [
-        "domains/financeiro/contas-a-pagar/dataproduct.yaml",
-        "domains/financeiro/contas-a-receber/dataproduct.yaml",
-        "domains/logistica/dataproduct.yaml",
+        "domains/financeiro/contas-a-pagar/data_contract.yaml",
+        "domains/financeiro/contas-a-receber/data_contract.yaml",
+        "domains/logistica/data_contract.yaml",
     ]
     
     policies_path = "governance/policies.yaml"

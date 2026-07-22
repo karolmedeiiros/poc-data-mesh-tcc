@@ -2,12 +2,12 @@
   {
     "product": "contas-a-pagar",
     "domain": "financeiro",
-    "dataset_path": "domains/financeiro/contas-a-pagar/data/ap.jsonl",
-    "validation_timestamp": "2026-06-24T01:39:49.380320+00:00",
-    "total_records": 1999,
+    "dataset_path": "domains/financeiro/contas-a-pagar/data/contas_a_pagar.jsonl",
+    "validation_timestamp": "2026-07-21T03:29:37.523866+00:00",
+    "total_records": 1998,
     "records_with_errors": 0,
     "records_with_warnings": 0,
-    "records_valid": 1999,
+    "records_valid": 1998,
     "total_errors": 0,
     "total_warnings": 0,
     "error_rate": 0.0,
@@ -16,8 +16,8 @@
     "rule_performance": {
       "ap-k-invoice-id-format": {
         "description": "invoice_id deve casar com master_entity invoice",
-        "total_executions": 1999,
-        "passes": 1999,
+        "total_executions": 1998,
+        "passes": 1998,
         "failures": 0,
         "warnings": 0,
         "errors": 0,
@@ -27,9 +27,9 @@
         "error_rate": 0.0
       },
       "ap-k-positive-amount": {
-        "description": "amount > 0",
-        "total_executions": 1999,
-        "passes": 1999,
+        "description": "valor_liquido > 0",
+        "total_executions": 1998,
+        "passes": 1998,
         "failures": 0,
         "warnings": 0,
         "errors": 0,
@@ -39,9 +39,9 @@
         "error_rate": 0.0
       },
       "ap-k-currency-brl": {
-        "description": "currency BRL",
-        "total_executions": 1999,
-        "passes": 1999,
+        "description": "moeda BRL",
+        "total_executions": 1998,
+        "passes": 1998,
         "failures": 0,
         "warnings": 0,
         "errors": 0,
@@ -52,8 +52,8 @@
       },
       "ap-k-valid-status": {
         "description": "status válido",
-        "total_executions": 1999,
-        "passes": 1999,
+        "total_executions": 1998,
+        "passes": 1998,
         "failures": 0,
         "warnings": 0,
         "errors": 0,
@@ -69,12 +69,12 @@
   {
     "product": "contas-a-receber",
     "domain": "financeiro",
-    "dataset_path": "domains/financeiro/contas-a-receber/data/ar.jsonl",
-    "validation_timestamp": "2026-06-24T01:39:49.416563+00:00",
-    "total_records": 1997,
+    "dataset_path": "domains/financeiro/contas-a-receber/data/contas_a_receber.jsonl",
+    "validation_timestamp": "2026-07-21T03:29:37.552075+00:00",
+    "total_records": 1999,
     "records_with_errors": 0,
     "records_with_warnings": 0,
-    "records_valid": 1997,
+    "records_valid": 1999,
     "total_errors": 0,
     "total_warnings": 0,
     "error_rate": 0.0,
@@ -83,8 +83,8 @@
     "rule_performance": {
       "ar-k-invoice-id-format": {
         "description": "invoice_id deve casar com master_entity invoice",
-        "total_executions": 1997,
-        "passes": 1997,
+        "total_executions": 1999,
+        "passes": 1999,
         "failures": 0,
         "warnings": 0,
         "errors": 0,
@@ -94,9 +94,9 @@
         "error_rate": 0.0
       },
       "ar-k-positive-amount": {
-        "description": "gross_amount > 0",
-        "total_executions": 1997,
-        "passes": 1997,
+        "description": "valor_bruto > 0",
+        "total_executions": 1999,
+        "passes": 1999,
         "failures": 0,
         "warnings": 0,
         "errors": 0,
@@ -106,9 +106,9 @@
         "error_rate": 0.0
       },
       "ar-k-currency-brl": {
-        "description": "currency BRL",
-        "total_executions": 1997,
-        "passes": 1997,
+        "description": "moeda BRL",
+        "total_executions": 1999,
+        "passes": 1999,
         "failures": 0,
         "warnings": 0,
         "errors": 0,
@@ -119,8 +119,8 @@
       },
       "ar-k-valid-status": {
         "description": "status válido",
-        "total_executions": 1997,
-        "passes": 1997,
+        "total_executions": 1999,
+        "passes": 1999,
         "failures": 0,
         "warnings": 0,
         "errors": 0,
@@ -137,11 +137,11 @@
     "product": "operacoes-logistica",
     "domain": "logistica",
     "dataset_path": "domains/logistica/data/logistics.jsonl",
-    "validation_timestamp": "2026-06-24T01:39:49.446158+00:00",
-    "total_records": 943,
+    "validation_timestamp": "2026-07-21T03:29:37.575587+00:00",
+    "total_records": 941,
     "records_with_errors": 0,
     "records_with_warnings": 0,
-    "records_valid": 943,
+    "records_valid": 941,
     "total_errors": 0,
     "total_warnings": 0,
     "error_rate": 0.0,
@@ -150,8 +150,8 @@
     "rule_performance": {
       "log-k-invoice-id-format": {
         "description": "invoice_id deve casar com master_entity invoice",
-        "total_executions": 943,
-        "passes": 943,
+        "total_executions": 941,
+        "passes": 941,
         "failures": 0,
         "warnings": 0,
         "errors": 0,
@@ -161,9 +161,9 @@
         "error_rate": 0.0
       },
       "log-k-positive-count": {
-        "description": "operation_count >= 1",
-        "total_executions": 943,
-        "passes": 943,
+        "description": "qtd_operacoes >= 1",
+        "total_executions": 941,
+        "passes": 941,
         "failures": 0,
         "warnings": 0,
         "errors": 0,
@@ -173,9 +173,9 @@
         "error_rate": 0.0
       },
       "log-k-currency-brl": {
-        "description": "currency BRL",
-        "total_executions": 943,
-        "passes": 943,
+        "description": "moeda BRL",
+        "total_executions": 941,
+        "passes": 941,
         "failures": 0,
         "warnings": 0,
         "errors": 0,
@@ -186,8 +186,8 @@
       },
       "log-k-valid-status": {
         "description": "status válido em pelo menos uma operação",
-        "total_executions": 943,
-        "passes": 943,
+        "total_executions": 941,
+        "passes": 941,
         "failures": 0,
         "warnings": 0,
         "errors": 0,

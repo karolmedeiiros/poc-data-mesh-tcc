@@ -1,15 +1,15 @@
 {
   "validation_summary": {
     "total_contracts": 3,
-    "compliant_contracts": 0,
-    "validation_timestamp": "2026-06-24T01:37:50.572262+00:00",
+    "compliant_contracts": 3,
+    "validation_timestamp": "2026-07-21T03:29:26.018649+00:00",
     "policies_version": "1.0.0"
   },
   "contracts": [
     {
       "contract": "contas-a-pagar",
       "version": "1.0.0",
-      "timestamp": "2026-06-24T01:37:50.482823+00:00",
+      "timestamp": "2026-07-21T03:29:25.934670+00:00",
       "compliance": {
         "required_sections": {
           "metadata": "PASS",
@@ -43,10 +43,10 @@
         },
         "required_fields": {
           "dataset_fields_defined": "PASS",
-          "required_field_generated_at": "FAIL",
-          "required_field_domain": "PASS",
-          "required_field_product": "PASS",
-          "required_field_currency": "PASS",
+          "required_field_dt_versao": "PASS",
+          "required_field_dsc_dominio": "PASS",
+          "required_field_dsc_produto": "PASS",
+          "required_field_dsc_moeda": "PASS",
           "master_entity_declared": "PASS",
           "master_entity_field_invoice_id": "PASS"
         },
@@ -67,31 +67,31 @@
           "interop_data_format_open": "PASS",
           "interop_schema_registry": "PASS",
           "interop_schema_compatibility": "PASS",
-          "interop_shared_id_domain": "PASS",
-          "interop_shared_id_product": "PASS",
-          "interop_shared_id_generated_at": "FAIL",
+          "interop_shared_id_dsc_dominio": "PASS",
+          "interop_shared_id_dsc_produto": "PASS",
+          "interop_shared_id_dt_versao": "PASS",
           "interop_cross_domain_key_present": "PASS",
           "interop_currency_standard": "PASS",
-          "interop_datetime_type": "FAIL",
+          "interop_datetime_type": "PASS",
           "interop_naming_convention": "PASS",
           "interop_catalog_metadata": "PASS",
-          "interop_federated_lineage": "FAIL",
+          "interop_federated_lineage": "PASS",
           "interop_semver": "PASS",
           "interop_consumer_contracts": "PASS"
         }
       },
-      "compliant": false,
+      "compliant": true,
       "summary": {
         "total_checks": 56,
-        "passed_checks": 52,
-        "failed_checks": 4,
-        "compliance_percentage": 92.86
+        "passed_checks": 56,
+        "failed_checks": 0,
+        "compliance_percentage": 100.0
       }
     },
     {
       "contract": "contas-a-receber",
       "version": "1.0.0",
-      "timestamp": "2026-06-24T01:37:50.532640+00:00",
+      "timestamp": "2026-07-21T03:29:25.976984+00:00",
       "compliance": {
         "required_sections": {
           "metadata": "PASS",
@@ -125,10 +125,10 @@
         },
         "required_fields": {
           "dataset_fields_defined": "PASS",
-          "required_field_generated_at": "FAIL",
-          "required_field_domain": "PASS",
-          "required_field_product": "PASS",
-          "required_field_currency": "PASS",
+          "required_field_dt_versao": "PASS",
+          "required_field_dsc_dominio": "PASS",
+          "required_field_dsc_produto": "PASS",
+          "required_field_dsc_moeda": "PASS",
           "master_entity_declared": "PASS",
           "master_entity_field_invoice_id": "PASS"
         },
@@ -149,31 +149,31 @@
           "interop_data_format_open": "PASS",
           "interop_schema_registry": "PASS",
           "interop_schema_compatibility": "PASS",
-          "interop_shared_id_domain": "PASS",
-          "interop_shared_id_product": "PASS",
-          "interop_shared_id_generated_at": "FAIL",
+          "interop_shared_id_dsc_dominio": "PASS",
+          "interop_shared_id_dsc_produto": "PASS",
+          "interop_shared_id_dt_versao": "PASS",
           "interop_cross_domain_key_present": "PASS",
           "interop_currency_standard": "PASS",
-          "interop_datetime_type": "FAIL",
+          "interop_datetime_type": "PASS",
           "interop_naming_convention": "PASS",
           "interop_catalog_metadata": "PASS",
-          "interop_federated_lineage": "FAIL",
+          "interop_federated_lineage": "PASS",
           "interop_semver": "PASS",
           "interop_consumer_contracts": "PASS"
         }
       },
-      "compliant": false,
+      "compliant": true,
       "summary": {
         "total_checks": 56,
-        "passed_checks": 52,
-        "failed_checks": 4,
-        "compliance_percentage": 92.86
+        "passed_checks": 56,
+        "failed_checks": 0,
+        "compliance_percentage": 100.0
       }
     },
     {
       "contract": "operacoes-logistica",
       "version": "1.0.0",
-      "timestamp": "2026-06-24T01:37:50.572039+00:00",
+      "timestamp": "2026-07-21T03:29:26.018524+00:00",
       "compliance": {
         "required_sections": {
           "metadata": "PASS",
@@ -207,10 +207,10 @@
         },
         "required_fields": {
           "dataset_fields_defined": "PASS",
-          "required_field_generated_at": "FAIL",
-          "required_field_domain": "PASS",
-          "required_field_product": "PASS",
-          "required_field_currency": "PASS",
+          "required_field_dt_versao": "PASS",
+          "required_field_dsc_dominio": "PASS",
+          "required_field_dsc_produto": "PASS",
+          "required_field_dsc_moeda": "PASS",
           "master_entity_declared": "PASS",
           "master_entity_field_invoice_id": "PASS"
         },
@@ -231,25 +231,25 @@
           "interop_data_format_open": "PASS",
           "interop_schema_registry": "PASS",
           "interop_schema_compatibility": "PASS",
-          "interop_shared_id_domain": "PASS",
-          "interop_shared_id_product": "PASS",
-          "interop_shared_id_generated_at": "FAIL",
+          "interop_shared_id_dsc_dominio": "PASS",
+          "interop_shared_id_dsc_produto": "PASS",
+          "interop_shared_id_dt_versao": "PASS",
           "interop_cross_domain_key_present": "PASS",
           "interop_currency_standard": "PASS",
-          "interop_datetime_type": "FAIL",
+          "interop_datetime_type": "PASS",
           "interop_naming_convention": "PASS",
           "interop_catalog_metadata": "PASS",
-          "interop_federated_lineage": "FAIL",
+          "interop_federated_lineage": "PASS",
           "interop_semver": "PASS",
           "interop_consumer_contracts": "PASS"
         }
       },
-      "compliant": false,
+      "compliant": true,
       "summary": {
         "total_checks": 56,
-        "passed_checks": 52,
-        "failed_checks": 4,
-        "compliance_percentage": 92.86
+        "passed_checks": 56,
+        "failed_checks": 0,
+        "compliance_percentage": 100.0
       }
     }
   ]
