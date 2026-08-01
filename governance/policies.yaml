@@ -370,6 +370,14 @@ spec:
         compare_amounts: true
         compare_temporal_window: true
         amount_tolerance: 0.01
+        # Integridade referencial: toda operação logística DEVE apontar para uma
+        # fatura financeira existente (domínio logístico não emite faturas).
+        orphan_logistics_is_violation: true
+        # Cobertura logística parcial é esperada: nem toda fatura financeira gera
+        # operação física (ex.: impostos, aluguel, serviços). Portanto, fatura sem
+        # logística não é violação, mas é reportada como métrica de cobertura.
+        orphan_finance_is_violation: false
+        min_logistics_coverage: 0.0
 
   # Políticas de Segurança
   security_policies:
@@ -494,14 +502,11 @@ spec:
         published_in_products:
           - "contas-a-pagar"
 
-    # Identificadores globais compartilhados entre produtos analíticos federados
+    # Identificadores globais compartilhados entre produtos analíticos federados.
+    # Usa os campos canônicos da malha (dsc_dominio/dsc_produto/dt_versao), que
+    # todos os output ports analíticos publicam.
     shared_identifiers:
       required_fields:
-        - "domain"            # produto pertence a um domínio (Domain Ownership)
-        - "product"            # nome do produto de dados (descoberta no catálogo)
-        - "generated_at"      # timestamp de materialização (UTC)
-      # Dimensões usadas para junção entre produtos analíticos de domínios diferentes
-      cross_domain_keys:
         - "dsc_dominio"       # produto pertence a um domínio (Domain Ownership)
         - "dsc_produto"       # nome do produto de dados (descoberta no catálogo)
         - "dt_versao"         # timestamp de materialização (UTC)

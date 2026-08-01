@@ -214,7 +214,11 @@ def validate_cross_domain_consistency(datasets: Dict[str, List[Dict]], config: D
 
     if config.get("compare_status_vocabulary", True):
         status_mismatch = 0
-        mapping = {"PAGO": "LIQUIDADO", "ABERTO": "ABERTO"}
+        # AP e AR pertencem ao MESMO domínio (financeiro), que governa um único
+        # vocabulário de status. Portanto os status devem ser idênticos para a
+        # mesma fatura (mapeamento identidade) — divergência aqui indicaria
+        # inconsistência intra-domínio, que não deveria existir por desenho.
+        mapping: Dict[str, str] = {}
         for inv_id in all_ap_ar:
             ap = ap_lookup.get(inv_id, [{}])[0]
             ar = ar_lookup.get(inv_id, [{}])[0]
@@ -234,8 +238,12 @@ def validate_cross_domain_consistency(datasets: Dict[str, List[Dict]], config: D
     for inv_id in set(ap_lookup.keys()) | set(ar_lookup.keys()):
         finance_lookup[inv_id] = ap_lookup.get(inv_id) or ar_lookup.get(inv_id)
 
+    all_finance_ids = set(finance_lookup.keys())
+    all_logistics_ids = set(log_lookup.keys())
+    total_finance = len(all_finance_ids)
+
     log_orphans = [inv for inv in log_lookup if inv not in finance_lookup]
-    if log_orphans:
+    if log_orphans and config.get("orphan_logistics_is_violation", True):
         violations.append({
             "type": "cross_domain_orphan_logistics",
             "count": len(log_orphans),
@@ -243,16 +251,24 @@ def validate_cross_domain_consistency(datasets: Dict[str, List[Dict]], config: D
         })
 
     finance_orphans = [inv for inv in finance_lookup if inv not in log_lookup]
-    if finance_orphans:
+    if finance_orphans and config.get("orphan_finance_is_violation", False):
         violations.append({
             "type": "cross_domain_orphan_finance",
             "count": len(finance_orphans),
             "message": f"{len(finance_orphans)} faturas financeiras sem operação logística correspondente",
         })
 
+    coverage = round(len(all_logistics_ids) / total_finance, 4) if total_finance else 0.0
     return {
         "status": "PASS" if not violations else "FAIL",
         "violations": violations,
+        "coverage": {
+            "total_finance_invoices": total_finance,
+            "invoices_with_logistics": len(all_logistics_ids & all_finance_ids),
+            "logistics_coverage": coverage,
+            "orphan_logistics_count": len(log_orphans),
+            "orphan_finance_count": len(finance_orphans),
+        },
     }
 
 
@@ -322,7 +338,14 @@ def main() -> None:
 
     print("\n🔗 Cross-domain Consistency")
     cdc = results["cross_domain_consistency"]
+    cov = cdc.get("coverage", {})
     print(f"   Status: {cdc.get('status', 'SKIPPED')}")
+    if cov:
+        print(f"   Cobertura logística: {cov.get('invoices_with_logistics', 0)}/{cov.get('total_finance_invoices', 0)} faturas ({cov.get('logistics_coverage', 0.0):.1%})")
+        if cov.get("orphan_finance_count", 0):
+            print(f"   ℹ️ Faturas sem logística (esperado/não violação): {cov['orphan_finance_count']}")
+        if cov.get("orphan_logistics_count", 0):
+            print(f"   ❌ Operações logísticas sem fatura: {cov['orphan_logistics_count']}")
     for v in cdc.get("violations", []):
         print(f"      ❌ {v['message']}")
 

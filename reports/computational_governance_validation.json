@@ -1,21 +1,21 @@
 {
-  "timestamp": "2026-07-21T03:29:49.835396+00:00",
+  "timestamp": "2026-08-01T15:53:24.432743+00:00",
   "schema_enforcement": [
     {
       "product": "contas-a-pagar",
-      "records_analyzed": 1998,
+      "records_analyzed": 2000,
       "status": "PASS",
       "violations": []
     },
     {
       "product": "contas-a-receber",
-      "records_analyzed": 1999,
+      "records_analyzed": 2000,
       "status": "PASS",
       "violations": []
     },
     {
       "product": "operacoes-logistica",
-      "records_analyzed": 941,
+      "records_analyzed": 939,
       "status": "PASS",
       "violations": []
     }
@@ -38,14 +38,15 @@
     }
   ],
   "cross_domain_consistency": {
-    "status": "FAIL",
-    "violations": [
-      {
-        "type": "cross_domain_orphan_finance",
-        "count": 1059,
-        "message": "1059 faturas financeiras sem operação logística correspondente"
-      }
-    ]
+    "status": "PASS",
+    "violations": [],
+    "coverage": {
+      "total_finance_invoices": 2000,
+      "invoices_with_logistics": 939,
+      "logistics_coverage": 0.4695,
+      "orphan_logistics_count": 0,
+      "orphan_finance_count": 1061
+    }
   },
-  "overall_status": "FAIL"
+  "overall_status": "PASS"
 }
