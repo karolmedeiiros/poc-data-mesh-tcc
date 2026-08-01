@@ -210,20 +210,24 @@ class CrossDomainDivergenceDetector:
         all_invoice_ids = set(logistics_lookup.keys()) | set(finance_lookup.keys())
         
         divergence_categories = {
-            "granularity_one_to_many": 0,
             "value_aggregation_diff": 0,
             "temporal_misalignment": 0,
             "only_in_logistics": 0,
             "only_in_finance": 0,
             "data_quality_issues": 0
         }
-        
+        informational_findings = {
+            "granularity_one_to_many": 0,
+            "granularity_many_to_one": 0,
+            "granularity_many_to_many": 0,
+        }
+
         matched_invoices = 0
-        
+
         for invoice_id in all_invoice_ids:
             logistics_records = logistics_lookup.get(invoice_id, [])
             finance_records = finance_lookup.get(invoice_id, [])
-            
+
             # Verificar existência em ambos
             if not logistics_records:
                 divergence_categories["only_in_finance"] += len(finance_records)
@@ -231,29 +235,38 @@ class CrossDomainDivergenceDetector:
             if not finance_records:
                 divergence_categories["only_in_logistics"] += len(logistics_records)
                 continue
-            
+
             # Análises cross-domain
             granularity_div = self.analyze_granularity_differences(logistics_records, finance_records)
             value_div = self.analyze_value_aggregation(logistics_records, finance_records)
             temporal_div = self.analyze_temporal_alignment(logistics_records, finance_records)
-            
-            # Contabilizar divergências
-            if granularity_div:
-                divergence_categories["granularity_one_to_many"] += 1
+
+            # Granularidade 1:N (e derivados) é informacional: no domínio logístico
+            # é normal haver várias operações para uma mesma fatura (recebimento,
+            # envio, paradas, etc.), portanto não é divergência.
+            for finding in granularity_div:
+                key = "granularity_one_to_many"
+                if "many_to_one" in finding:
+                    key = "granularity_many_to_one"
+                elif "many_to_many" in finding:
+                    key = "granularity_many_to_many"
+                informational_findings[key] += 1
+
             if value_div:
                 divergence_categories["value_aggregation_diff"] += 1
             if temporal_div:
                 divergence_categories["temporal_misalignment"] += 1
-            
+
             # Verificar qualidade dos dados
             if any(not r.get("invoice_id") for r in logistics_records + finance_records):
                 divergence_categories["data_quality_issues"] += 1
-            
+
             # Considerar como matched se não houver divergências críticas
             if not value_div and not temporal_div:
                 matched_invoices += 1
-        
+
         self.results["divergences"] = divergence_categories
+        self.results["informational_findings"] = informational_findings
         self.results["matched_invoices"] = matched_invoices
         self.results["total_invoices"] = len(all_invoice_ids)
         
@@ -276,12 +289,16 @@ class CrossDomainDivergenceDetector:
         recommendations = []
         divergences = self.results["divergences"]
         integrity = self.results["referential_integrity"]
-        
-        if divergences.get("granularity_one_to_many", 0) > 0:
+
+        # Granularidade é informacional, não gera recomendação de correção
+        informational = self.results.get("informational_findings", {})
+        if informational.get("granularity_one_to_many", 0) > 0 or \
+           informational.get("granularity_many_to_one", 0) > 0 or \
+           informational.get("granularity_many_to_many", 0) > 0:
             recommendations.append(
-                "📏 Documentar política de granularidade: N operações por fatura é esperado"
+                "📏 Granularidade 1:N (logística ↔ fatura) é esperada; nenhuma ação necessária"
             )
-        
+
         if divergences.get("value_aggregation_diff", 0) > 0:
             recommendations.append(
                 "💰 Mapear regras de negócio cross-domain: custos logísticos vs valor financeiro"
@@ -341,12 +358,21 @@ class CrossDomainDivergenceDetector:
         print(f"\n🔍 Divergências encontradas:")
         divergences = self.results["divergences"]
         total_div = sum(divergences.values())
-        
+
         for category, count in divergences.items():
             if count > 0:
                 percent = (count / total_div) * 100 if total_div > 0 else 0
                 print(f"   • {category}: {count} ({percent:.1f}%)")
-        
+
+        # Achados informacionais (não são divergências)
+        informational = self.results.get("informational_findings", {})
+        total_info = sum(informational.values())
+        if total_info > 0:
+            print(f"\nℹ️  Achados informacionais (não divergências):")
+            for category, count in informational.items():
+                if count > 0:
+                    print(f"   • {category}: {count}")
+
         # Integridade referencial
         integrity = self.results["referential_integrity"]
         print(f"\n🔗 Integridade Referencial:")
