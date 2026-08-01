@@ -1,0 +1,1016 @@
+{
+  "execution_timestamp": "2026-08-01T16:06:39.985276+00:00",
+  "thesis": "Compartilhar invoice_id (master entity federada) é necessário para reconciliação fina, mas insuficiente para eliminar divergências.",
+  "master_entity_in_use": {
+    "id": "invoice",
+    "canonical_field": "invoice_id",
+    "format": {
+      "type": "string",
+      "pattern": "^INV-[0-9]+$",
+      "case_sensitive": true
+    },
+    "issuing_authority": "billing-system",
+    "lifecycle": "immutable_once_emitted",
+    "published_in_products": [
+      "contas-a-pagar",
+      "contas-a-receber",
+      "operacoes-logistica"
+    ],
+    "cross_product_assertions": [
+      "ap.invoice_id == ar.invoice_id => same_real_invoice",
+      "logistics.related_invoice_id == ap.invoice_id => same_real_invoice"
+    ]
+  },
+  "ap_vs_ar": {
+    "comparison": "ap_invoice_keyed vs ar_invoice_keyed",
+    "ap_total": 2000,
+    "ar_total": 2000,
+    "common_keys": 2000,
+    "coverage_ap_in_ar_pct": 100.0,
+    "coverage_ar_in_ap_pct": 100.0,
+    "persistent_divergences_summary": {
+      "amount_business_rules_diff": 160
+    },
+    "persistent_divergences_examples": {
+      "status_vocabulary_diff": [],
+      "amount_business_rules_diff": [
+        {
+          "invoice_id": "INV-2904",
+          "ap_amount": 3815.13,
+          "ar_gross_amount": 4475.22,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1949",
+          "ap_amount": 2678.53,
+          "ar_gross_amount": 3141.97,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1238",
+          "ap_amount": 4146.84,
+          "ar_gross_amount": 4864.33,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2609",
+          "ap_amount": 4133.01,
+          "ar_gross_amount": 4848.11,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1196",
+          "ap_amount": 2589.94,
+          "ar_gross_amount": 3038.05,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2700",
+          "ap_amount": 3060.2,
+          "ar_gross_amount": 3589.68,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2553",
+          "ap_amount": 2873.12,
+          "ar_gross_amount": 3403.93,
+          "diff_pct": 15.59,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2987",
+          "ap_amount": 4031.22,
+          "ar_gross_amount": 4728.7,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2594",
+          "ap_amount": 3874.83,
+          "ar_gross_amount": 4545.25,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2480",
+          "ap_amount": 2591.28,
+          "ar_gross_amount": 3039.63,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2699",
+          "ap_amount": 2787.45,
+          "ar_gross_amount": 3269.74,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1325",
+          "ap_amount": 4103.86,
+          "ar_gross_amount": 4813.91,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2163",
+          "ap_amount": 3260.73,
+          "ar_gross_amount": 3824.9,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2813",
+          "ap_amount": 3054.85,
+          "ar_gross_amount": 3583.4,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1170",
+          "ap_amount": 3316.08,
+          "ar_gross_amount": 3889.83,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1795",
+          "ap_amount": 3746.02,
+          "ar_gross_amount": 4394.16,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1174",
+          "ap_amount": 2750.26,
+          "ar_gross_amount": 3226.11,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1838",
+          "ap_amount": 3843.47,
+          "ar_gross_amount": 4508.47,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1550",
+          "ap_amount": 4260.75,
+          "ar_gross_amount": 4997.95,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2977",
+          "ap_amount": 4080.29,
+          "ar_gross_amount": 4786.26,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1739",
+          "ap_amount": 3455.92,
+          "ar_gross_amount": 4094.41,
+          "diff_pct": 15.59,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1614",
+          "ap_amount": 3355.14,
+          "ar_gross_amount": 3935.65,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1449",
+          "ap_amount": 3082.2,
+          "ar_gross_amount": 3615.48,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2851",
+          "ap_amount": 2608.51,
+          "ar_gross_amount": 3059.84,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1476",
+          "ap_amount": 4011.54,
+          "ar_gross_amount": 4705.62,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1053",
+          "ap_amount": 3180.13,
+          "ar_gross_amount": 3730.36,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1742",
+          "ap_amount": 3754.32,
+          "ar_gross_amount": 4403.89,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1751",
+          "ap_amount": 3109.77,
+          "ar_gross_amount": 3647.82,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1229",
+          "ap_amount": 2562.86,
+          "ar_gross_amount": 3036.35,
+          "diff_pct": 15.59,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2624",
+          "ap_amount": 3628.52,
+          "ar_gross_amount": 4256.33,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2464",
+          "ap_amount": 4184.96,
+          "ar_gross_amount": 4909.04,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1551",
+          "ap_amount": 3046.63,
+          "ar_gross_amount": 3573.76,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1222",
+          "ap_amount": 3218.95,
+          "ar_gross_amount": 3775.9,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1688",
+          "ap_amount": 4044.61,
+          "ar_gross_amount": 4744.41,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2834",
+          "ap_amount": 3568.51,
+          "ar_gross_amount": 4185.93,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1771",
+          "ap_amount": 3187.79,
+          "ar_gross_amount": 3739.34,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1326",
+          "ap_amount": 2789.2,
+          "ar_gross_amount": 3271.79,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1458",
+          "ap_amount": 2705.0,
+          "ar_gross_amount": 3173.02,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2993",
+          "ap_amount": 3370.11,
+          "ar_gross_amount": 3953.21,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2854",
+          "ap_amount": 4249.36,
+          "ar_gross_amount": 4984.59,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2466",
+          "ap_amount": 3353.06,
+          "ar_gross_amount": 3933.21,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1052",
+          "ap_amount": 3769.29,
+          "ar_gross_amount": 4421.45,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1125",
+          "ap_amount": 3060.75,
+          "ar_gross_amount": 3590.32,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1085",
+          "ap_amount": 3486.95,
+          "ar_gross_amount": 4090.26,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2381",
+          "ap_amount": 2838.88,
+          "ar_gross_amount": 3330.06,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1683",
+          "ap_amount": 2842.18,
+          "ar_gross_amount": 3333.94,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2399",
+          "ap_amount": 3957.93,
+          "ar_gross_amount": 4642.73,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2291",
+          "ap_amount": 3209.69,
+          "ar_gross_amount": 3689.73,
+          "diff_pct": 13.01,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1361",
+          "ap_amount": 4119.71,
+          "ar_gross_amount": 4832.51,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1710",
+          "ap_amount": 3017.59,
+          "ar_gross_amount": 3539.69,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        }
+      ],
+      "issue_month_diff": []
+    },
+    "referential_integrity": {
+      "ap_only_count": 0,
+      "ar_only_count": 0,
+      "examples": {
+        "in_ap_only": [],
+        "in_ar_only": []
+      }
+    }
+  },
+  "logistics_vs_finance": {
+    "comparison": "logistics_invoice_keyed vs finance_invoice_keyed",
+    "logistics_total": 939,
+    "finance_total": 2000,
+    "logistics_with_finance_match": 939,
+    "coverage_logistics_in_finance_pct": 100.0,
+    "counters": {
+      "value_business_rules_diff": 912,
+      "granularity_one_to_many": 161
+    },
+    "referential_integrity": {
+      "logistics_pointing_to_missing_invoice": [],
+      "operations_with_no_finance_counterpart": 0
+    },
+    "granularity": {
+      "one_to_many_examples": [
+        {
+          "invoice_id": "INV-1003",
+          "operation_count": 2,
+          "operation_types": [],
+          "statuses": []
+        },
+        {
+          "invoice_id": "INV-1008",
+          "operation_count": 2,
+          "operation_types": [],
+          "statuses": []
+        },
+        {
+          "invoice_id": "INV-1047",
+          "operation_count": 2,
+          "operation_types": [],
+          "statuses": []
+        },
+        {
+          "invoice_id": "INV-1052",
+          "operation_count": 2,
+          "operation_types": [],
+          "statuses": []
+        },
+        {
+          "invoice_id": "INV-1055",
+          "operation_count": 2,
+          "operation_types": [],
+          "statuses": []
+        },
+        {
+          "invoice_id": "INV-1095",
+          "operation_count": 2,
+          "operation_types": [],
+          "statuses": []
+        },
+        {
+          "invoice_id": "INV-1098",
+          "operation_count": 2,
+          "operation_types": [],
+          "statuses": []
+        },
+        {
+          "invoice_id": "INV-1118",
+          "operation_count": 2,
+          "operation_types": [],
+          "statuses": []
+        },
+        {
+          "invoice_id": "INV-1124",
+          "operation_count": 2,
+          "operation_types": [],
+          "statuses": []
+        },
+        {
+          "invoice_id": "INV-1129",
+          "operation_count": 2,
+          "operation_types": [],
+          "statuses": []
+        },
+        {
+          "invoice_id": "INV-1131",
+          "operation_count": 2,
+          "operation_types": [],
+          "statuses": []
+        },
+        {
+          "invoice_id": "INV-1133",
+          "operation_count": 2,
+          "operation_types": [],
+          "statuses": []
+        },
+        {
+          "invoice_id": "INV-1137",
+          "operation_count": 2,
+          "operation_types": [],
+          "statuses": []
+        },
+        {
+          "invoice_id": "INV-1164",
+          "operation_count": 2,
+          "operation_types": [],
+          "statuses": []
+        },
+        {
+          "invoice_id": "INV-1167",
+          "operation_count": 2,
+          "operation_types": [],
+          "statuses": []
+        },
+        {
+          "invoice_id": "INV-1169",
+          "operation_count": 2,
+          "operation_types": [],
+          "statuses": []
+        },
+        {
+          "invoice_id": "INV-1177",
+          "operation_count": 2,
+          "operation_types": [],
+          "statuses": []
+        },
+        {
+          "invoice_id": "INV-1181",
+          "operation_count": 2,
+          "operation_types": [],
+          "statuses": []
+        },
+        {
+          "invoice_id": "INV-1199",
+          "operation_count": 2,
+          "operation_types": [],
+          "statuses": []
+        },
+        {
+          "invoice_id": "INV-1210",
+          "operation_count": 2,
+          "operation_types": [],
+          "statuses": []
+        },
+        {
+          "invoice_id": "INV-1217",
+          "operation_count": 2,
+          "operation_types": [],
+          "statuses": []
+        },
+        {
+          "invoice_id": "INV-1241",
+          "operation_count": 2,
+          "operation_types": [],
+          "statuses": []
+        },
+        {
+          "invoice_id": "INV-1245",
+          "operation_count": 2,
+          "operation_types": [],
+          "statuses": []
+        },
+        {
+          "invoice_id": "INV-1249",
+          "operation_count": 2,
+          "operation_types": [],
+          "statuses": []
+        },
+        {
+          "invoice_id": "INV-1250",
+          "operation_count": 2,
+          "operation_types": [],
+          "statuses": []
+        },
+        {
+          "invoice_id": "INV-1253",
+          "operation_count": 2,
+          "operation_types": [],
+          "statuses": []
+        },
+        {
+          "invoice_id": "INV-1268",
+          "operation_count": 2,
+          "operation_types": [],
+          "statuses": []
+        },
+        {
+          "invoice_id": "INV-1280",
+          "operation_count": 2,
+          "operation_types": [],
+          "statuses": []
+        },
+        {
+          "invoice_id": "INV-1305",
+          "operation_count": 2,
+          "operation_types": [],
+          "statuses": []
+        },
+        {
+          "invoice_id": "INV-1310",
+          "operation_count": 2,
+          "operation_types": [],
+          "statuses": []
+        }
+      ]
+    },
+    "persistent_divergences_examples": {
+      "value_business_rules_diff": [
+        {
+          "invoice_id": "INV-1000",
+          "logistics_value": 4660.3,
+          "finance_value": 839.16,
+          "finance_side": "ap",
+          "diff_pct": 81.99,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1003",
+          "logistics_value": 11826.44,
+          "finance_value": 2827.66,
+          "finance_side": "ap",
+          "diff_pct": 76.09,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1008",
+          "logistics_value": 3987.04,
+          "finance_value": 4673.02,
+          "finance_side": "ap",
+          "diff_pct": 14.68,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1009",
+          "logistics_value": 2062.4,
+          "finance_value": 2533.71,
+          "finance_side": "ap",
+          "diff_pct": 18.6,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1011",
+          "logistics_value": 1435.77,
+          "finance_value": 923.44,
+          "finance_side": "ap",
+          "diff_pct": 35.68,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1018",
+          "logistics_value": 2897.92,
+          "finance_value": 101.14,
+          "finance_side": "ap",
+          "diff_pct": 96.51,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1020",
+          "logistics_value": 1095.54,
+          "finance_value": 2470.79,
+          "finance_side": "ap",
+          "diff_pct": 55.66,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1023",
+          "logistics_value": 4879.12,
+          "finance_value": 2753.68,
+          "finance_side": "ap",
+          "diff_pct": 43.56,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1024",
+          "logistics_value": 4247.1,
+          "finance_value": 1842.26,
+          "finance_side": "ap",
+          "diff_pct": 56.62,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1026",
+          "logistics_value": 4331.52,
+          "finance_value": 1754.91,
+          "finance_side": "ap",
+          "diff_pct": 59.49,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1028",
+          "logistics_value": 1191.36,
+          "finance_value": 4745.68,
+          "finance_side": "ap",
+          "diff_pct": 74.9,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1029",
+          "logistics_value": 636.74,
+          "finance_value": 840.64,
+          "finance_side": "ap",
+          "diff_pct": 24.26,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1030",
+          "logistics_value": 2196.96,
+          "finance_value": 204.84,
+          "finance_side": "ap",
+          "diff_pct": 90.68,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1034",
+          "logistics_value": 2700.1,
+          "finance_value": 3133.6,
+          "finance_side": "ap",
+          "diff_pct": 13.83,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1037",
+          "logistics_value": 1198.4,
+          "finance_value": 3494.38,
+          "finance_side": "ap",
+          "diff_pct": 65.7,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1038",
+          "logistics_value": 2153.32,
+          "finance_value": 4025.51,
+          "finance_side": "ap",
+          "diff_pct": 46.51,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1039",
+          "logistics_value": 596.19,
+          "finance_value": 1279.13,
+          "finance_side": "ap",
+          "diff_pct": 53.39,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1043",
+          "logistics_value": 478.08,
+          "finance_value": 4926.91,
+          "finance_side": "ap",
+          "diff_pct": 90.3,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1046",
+          "logistics_value": 806.19,
+          "finance_value": 1376.7,
+          "finance_side": "ap",
+          "diff_pct": 41.44,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1047",
+          "logistics_value": 6023.13,
+          "finance_value": 2147.03,
+          "finance_side": "ap",
+          "diff_pct": 64.35,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1052",
+          "logistics_value": 1191.46,
+          "finance_value": 3769.29,
+          "finance_side": "ap",
+          "diff_pct": 68.39,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1055",
+          "logistics_value": 6627.24,
+          "finance_value": 1884.29,
+          "finance_side": "ap",
+          "diff_pct": 71.57,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1056",
+          "logistics_value": 196.65,
+          "finance_value": 105.24,
+          "finance_side": "ap",
+          "diff_pct": 46.48,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1057",
+          "logistics_value": 4488.96,
+          "finance_value": 124.26,
+          "finance_side": "ap",
+          "diff_pct": 97.23,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1058",
+          "logistics_value": 323.7,
+          "finance_value": 1590.8,
+          "finance_side": "ap",
+          "diff_pct": 79.65,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1068",
+          "logistics_value": 4598.71,
+          "finance_value": 3859.13,
+          "finance_side": "ap",
+          "diff_pct": 16.08,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1070",
+          "logistics_value": 1397.3,
+          "finance_value": 794.53,
+          "finance_side": "ap",
+          "diff_pct": 43.14,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1073",
+          "logistics_value": 1332.1,
+          "finance_value": 3778.6,
+          "finance_side": "ap",
+          "diff_pct": 64.75,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1076",
+          "logistics_value": 1058.76,
+          "finance_value": 1929.41,
+          "finance_side": "ap",
+          "diff_pct": 45.13,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1077",
+          "logistics_value": 4391.92,
+          "finance_value": 4673.98,
+          "finance_side": "ap",
+          "diff_pct": 6.03,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1080",
+          "logistics_value": 946.91,
+          "finance_value": 3869.67,
+          "finance_side": "ap",
+          "diff_pct": 75.53,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1081",
+          "logistics_value": 1853.18,
+          "finance_value": 1296.02,
+          "finance_side": "ap",
+          "diff_pct": 30.07,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1085",
+          "logistics_value": 2186.2,
+          "finance_value": 3486.95,
+          "finance_side": "ap",
+          "diff_pct": 37.3,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1086",
+          "logistics_value": 392.7,
+          "finance_value": 458.38,
+          "finance_side": "ap",
+          "diff_pct": 14.33,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1088",
+          "logistics_value": 369.75,
+          "finance_value": 4607.61,
+          "finance_side": "ap",
+          "diff_pct": 91.98,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1093",
+          "logistics_value": 596.4,
+          "finance_value": 2160.73,
+          "finance_side": "ap",
+          "diff_pct": 72.4,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1094",
+          "logistics_value": 6286.95,
+          "finance_value": 4136.59,
+          "finance_side": "ap",
+          "diff_pct": 34.2,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1095",
+          "logistics_value": 2540.59,
+          "finance_value": 4061.69,
+          "finance_side": "ap",
+          "diff_pct": 37.45,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1098",
+          "logistics_value": 2462.19,
+          "finance_value": 2671.51,
+          "finance_side": "ap",
+          "diff_pct": 7.84,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1100",
+          "logistics_value": 5822.95,
+          "finance_value": 4039.29,
+          "finance_side": "ap",
+          "diff_pct": 30.63,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1101",
+          "logistics_value": 421.96,
+          "finance_value": 3712.87,
+          "finance_side": "ap",
+          "diff_pct": 88.64,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1103",
+          "logistics_value": 6145.37,
+          "finance_value": 1741.36,
+          "finance_side": "ap",
+          "diff_pct": 71.66,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1107",
+          "logistics_value": 2245.6,
+          "finance_value": 1066.83,
+          "finance_side": "ap",
+          "diff_pct": 52.49,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1109",
+          "logistics_value": 7949.39,
+          "finance_value": 2547.62,
+          "finance_side": "ap",
+          "diff_pct": 67.95,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1110",
+          "logistics_value": 389.76,
+          "finance_value": 3403.13,
+          "finance_side": "ap",
+          "diff_pct": 88.55,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1111",
+          "logistics_value": 5394.96,
+          "finance_value": 3168.34,
+          "finance_side": "ap",
+          "diff_pct": 41.27,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1116",
+          "logistics_value": 769.46,
+          "finance_value": 1906.67,
+          "finance_side": "ap",
+          "diff_pct": 59.64,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1117",
+          "logistics_value": 5346.0,
+          "finance_value": 3423.77,
+          "finance_side": "ap",
+          "diff_pct": 35.96,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1118",
+          "logistics_value": 1799.28,
+          "finance_value": 2100.03,
+          "finance_side": "ap",
+          "diff_pct": 14.32,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        },
+        {
+          "invoice_id": "INV-1119",
+          "logistics_value": 413.37,
+          "finance_value": 3507.49,
+          "finance_side": "ap",
+          "diff_pct": 88.21,
+          "root_cause": "Frete/manuseio (log) vs valor de fatura (finance) — naturais por desenho"
+        }
+      ],
+      "month_window_diff": []
+    }
+  },
+  "summary": {
+    "intra_domain_invoices_compared": 2000,
+    "intra_domain_persistent_divergences_total": 160,
+    "cross_domain_invoices_with_match": 939,
+    "cross_domain_persistent_divergences_total": 1073,
+    "new_category_referential_integrity_violations": 0
+  },
+  "conclusions": [
+    "Mesma chave invoice_id — vocabulário de status diverge em 0 faturas (PAID vs SETTLED). Sem canonicalização federada, consumidores filtrariam errado.",
+    "Mesma chave invoice_id — valor de fatura diverge em 160 casos AP vs AR (retenções fiscais vs descontos/juros). Divergência é correta por desenho.",
+    "Mesma chave invoice_id — granularidade 1:N entre Logística e Financeiro em 161 faturas. Chave compartilhada não unifica grão.",
+    "Surgiu nova categoria de vulnerabilidade: integridade referencial. 0 operações logísticas apontam para faturas que não existem no financeiro publicado."
+  ]
+}

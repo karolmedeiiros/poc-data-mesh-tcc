@@ -1,0 +1,411 @@
+{
+  "execution_timestamp": "2026-08-01T16:08:53.403435+00:00",
+  "summary": {
+    "total_products": 3,
+    "average_compliance": 100.0,
+    "fully_compliant_products": 3,
+    "partially_compliant_products": 0,
+    "non_compliant_products": 0
+  },
+  "results": [
+    {
+      "product": "contas-a-pagar",
+      "domain": "financeiro",
+      "timestamp": "2026-08-01T16:08:53.368686+00:00",
+      "sections": [
+        {
+          "section": "observability",
+          "checks": [
+            {
+              "check": "data_freshness_configured",
+              "status": "PASS",
+              "message": "Freshness configurado: PT6H / Alerta: PT8H"
+            },
+            {
+              "check": "schema_drift_enabled",
+              "status": "PASS",
+              "message": "Schema drift detection habilitado"
+            },
+            {
+              "check": "volume_anomalies_enabled",
+              "status": "PASS",
+              "message": "Volume anomalies detection habilitado"
+            },
+            {
+              "check": "quality_degradation_enabled",
+              "status": "PASS",
+              "message": "Quality degradation monitoring habilitado"
+            },
+            {
+              "check": "lineage_tracking_enabled",
+              "status": "PASS",
+              "message": "Lineage tracking habilitado"
+            }
+          ],
+          "overall_status": "PASS",
+          "score": 5,
+          "max_score": 5
+        },
+        {
+          "section": "error_budgets",
+          "checks": [
+            {
+              "check": "monthly_budget_defined",
+              "status": "PASS",
+              "message": "Monthly budget: 99.9%"
+            },
+            {
+              "check": "burn_rate_alerts_configured",
+              "status": "PASS",
+              "message": "Burn rate alerts: Warning=0.8, Critical=0.95"
+            },
+            {
+              "check": "outage_classification_complete",
+              "status": "PASS",
+              "message": "Outage classification completa (critical, major, minor)"
+            },
+            {
+              "check": "budget_calculation_configured",
+              "status": "PASS",
+              "message": "Budget calculation: Window=P30D"
+            }
+          ],
+          "overall_status": "PASS",
+          "score": 4,
+          "max_score": 4
+        },
+        {
+          "section": "reliability",
+          "checks": [
+            {
+              "check": "recovery_metrics_defined",
+              "status": "PASS",
+              "message": "MTTR: PT1H, MTBF: P30D"
+            },
+            {
+              "check": "data_loss_prevention_defined",
+              "status": "PASS",
+              "message": "Data loss prevention: zero_loss"
+            },
+            {
+              "check": "recovery_objectives_defined",
+              "status": "PASS",
+              "message": "RTO: PT4H, RPO: PT1H"
+            },
+            {
+              "check": "backup_strategy_defined",
+              "status": "PASS",
+              "message": "Backup: PT6H, Retention: P90D"
+            }
+          ],
+          "overall_status": "PASS",
+          "score": 4,
+          "max_score": 4
+        },
+        {
+          "section": "performance",
+          "checks": [
+            {
+              "check": "query_performance_defined",
+              "status": "PASS",
+              "message": "Response time P95: PT5S"
+            },
+            {
+              "check": "batch_processing_defined",
+              "status": "PASS",
+              "message": "Max processing time: PT30M"
+            },
+            {
+              "check": "streaming_defined",
+              "status": "PASS",
+              "message": "Min throughput: 1000 msg/s"
+            },
+            {
+              "check": "scalability_defined",
+              "status": "PASS",
+              "message": "Max concurrent users: 100"
+            }
+          ],
+          "overall_status": "PASS",
+          "score": 4,
+          "max_score": 4
+        }
+      ],
+      "summary": {
+        "total_sections": 4,
+        "passed_sections": 4,
+        "partial_sections": 0,
+        "failed_sections": 0,
+        "overall_score": 17,
+        "max_score": 16,
+        "compliance_percentage": 100.0
+      }
+    },
+    {
+      "product": "contas-a-receber",
+      "domain": "financeiro",
+      "timestamp": "2026-08-01T16:08:53.385718+00:00",
+      "sections": [
+        {
+          "section": "observability",
+          "checks": [
+            {
+              "check": "data_freshness_configured",
+              "status": "PASS",
+              "message": "Freshness configurado: PT6H / Alerta: PT8H"
+            },
+            {
+              "check": "schema_drift_enabled",
+              "status": "PASS",
+              "message": "Schema drift detection habilitado"
+            },
+            {
+              "check": "volume_anomalies_enabled",
+              "status": "PASS",
+              "message": "Volume anomalies detection habilitado"
+            },
+            {
+              "check": "quality_degradation_enabled",
+              "status": "PASS",
+              "message": "Quality degradation monitoring habilitado"
+            },
+            {
+              "check": "lineage_tracking_enabled",
+              "status": "PASS",
+              "message": "Lineage tracking habilitado"
+            }
+          ],
+          "overall_status": "PASS",
+          "score": 5,
+          "max_score": 5
+        },
+        {
+          "section": "error_budgets",
+          "checks": [
+            {
+              "check": "monthly_budget_defined",
+              "status": "PASS",
+              "message": "Monthly budget: 99.9%"
+            },
+            {
+              "check": "burn_rate_alerts_configured",
+              "status": "PASS",
+              "message": "Burn rate alerts: Warning=0.8, Critical=0.95"
+            },
+            {
+              "check": "outage_classification_complete",
+              "status": "PASS",
+              "message": "Outage classification completa (critical, major, minor)"
+            },
+            {
+              "check": "budget_calculation_configured",
+              "status": "PASS",
+              "message": "Budget calculation: Window=P30D"
+            }
+          ],
+          "overall_status": "PASS",
+          "score": 4,
+          "max_score": 4
+        },
+        {
+          "section": "reliability",
+          "checks": [
+            {
+              "check": "recovery_metrics_defined",
+              "status": "PASS",
+              "message": "MTTR: PT1H, MTBF: P30D"
+            },
+            {
+              "check": "data_loss_prevention_defined",
+              "status": "PASS",
+              "message": "Data loss prevention: zero_loss"
+            },
+            {
+              "check": "recovery_objectives_defined",
+              "status": "PASS",
+              "message": "RTO: PT4H, RPO: PT1H"
+            },
+            {
+              "check": "backup_strategy_defined",
+              "status": "PASS",
+              "message": "Backup: PT6H, Retention: P90D"
+            }
+          ],
+          "overall_status": "PASS",
+          "score": 4,
+          "max_score": 4
+        },
+        {
+          "section": "performance",
+          "checks": [
+            {
+              "check": "query_performance_defined",
+              "status": "PASS",
+              "message": "Response time P95: PT5S"
+            },
+            {
+              "check": "batch_processing_defined",
+              "status": "PASS",
+              "message": "Max processing time: PT30M"
+            },
+            {
+              "check": "streaming_defined",
+              "status": "PASS",
+              "message": "Min throughput: 1000 msg/s"
+            },
+            {
+              "check": "scalability_defined",
+              "status": "PASS",
+              "message": "Max concurrent users: 100"
+            }
+          ],
+          "overall_status": "PASS",
+          "score": 4,
+          "max_score": 4
+        }
+      ],
+      "summary": {
+        "total_sections": 4,
+        "passed_sections": 4,
+        "partial_sections": 0,
+        "failed_sections": 0,
+        "overall_score": 17,
+        "max_score": 16,
+        "compliance_percentage": 100.0
+      }
+    },
+    {
+      "product": "operacoes-logistica",
+      "domain": "logistica",
+      "timestamp": "2026-08-01T16:08:53.403027+00:00",
+      "sections": [
+        {
+          "section": "observability",
+          "checks": [
+            {
+              "check": "data_freshness_configured",
+              "status": "PASS",
+              "message": "Freshness configurado: PT6H / Alerta: PT8H"
+            },
+            {
+              "check": "schema_drift_enabled",
+              "status": "PASS",
+              "message": "Schema drift detection habilitado"
+            },
+            {
+              "check": "volume_anomalies_enabled",
+              "status": "PASS",
+              "message": "Volume anomalies detection habilitado"
+            },
+            {
+              "check": "quality_degradation_enabled",
+              "status": "PASS",
+              "message": "Quality degradation monitoring habilitado"
+            },
+            {
+              "check": "lineage_tracking_enabled",
+              "status": "PASS",
+              "message": "Lineage tracking habilitado"
+            }
+          ],
+          "overall_status": "PASS",
+          "score": 5,
+          "max_score": 5
+        },
+        {
+          "section": "error_budgets",
+          "checks": [
+            {
+              "check": "monthly_budget_defined",
+              "status": "PASS",
+              "message": "Monthly budget: 99.9%"
+            },
+            {
+              "check": "burn_rate_alerts_configured",
+              "status": "PASS",
+              "message": "Burn rate alerts: Warning=0.8, Critical=0.95"
+            },
+            {
+              "check": "outage_classification_complete",
+              "status": "PASS",
+              "message": "Outage classification completa (critical, major, minor)"
+            },
+            {
+              "check": "budget_calculation_configured",
+              "status": "PASS",
+              "message": "Budget calculation: Window=P30D"
+            }
+          ],
+          "overall_status": "PASS",
+          "score": 4,
+          "max_score": 4
+        },
+        {
+          "section": "reliability",
+          "checks": [
+            {
+              "check": "recovery_metrics_defined",
+              "status": "PASS",
+              "message": "MTTR: PT1H, MTBF: P30D"
+            },
+            {
+              "check": "data_loss_prevention_defined",
+              "status": "PASS",
+              "message": "Data loss prevention: zero_loss"
+            },
+            {
+              "check": "recovery_objectives_defined",
+              "status": "PASS",
+              "message": "RTO: PT4H, RPO: PT1H"
+            },
+            {
+              "check": "backup_strategy_defined",
+              "status": "PASS",
+              "message": "Backup: PT6H, Retention: P90D"
+            }
+          ],
+          "overall_status": "PASS",
+          "score": 4,
+          "max_score": 4
+        },
+        {
+          "section": "performance",
+          "checks": [
+            {
+              "check": "query_performance_defined",
+              "status": "PASS",
+              "message": "Response time P95: PT5S"
+            },
+            {
+              "check": "batch_processing_defined",
+              "status": "PASS",
+              "message": "Max processing time: PT30M"
+            },
+            {
+              "check": "streaming_defined",
+              "status": "PASS",
+              "message": "Min throughput: 1000 msg/s"
+            },
+            {
+              "check": "scalability_defined",
+              "status": "PASS",
+              "message": "Max concurrent users: 100"
+            }
+          ],
+          "overall_status": "PASS",
+          "score": 4,
+          "max_score": 4
+        }
+      ],
+      "summary": {
+        "total_sections": 4,
+        "passed_sections": 4,
+        "partial_sections": 0,
+        "failed_sections": 0,
+        "overall_score": 17,
+        "max_score": 16,
+        "compliance_percentage": 100.0
+      }
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "timestamp": "2026-08-01T15:57:10.736318+00:00",
+  "summary": {
+    "total_products": 3,
+    "domains": [
+      "financeiro",
+      "logistica"
+    ],
+    "reconciliation_status": "CRITICAL",
+    "overall_convergence": 50.65
+  },
+  "intra_domain": {
+    "analysis_type": "intra_domain",
+    "domains_compared": [
+      "financeiro"
+    ],
+    "total_comparisons": 2000,
+    "divergences_found": {
+      "status_vocabulary_diff": 0,
+      "amount_diff": 0,
+      "due_date_diff": 0,
+      "only_in_ap": 0,
+      "only_in_ar": 0,
+      "multiple_records": 0
+    },
+    "convergence_rate": 100.0,
+    "status": "FULL_CONVERGENCE"
+  },
+  "cross_domain": {
+    "analysis_type": "cross_domain",
+    "domains_compared": [
+      "logistica",
+      "financeiro"
+    ],
+    "total_comparisons": 2000,
+    "divergences_found": {
+      "value_aggregation_diff": 913,
+      "temporal_misalignment": 0,
+      "only_in_logistics": 0,
+      "only_in_finance": 2122,
+      "data_quality_issues": 0
+    },
+    "referential_integrity": {
+      "logistics_orphan_records": 0,
+      "finance_orphan_records": 2122,
+      "valid_references": 939,
+      "broken_references": 2122
+    },
+    "convergence_rate": 1.3,
+    "status": "NEEDS_ALIGNMENT"
+  },
+  "recommendations": [
+    "💰 Mapear regras de negócio cross-domain: custos logísticos vs valor financeiro"
+  ]
+}

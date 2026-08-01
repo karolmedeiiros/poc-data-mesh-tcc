@@ -1,0 +1,52 @@
+{
+  "timestamp": "2026-08-01T16:08:53.210555+00:00",
+  "schema_enforcement": [
+    {
+      "product": "contas-a-pagar",
+      "records_analyzed": 2000,
+      "status": "PASS",
+      "violations": []
+    },
+    {
+      "product": "contas-a-receber",
+      "records_analyzed": 2000,
+      "status": "PASS",
+      "violations": []
+    },
+    {
+      "product": "operacoes-logistica",
+      "records_analyzed": 939,
+      "status": "PASS",
+      "violations": []
+    }
+  ],
+  "master_entity_integrity": [
+    {
+      "product": "contas-a-pagar",
+      "status": "PASS",
+      "violations": []
+    },
+    {
+      "product": "contas-a-receber",
+      "status": "PASS",
+      "violations": []
+    },
+    {
+      "product": "operacoes-logistica",
+      "status": "PASS",
+      "violations": []
+    }
+  ],
+  "cross_domain_consistency": {
+    "status": "PASS",
+    "violations": [],
+    "coverage": {
+      "total_finance_invoices": 2000,
+      "invoices_with_logistics": 939,
+      "logistics_coverage": 0.4695,
+      "orphan_logistics_count": 0,
+      "orphan_finance_count": 1061
+    }
+  },
+  "overall_status": "PASS"
+}
