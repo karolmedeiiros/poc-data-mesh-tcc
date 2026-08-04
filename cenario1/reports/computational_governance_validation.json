@@ -1,0 +1,58 @@
+{
+  "timestamp": "2026-08-02T20:27:50.364053+00:00",
+  "schema_enforcement": [
+    {
+      "product": "contas-a-pagar",
+      "records_analyzed": 2000,
+      "status": "PASS",
+      "violations": []
+    },
+    {
+      "product": "contas-a-receber",
+      "records_analyzed": 2000,
+      "status": "PASS",
+      "violations": []
+    },
+    {
+      "product": "operacoes-logistica",
+      "records_analyzed": 939,
+      "status": "PASS",
+      "violations": []
+    }
+  ],
+  "master_entity_integrity": [
+    {
+      "product": "contas-a-pagar",
+      "status": "PASS",
+      "violations": []
+    },
+    {
+      "product": "contas-a-receber",
+      "status": "PASS",
+      "violations": []
+    },
+    {
+      "product": "operacoes-logistica",
+      "status": "PASS",
+      "violations": []
+    }
+  ],
+  "cross_domain_consistency": {
+    "status": "FAIL",
+    "violations": [
+      {
+        "type": "cross_domain_orphan_logistics",
+        "count": 5,
+        "message": "5 operações logísticas sem fatura financeira correspondente"
+      }
+    ],
+    "coverage": {
+      "total_finance_invoices": 2000,
+      "invoices_with_logistics": 934,
+      "logistics_coverage": 0.4695,
+      "orphan_logistics_count": 5,
+      "orphan_finance_count": 1066
+    }
+  },
+  "overall_status": "FAIL"
+}

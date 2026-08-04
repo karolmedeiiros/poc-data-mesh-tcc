@@ -1,0 +1,961 @@
+{
+  "execution_timestamp": "2026-08-04T01:32:31.811186+00:00",
+  "thesis": "Compartilhar invoice_id (master entity federada) é necessário para reconciliação fina, mas insuficiente para eliminar divergências.",
+  "master_entity_in_use": {
+    "id": "invoice",
+    "canonical_field": "invoice_id",
+    "format": {
+      "type": "string",
+      "pattern": "^INV-[0-9]+$",
+      "case_sensitive": true
+    },
+    "issuing_authority": "billing-system",
+    "lifecycle": "immutable_once_emitted",
+    "published_in_products": [
+      "contas-a-pagar",
+      "contas-a-receber",
+      "operacoes-logistica"
+    ],
+    "cross_product_assertions": [
+      "ap.invoice_id == ar.invoice_id => same_real_invoice",
+      "logistics.related_invoice_id == ap.invoice_id => same_real_invoice"
+    ]
+  },
+  "ap_vs_ar": {
+    "comparison": "ap_invoice_keyed vs ar_invoice_keyed",
+    "ap_total": 2000,
+    "ar_total": 2000,
+    "common_keys": 2000,
+    "coverage_ap_in_ar_pct": 100.0,
+    "coverage_ar_in_ap_pct": 100.0,
+    "persistent_divergences_summary": {
+      "amount_business_rules_diff": 160
+    },
+    "persistent_divergences_examples": {
+      "status_vocabulary_diff": [],
+      "amount_business_rules_diff": [
+        {
+          "invoice_id": "INV-1361",
+          "ap_amount": 4119.71,
+          "ar_gross_amount": 4832.51,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2870",
+          "ap_amount": 3148.93,
+          "ar_gross_amount": 3693.76,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1150",
+          "ap_amount": 3183.75,
+          "ar_gross_amount": 3734.6,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2465",
+          "ap_amount": 3394.66,
+          "ar_gross_amount": 3982.0,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1710",
+          "ap_amount": 3017.59,
+          "ar_gross_amount": 3539.69,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2977",
+          "ap_amount": 4080.29,
+          "ar_gross_amount": 4786.26,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1833",
+          "ap_amount": 2582.67,
+          "ar_gross_amount": 3029.52,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1649",
+          "ap_amount": 2599.62,
+          "ar_gross_amount": 3049.41,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2607",
+          "ap_amount": 3057.99,
+          "ar_gross_amount": 3587.08,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1561",
+          "ap_amount": 2917.17,
+          "ar_gross_amount": 3353.46,
+          "diff_pct": 13.01,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1838",
+          "ap_amount": 3843.47,
+          "ar_gross_amount": 4508.47,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2399",
+          "ap_amount": 3957.93,
+          "ar_gross_amount": 4642.73,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1238",
+          "ap_amount": 4146.84,
+          "ar_gross_amount": 4864.33,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1064",
+          "ap_amount": 3465.56,
+          "ar_gross_amount": 4065.17,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2441",
+          "ap_amount": 2736.72,
+          "ar_gross_amount": 3210.23,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2426",
+          "ap_amount": 3151.3,
+          "ar_gross_amount": 3696.54,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2440",
+          "ap_amount": 2722.48,
+          "ar_gross_amount": 3193.53,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1080",
+          "ap_amount": 3869.67,
+          "ar_gross_amount": 4539.2,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2676",
+          "ap_amount": 2580.03,
+          "ar_gross_amount": 3026.43,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1845",
+          "ap_amount": 3681.88,
+          "ar_gross_amount": 4318.92,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1111",
+          "ap_amount": 3168.34,
+          "ar_gross_amount": 3716.53,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2594",
+          "ap_amount": 3874.83,
+          "ar_gross_amount": 4545.25,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1771",
+          "ap_amount": 3187.79,
+          "ar_gross_amount": 3739.34,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1727",
+          "ap_amount": 3453.66,
+          "ar_gross_amount": 4051.21,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2722",
+          "ap_amount": 2840.53,
+          "ar_gross_amount": 3332.0,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1038",
+          "ap_amount": 4025.51,
+          "ar_gross_amount": 4722.01,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2689",
+          "ap_amount": 3140.21,
+          "ar_gross_amount": 3683.53,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2115",
+          "ap_amount": 4140.79,
+          "ar_gross_amount": 4857.23,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1801",
+          "ap_amount": 4010.07,
+          "ar_gross_amount": 4703.9,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1545",
+          "ap_amount": 3312.44,
+          "ar_gross_amount": 3924.42,
+          "diff_pct": 15.59,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2468",
+          "ap_amount": 3701.45,
+          "ar_gross_amount": 4341.88,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2217",
+          "ap_amount": 3642.88,
+          "ar_gross_amount": 4187.71,
+          "diff_pct": 13.01,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2835",
+          "ap_amount": 3514.16,
+          "ar_gross_amount": 4122.18,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1834",
+          "ap_amount": 3909.18,
+          "ar_gross_amount": 4585.55,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1542",
+          "ap_amount": 4037.72,
+          "ar_gross_amount": 4736.33,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1328",
+          "ap_amount": 2602.56,
+          "ar_gross_amount": 3052.86,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2214",
+          "ap_amount": 2582.2,
+          "ar_gross_amount": 3028.97,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1348",
+          "ap_amount": 2955.7,
+          "ar_gross_amount": 3467.1,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2876",
+          "ap_amount": 2951.91,
+          "ar_gross_amount": 3462.65,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2821",
+          "ap_amount": 3930.03,
+          "ar_gross_amount": 4610.01,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1754",
+          "ap_amount": 2807.45,
+          "ar_gross_amount": 3293.2,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2794",
+          "ap_amount": 2999.53,
+          "ar_gross_amount": 3518.51,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1831",
+          "ap_amount": 3360.52,
+          "ar_gross_amount": 3941.96,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2514",
+          "ap_amount": 2968.86,
+          "ar_gross_amount": 3482.53,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1144",
+          "ap_amount": 3997.63,
+          "ar_gross_amount": 4689.3,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2828",
+          "ap_amount": 2793.51,
+          "ar_gross_amount": 3309.62,
+          "diff_pct": 15.59,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1449",
+          "ap_amount": 3082.2,
+          "ar_gross_amount": 3615.48,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2165",
+          "ap_amount": 3788.57,
+          "ar_gross_amount": 4444.07,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-2170",
+          "ap_amount": 2962.23,
+          "ar_gross_amount": 3509.51,
+          "diff_pct": 15.59,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        },
+        {
+          "invoice_id": "INV-1608",
+          "ap_amount": 3050.49,
+          "ar_gross_amount": 3578.29,
+          "diff_pct": 14.75,
+          "root_cause": "AP retém impostos; AR aplica descontos/juros — mesma fatura, regras diferentes"
+        }
+      ],
+      "issue_month_diff": []
+    },
+    "referential_integrity": {
+      "ap_only_count": 0,
+      "ar_only_count": 0,
+      "examples": {
+        "in_ap_only": [],
+        "in_ar_only": []
+      }
+    }
+  },
+  "logistics_vs_finance": {
+    "comparison": "logistics_invoice_keyed vs finance_invoice_keyed",
+    "logistics_total": 939,
+    "finance_total": 2000,
+    "logistics_with_finance_match": 939,
+    "coverage_logistics_in_finance_pct": 100.0,
+    "counters": {
+      "value_ratio_observed": 939,
+      "granularity_one_to_many": 161
+    },
+    "referential_integrity": {
+      "logistics_pointing_to_missing_invoice": [],
+      "operations_with_no_finance_counterpart": 0
+    },
+    "granularity": {
+      "one_to_many_examples": [
+        {
+          "invoice_id": "INV-1003",
+          "operation_count": 2,
+          "operation_types": [
+            "envio",
+            "recebimento"
+          ],
+          "statuses": [
+            "CONCLUIDO",
+            "EM_PROCESSAMENTO"
+          ]
+        },
+        {
+          "invoice_id": "INV-1008",
+          "operation_count": 2,
+          "operation_types": [
+            "envio",
+            "recebimento"
+          ],
+          "statuses": [
+            "EM_PROCESSAMENTO",
+            "PENDENTE"
+          ]
+        },
+        {
+          "invoice_id": "INV-1047",
+          "operation_count": 2,
+          "operation_types": [
+            "envio",
+            "recebimento"
+          ],
+          "statuses": [
+            "CANCELADO",
+            "CONCLUIDO"
+          ]
+        },
+        {
+          "invoice_id": "INV-1052",
+          "operation_count": 2,
+          "operation_types": [
+            "envio",
+            "recebimento"
+          ],
+          "statuses": [
+            "CONCLUIDO",
+            "EM_PROCESSAMENTO"
+          ]
+        },
+        {
+          "invoice_id": "INV-1055",
+          "operation_count": 2,
+          "operation_types": [
+            "envio",
+            "recebimento"
+          ],
+          "statuses": [
+            "EM_PROCESSAMENTO",
+            "PENDENTE"
+          ]
+        },
+        {
+          "invoice_id": "INV-1095",
+          "operation_count": 2,
+          "operation_types": [
+            "envio",
+            "recebimento"
+          ],
+          "statuses": [
+            "CONCLUIDO"
+          ]
+        },
+        {
+          "invoice_id": "INV-1098",
+          "operation_count": 2,
+          "operation_types": [
+            "envio",
+            "recebimento"
+          ],
+          "statuses": [
+            "CONCLUIDO",
+            "PENDENTE"
+          ]
+        },
+        {
+          "invoice_id": "INV-1118",
+          "operation_count": 2,
+          "operation_types": [
+            "envio",
+            "recebimento"
+          ],
+          "statuses": [
+            "CONCLUIDO"
+          ]
+        },
+        {
+          "invoice_id": "INV-1124",
+          "operation_count": 2,
+          "operation_types": [
+            "envio",
+            "recebimento"
+          ],
+          "statuses": [
+            "CONCLUIDO"
+          ]
+        },
+        {
+          "invoice_id": "INV-1129",
+          "operation_count": 2,
+          "operation_types": [
+            "envio",
+            "recebimento"
+          ],
+          "statuses": [
+            "CONCLUIDO",
+            "PENDENTE"
+          ]
+        },
+        {
+          "invoice_id": "INV-1131",
+          "operation_count": 2,
+          "operation_types": [
+            "envio",
+            "recebimento"
+          ],
+          "statuses": [
+            "CONCLUIDO",
+            "EM_PROCESSAMENTO"
+          ]
+        },
+        {
+          "invoice_id": "INV-1133",
+          "operation_count": 2,
+          "operation_types": [
+            "envio",
+            "recebimento"
+          ],
+          "statuses": [
+            "CANCELADO",
+            "EM_PROCESSAMENTO"
+          ]
+        },
+        {
+          "invoice_id": "INV-1137",
+          "operation_count": 2,
+          "operation_types": [
+            "envio",
+            "recebimento"
+          ],
+          "statuses": [
+            "CONCLUIDO",
+            "EM_PROCESSAMENTO"
+          ]
+        },
+        {
+          "invoice_id": "INV-1164",
+          "operation_count": 2,
+          "operation_types": [
+            "envio",
+            "recebimento"
+          ],
+          "statuses": [
+            "CONCLUIDO",
+            "PENDENTE"
+          ]
+        },
+        {
+          "invoice_id": "INV-1167",
+          "operation_count": 2,
+          "operation_types": [
+            "envio",
+            "recebimento"
+          ],
+          "statuses": [
+            "CONCLUIDO",
+            "EM_PROCESSAMENTO"
+          ]
+        },
+        {
+          "invoice_id": "INV-1169",
+          "operation_count": 2,
+          "operation_types": [
+            "envio",
+            "recebimento"
+          ],
+          "statuses": [
+            "EM_PROCESSAMENTO"
+          ]
+        },
+        {
+          "invoice_id": "INV-1177",
+          "operation_count": 2,
+          "operation_types": [
+            "envio",
+            "recebimento"
+          ],
+          "statuses": [
+            "CONCLUIDO"
+          ]
+        },
+        {
+          "invoice_id": "INV-1181",
+          "operation_count": 2,
+          "operation_types": [
+            "envio",
+            "recebimento"
+          ],
+          "statuses": [
+            "CONCLUIDO",
+            "PENDENTE"
+          ]
+        },
+        {
+          "invoice_id": "INV-1199",
+          "operation_count": 2,
+          "operation_types": [
+            "envio",
+            "recebimento"
+          ],
+          "statuses": [
+            "CONCLUIDO",
+            "EM_PROCESSAMENTO"
+          ]
+        },
+        {
+          "invoice_id": "INV-1210",
+          "operation_count": 2,
+          "operation_types": [
+            "envio",
+            "recebimento"
+          ],
+          "statuses": [
+            "EM_PROCESSAMENTO"
+          ]
+        },
+        {
+          "invoice_id": "INV-1217",
+          "operation_count": 2,
+          "operation_types": [
+            "envio",
+            "recebimento"
+          ],
+          "statuses": [
+            "EM_PROCESSAMENTO",
+            "PENDENTE"
+          ]
+        },
+        {
+          "invoice_id": "INV-1241",
+          "operation_count": 2,
+          "operation_types": [
+            "envio",
+            "recebimento"
+          ],
+          "statuses": [
+            "CONCLUIDO",
+            "PENDENTE"
+          ]
+        },
+        {
+          "invoice_id": "INV-1245",
+          "operation_count": 2,
+          "operation_types": [
+            "envio",
+            "recebimento"
+          ],
+          "statuses": [
+            "CONCLUIDO"
+          ]
+        },
+        {
+          "invoice_id": "INV-1249",
+          "operation_count": 2,
+          "operation_types": [
+            "envio",
+            "recebimento"
+          ],
+          "statuses": [
+            "CONCLUIDO",
+            "PENDENTE"
+          ]
+        },
+        {
+          "invoice_id": "INV-1250",
+          "operation_count": 2,
+          "operation_types": [
+            "envio",
+            "recebimento"
+          ],
+          "statuses": [
+            "CONCLUIDO",
+            "PENDENTE"
+          ]
+        },
+        {
+          "invoice_id": "INV-1253",
+          "operation_count": 2,
+          "operation_types": [
+            "envio",
+            "recebimento"
+          ],
+          "statuses": [
+            "CONCLUIDO"
+          ]
+        },
+        {
+          "invoice_id": "INV-1268",
+          "operation_count": 2,
+          "operation_types": [
+            "envio",
+            "recebimento"
+          ],
+          "statuses": [
+            "CONCLUIDO",
+            "PENDENTE"
+          ]
+        },
+        {
+          "invoice_id": "INV-1280",
+          "operation_count": 2,
+          "operation_types": [
+            "envio",
+            "recebimento"
+          ],
+          "statuses": [
+            "EM_PROCESSAMENTO",
+            "PENDENTE"
+          ]
+        },
+        {
+          "invoice_id": "INV-1305",
+          "operation_count": 2,
+          "operation_types": [
+            "envio",
+            "recebimento"
+          ],
+          "statuses": [
+            "CONCLUIDO",
+            "PENDENTE"
+          ]
+        },
+        {
+          "invoice_id": "INV-1310",
+          "operation_count": 2,
+          "operation_types": [
+            "envio",
+            "recebimento"
+          ],
+          "statuses": [
+            "CONCLUIDO",
+            "EM_PROCESSAMENTO"
+          ]
+        }
+      ]
+    },
+    "persistent_divergences_examples": {
+      "month_window_diff": [],
+      "cross_domain_state_contradiction": [],
+      "cross_domain_attribute_divergence": []
+    },
+    "informational": {
+      "value_ratio_samples": [
+        {
+          "invoice_id": "INV-1000",
+          "logistics_value": 4660.3,
+          "finance_value": 839.16,
+          "finance_side": "ap",
+          "ratio": 5.5535,
+          "note": "grandezas distintas; sem regra declarada no contrato"
+        },
+        {
+          "invoice_id": "INV-1003",
+          "logistics_value": 11826.44,
+          "finance_value": 2827.66,
+          "finance_side": "ap",
+          "ratio": 4.1824,
+          "note": "grandezas distintas; sem regra declarada no contrato"
+        },
+        {
+          "invoice_id": "INV-1008",
+          "logistics_value": 3987.04,
+          "finance_value": 4673.02,
+          "finance_side": "ap",
+          "ratio": 0.8532,
+          "note": "grandezas distintas; sem regra declarada no contrato"
+        },
+        {
+          "invoice_id": "INV-1009",
+          "logistics_value": 2062.4,
+          "finance_value": 2533.71,
+          "finance_side": "ap",
+          "ratio": 0.814,
+          "note": "grandezas distintas; sem regra declarada no contrato"
+        },
+        {
+          "invoice_id": "INV-1011",
+          "logistics_value": 1435.77,
+          "finance_value": 923.44,
+          "finance_side": "ap",
+          "ratio": 1.5548,
+          "note": "grandezas distintas; sem regra declarada no contrato"
+        },
+        {
+          "invoice_id": "INV-1018",
+          "logistics_value": 2897.92,
+          "finance_value": 101.14,
+          "finance_side": "ap",
+          "ratio": 28.6526,
+          "note": "grandezas distintas; sem regra declarada no contrato"
+        },
+        {
+          "invoice_id": "INV-1020",
+          "logistics_value": 1095.54,
+          "finance_value": 2470.79,
+          "finance_side": "ap",
+          "ratio": 0.4434,
+          "note": "grandezas distintas; sem regra declarada no contrato"
+        },
+        {
+          "invoice_id": "INV-1023",
+          "logistics_value": 4879.12,
+          "finance_value": 2753.68,
+          "finance_side": "ap",
+          "ratio": 1.7719,
+          "note": "grandezas distintas; sem regra declarada no contrato"
+        },
+        {
+          "invoice_id": "INV-1024",
+          "logistics_value": 4247.1,
+          "finance_value": 1842.26,
+          "finance_side": "ap",
+          "ratio": 2.3054,
+          "note": "grandezas distintas; sem regra declarada no contrato"
+        },
+        {
+          "invoice_id": "INV-1026",
+          "logistics_value": 4331.52,
+          "finance_value": 1754.91,
+          "finance_side": "ap",
+          "ratio": 2.4682,
+          "note": "grandezas distintas; sem regra declarada no contrato"
+        },
+        {
+          "invoice_id": "INV-1028",
+          "logistics_value": 1191.36,
+          "finance_value": 4745.68,
+          "finance_side": "ap",
+          "ratio": 0.251,
+          "note": "grandezas distintas; sem regra declarada no contrato"
+        },
+        {
+          "invoice_id": "INV-1029",
+          "logistics_value": 636.74,
+          "finance_value": 840.64,
+          "finance_side": "ap",
+          "ratio": 0.7574,
+          "note": "grandezas distintas; sem regra declarada no contrato"
+        },
+        {
+          "invoice_id": "INV-1030",
+          "logistics_value": 2196.96,
+          "finance_value": 204.84,
+          "finance_side": "ap",
+          "ratio": 10.7252,
+          "note": "grandezas distintas; sem regra declarada no contrato"
+        },
+        {
+          "invoice_id": "INV-1034",
+          "logistics_value": 2700.1,
+          "finance_value": 3133.6,
+          "finance_side": "ap",
+          "ratio": 0.8617,
+          "note": "grandezas distintas; sem regra declarada no contrato"
+        },
+        {
+          "invoice_id": "INV-1037",
+          "logistics_value": 1198.4,
+          "finance_value": 3494.38,
+          "finance_side": "ap",
+          "ratio": 0.343,
+          "note": "grandezas distintas; sem regra declarada no contrato"
+        },
+        {
+          "invoice_id": "INV-1038",
+          "logistics_value": 2153.32,
+          "finance_value": 4025.51,
+          "finance_side": "ap",
+          "ratio": 0.5349,
+          "note": "grandezas distintas; sem regra declarada no contrato"
+        },
+        {
+          "invoice_id": "INV-1039",
+          "logistics_value": 596.19,
+          "finance_value": 1279.13,
+          "finance_side": "ap",
+          "ratio": 0.4661,
+          "note": "grandezas distintas; sem regra declarada no contrato"
+        },
+        {
+          "invoice_id": "INV-1043",
+          "logistics_value": 478.08,
+          "finance_value": 4926.91,
+          "finance_side": "ap",
+          "ratio": 0.097,
+          "note": "grandezas distintas; sem regra declarada no contrato"
+        },
+        {
+          "invoice_id": "INV-1045",
+          "logistics_value": 1704.78,
+          "finance_value": 1702.54,
+          "finance_side": "ap",
+          "ratio": 1.0013,
+          "note": "grandezas distintas; sem regra declarada no contrato"
+        },
+        {
+          "invoice_id": "INV-1046",
+          "logistics_value": 806.19,
+          "finance_value": 1376.7,
+          "finance_side": "ap",
+          "ratio": 0.5856,
+          "note": "grandezas distintas; sem regra declarada no contrato"
+        }
+      ]
+    },
+    "value_ratio_stats": {
+      "description": "razão valor_total logístico / valor da fatura; grandezas distintas, sem regra que as vincule",
+      "n": 939,
+      "min": 0.0016,
+      "p50": 1.1599,
+      "max": 91.2197
+    }
+  },
+  "summary": {
+    "intra_domain_invoices_compared": 2000,
+    "intra_domain_persistent_divergences_total": 160,
+    "cross_domain_invoices_with_match": 939,
+    "cross_domain_persistent_divergences_total": 161,
+    "new_category_referential_integrity_violations": 0
+  },
+  "conclusions": [
+    "Mesma chave invoice_id — vocabulário de status diverge em 0 faturas de AP e AR . Sem canonicalização federada, consumidores filtrariam errado.",
+    "Mesma chave invoice_id — valor de fatura diverge em 160 casos AP vs AR (retenções fiscais vs descontos/juros). Divergência é correta por desenho.",
+    "Mesma chave invoice_id — granularidade 1:N entre Logística e Financeiro em 161 faturas. Chave compartilhada não unifica grão.",
+    "Mesma chave invoice_id — janela temporal divergente entre domínios em 0 faturas (mês de operação logística vs mês de emissão da fatura). Nenhuma política declara a relação esperada entre os dois períodos.",
+    "Mesma chave invoice_id — atributo comum divergente entre domínios em 0 faturas (dsc_moeda).",
+    "Mesma chave invoice_id — contradição de estado entre domínios em 0 faturas (logística CONCLUIDO vs financeiro CANCELADO). Cada estado é válido no vocabulário de seu domínio; nenhuma camada da arquitetura relaciona os dois."
+  ]
+}

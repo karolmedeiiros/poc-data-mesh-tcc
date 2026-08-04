@@ -1,0 +1,17 @@
+{
+  "invoice_ids_originais": [
+    "INV-2986",
+    "INV-2988",
+    "INV-2990",
+    "INV-2992",
+    "INV-2993"
+  ],
+  "invoice_ids_substituidos": [
+    "INV-3081",
+    "INV-3082",
+    "INV-3083",
+    "INV-3084",
+    "INV-3085"
+  ],
+  "registros_afetados": 5
+}

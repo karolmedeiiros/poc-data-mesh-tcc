@@ -1,0 +1,17 @@
+# Ambientes virtuais Python
+.venv/
+venv/
+env/
+
+# Cache Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ferramentas / IDE
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.DS_Store
+.idea/
+.vscode/
