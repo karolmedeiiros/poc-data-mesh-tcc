@@ -12,6 +12,7 @@ Os cenários experimentais e as métricas coletadas encontram-se em
 [`experimentos/`](experimentos/).
 
  [Leia o trabalho completo aqui.](docs/)
+ [Assista ao Vídeo de Apresentação da PoC aqui](https://drive.google.com/file/d/1tB4Qk5b9eOMJnXebGpg7HcrnSNxyLZe0/view?usp=drive_link)
 
 
 ---
