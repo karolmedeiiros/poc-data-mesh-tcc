@@ -11,7 +11,7 @@ intitulado:
 Os cenários experimentais e as métricas coletadas encontram-se em
 [`experimentos/`](experimentos/).
 
- [Leia o trabalho completo aqui.](docs/PGC_KAROLINE_MEDEIROS)
+ [Leia o trabalho completo aqui.](docs/)
 
 
 ---
