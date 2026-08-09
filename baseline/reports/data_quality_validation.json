@@ -1,0 +1,680 @@
+[
+  {
+    "product": "contas-a-pagar",
+    "domain": "financeiro",
+    "dataset_path": "domains/financeiro/contas-a-pagar/data/contas_a_pagar.jsonl",
+    "validation_timestamp": "2026-08-05T23:25:23.996037+00:00",
+    "total_records": 2000,
+    "records_with_errors": 0,
+    "records_with_warnings": 0,
+    "records_valid": 2000,
+    "records_failing_schema": 0,
+    "records_failing_rules": 0,
+    "total_errors": 0,
+    "total_warnings": 0,
+    "errors_schema": 0,
+    "errors_rules": 0,
+    "errors_profiling": 0,
+    "error_rate": 0.0,
+    "warning_rate": 0.0,
+    "quality_score": 100.0,
+    "camadas": {
+      "validacao_de_esquema": {
+        "camada": "validacao_de_esquema",
+        "status": "PASS",
+        "registros_com_violacao": 0,
+        "violacoes": []
+      },
+      "perfilamento_estatistico": {
+        "camada": "perfilamento_estatistico",
+        "status": "PASS",
+        "perfil_por_atributo": {
+          "invoice_id": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 2000,
+            "cardinalidade_relativa": 1.0
+          },
+          "mes_emissao": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 1,
+            "cardinalidade_relativa": 0.0005
+          },
+          "status": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 3,
+            "cardinalidade_relativa": 0.0015
+          },
+          "tipo_fatura": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 5,
+            "cardinalidade_relativa": 0.0025
+          },
+          "id_fornecedor": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 50,
+            "cardinalidade_relativa": 0.025
+          },
+          "valor_liquido": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 1996,
+            "cardinalidade_relativa": 0.998
+          },
+          "valor_base": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 1997,
+            "cardinalidade_relativa": 0.9985
+          },
+          "dsc_moeda": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 1,
+            "cardinalidade_relativa": 0.0005
+          },
+          "dsc_dominio": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 1,
+            "cardinalidade_relativa": 0.0005
+          },
+          "dsc_produto": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 1,
+            "cardinalidade_relativa": 0.0005
+          },
+          "dt_versao": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 1,
+            "cardinalidade_relativa": 0.0005
+          }
+        },
+        "unicidade": {
+          "invoice_id": {
+            "registros": 2000,
+            "duplicatas": 0
+          }
+        },
+        "atualidade": {
+          "avaliada": true,
+          "classificacao": "informacional",
+          "materializacao_mais_recente": "2026-08-01T14:53:48.078703Z",
+          "idade_horas": 104.53,
+          "sla_freshness": "P1D",
+          "sla_horas": 24.0,
+          "dentro_do_sla": false
+        },
+        "violacoes": []
+      },
+      "regras_de_negocio": {
+        "camada": "regras_de_negocio",
+        "status": "PASS",
+        "regras_avaliadas": 4,
+        "reprovacoes": 0
+      }
+    },
+    "dimensoes": {
+      "integridade": {
+        "descricao": "Campos obrigatórios preenchidos",
+        "verificada": true,
+        "violacoes": 0,
+        "origem": [
+          "validacao_de_esquema"
+        ],
+        "status": "PASS"
+      },
+      "validade": {
+        "descricao": "Conformidade a formatos, tipos, intervalos e enumerações",
+        "verificada": true,
+        "violacoes": 0,
+        "origem": [
+          "validacao_de_esquema",
+          "regras_de_negocio"
+        ],
+        "status": "PASS"
+      },
+      "unicidade": {
+        "descricao": "Ausência de duplicatas na chave primária",
+        "verificada": true,
+        "violacoes": 0,
+        "origem": [
+          "perfilamento_estatistico"
+        ],
+        "status": "PASS"
+      },
+      "atualidade": {
+        "descricao": "Frescor dos dados em relação ao SLA federado",
+        "verificada": true,
+        "violacoes": 0,
+        "origem": [
+          "perfilamento_estatistico"
+        ],
+        "status": "INFORMACIONAL",
+        "idade_horas": 104.53,
+        "sla_freshness": "P1D",
+        "dentro_do_sla": false
+      },
+      "consistencia": {
+        "descricao": "Coerência interna entre campos do mesmo registro",
+        "verificada": false,
+        "violacoes": 0,
+        "origem": [],
+        "status": "SEM_REGRA_DECLARADA"
+      }
+    },
+    "rule_performance": {
+      "ap-k-invoice-id-format": {
+        "description": "invoice_id deve casar com master_entity invoice",
+        "dimensao": "validade",
+        "total_executions": 2000,
+        "passes": 2000,
+        "failures": 0,
+        "warnings": 0,
+        "errors": 0,
+        "pass_rate": 100.0,
+        "failure_rate": 0.0,
+        "warning_rate": 0.0,
+        "error_rate": 0.0
+      },
+      "ap-k-positive-amount": {
+        "description": "valor_liquido > 0",
+        "dimensao": "validade",
+        "total_executions": 2000,
+        "passes": 2000,
+        "failures": 0,
+        "warnings": 0,
+        "errors": 0,
+        "pass_rate": 100.0,
+        "failure_rate": 0.0,
+        "warning_rate": 0.0,
+        "error_rate": 0.0
+      },
+      "ap-k-currency-brl": {
+        "description": "moeda BRL",
+        "dimensao": "validade",
+        "total_executions": 2000,
+        "passes": 2000,
+        "failures": 0,
+        "warnings": 0,
+        "errors": 0,
+        "pass_rate": 100.0,
+        "failure_rate": 0.0,
+        "warning_rate": 0.0,
+        "error_rate": 0.0
+      },
+      "ap-k-valid-status": {
+        "description": "status válido",
+        "dimensao": "validade",
+        "total_executions": 2000,
+        "passes": 2000,
+        "failures": 0,
+        "warnings": 0,
+        "errors": 0,
+        "pass_rate": 100.0,
+        "failure_rate": 0.0,
+        "warning_rate": 0.0,
+        "error_rate": 0.0
+      }
+    },
+    "sample_errors": [],
+    "sample_warnings": []
+  },
+  {
+    "product": "contas-a-receber",
+    "domain": "financeiro",
+    "dataset_path": "domains/financeiro/contas-a-receber/data/contas_a_receber.jsonl",
+    "validation_timestamp": "2026-08-05T23:25:24.175676+00:00",
+    "total_records": 2000,
+    "records_with_errors": 0,
+    "records_with_warnings": 0,
+    "records_valid": 2000,
+    "records_failing_schema": 0,
+    "records_failing_rules": 0,
+    "total_errors": 0,
+    "total_warnings": 0,
+    "errors_schema": 0,
+    "errors_rules": 0,
+    "errors_profiling": 0,
+    "error_rate": 0.0,
+    "warning_rate": 0.0,
+    "quality_score": 100.0,
+    "camadas": {
+      "validacao_de_esquema": {
+        "camada": "validacao_de_esquema",
+        "status": "PASS",
+        "registros_com_violacao": 0,
+        "violacoes": []
+      },
+      "perfilamento_estatistico": {
+        "camada": "perfilamento_estatistico",
+        "status": "PASS",
+        "perfil_por_atributo": {
+          "invoice_id": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 2000,
+            "cardinalidade_relativa": 1.0
+          },
+          "mes_emissao": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 1,
+            "cardinalidade_relativa": 0.0005
+          },
+          "status": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 3,
+            "cardinalidade_relativa": 0.0015
+          },
+          "tipo_cliente": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 3,
+            "cardinalidade_relativa": 0.0015
+          },
+          "id_cliente": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 50,
+            "cardinalidade_relativa": 0.025
+          },
+          "valor_bruto": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 1996,
+            "cardinalidade_relativa": 0.998
+          },
+          "valor_base": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 1997,
+            "cardinalidade_relativa": 0.9985
+          },
+          "dsc_moeda": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 1,
+            "cardinalidade_relativa": 0.0005
+          },
+          "dsc_dominio": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 1,
+            "cardinalidade_relativa": 0.0005
+          },
+          "dsc_produto": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 1,
+            "cardinalidade_relativa": 0.0005
+          },
+          "dt_versao": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 1,
+            "cardinalidade_relativa": 0.0005
+          }
+        },
+        "unicidade": {
+          "invoice_id": {
+            "registros": 2000,
+            "duplicatas": 0
+          }
+        },
+        "atualidade": {
+          "avaliada": true,
+          "classificacao": "informacional",
+          "materializacao_mais_recente": "2026-08-01T14:53:48.096278Z",
+          "idade_horas": 104.53,
+          "sla_freshness": "P1D",
+          "sla_horas": 24.0,
+          "dentro_do_sla": false
+        },
+        "violacoes": []
+      },
+      "regras_de_negocio": {
+        "camada": "regras_de_negocio",
+        "status": "PASS",
+        "regras_avaliadas": 4,
+        "reprovacoes": 0
+      }
+    },
+    "dimensoes": {
+      "integridade": {
+        "descricao": "Campos obrigatórios preenchidos",
+        "verificada": true,
+        "violacoes": 0,
+        "origem": [
+          "validacao_de_esquema"
+        ],
+        "status": "PASS"
+      },
+      "validade": {
+        "descricao": "Conformidade a formatos, tipos, intervalos e enumerações",
+        "verificada": true,
+        "violacoes": 0,
+        "origem": [
+          "validacao_de_esquema",
+          "regras_de_negocio"
+        ],
+        "status": "PASS"
+      },
+      "unicidade": {
+        "descricao": "Ausência de duplicatas na chave primária",
+        "verificada": true,
+        "violacoes": 0,
+        "origem": [
+          "perfilamento_estatistico"
+        ],
+        "status": "PASS"
+      },
+      "atualidade": {
+        "descricao": "Frescor dos dados em relação ao SLA federado",
+        "verificada": true,
+        "violacoes": 0,
+        "origem": [
+          "perfilamento_estatistico"
+        ],
+        "status": "INFORMACIONAL",
+        "idade_horas": 104.53,
+        "sla_freshness": "P1D",
+        "dentro_do_sla": false
+      },
+      "consistencia": {
+        "descricao": "Coerência interna entre campos do mesmo registro",
+        "verificada": false,
+        "violacoes": 0,
+        "origem": [],
+        "status": "SEM_REGRA_DECLARADA"
+      }
+    },
+    "rule_performance": {
+      "ar-k-invoice-id-format": {
+        "description": "invoice_id deve casar com master_entity invoice",
+        "dimensao": "validade",
+        "total_executions": 2000,
+        "passes": 2000,
+        "failures": 0,
+        "warnings": 0,
+        "errors": 0,
+        "pass_rate": 100.0,
+        "failure_rate": 0.0,
+        "warning_rate": 0.0,
+        "error_rate": 0.0
+      },
+      "ar-k-positive-amount": {
+        "description": "valor_bruto > 0",
+        "dimensao": "validade",
+        "total_executions": 2000,
+        "passes": 2000,
+        "failures": 0,
+        "warnings": 0,
+        "errors": 0,
+        "pass_rate": 100.0,
+        "failure_rate": 0.0,
+        "warning_rate": 0.0,
+        "error_rate": 0.0
+      },
+      "ar-k-currency-brl": {
+        "description": "moeda BRL",
+        "dimensao": "validade",
+        "total_executions": 2000,
+        "passes": 2000,
+        "failures": 0,
+        "warnings": 0,
+        "errors": 0,
+        "pass_rate": 100.0,
+        "failure_rate": 0.0,
+        "warning_rate": 0.0,
+        "error_rate": 0.0
+      },
+      "ar-k-valid-status": {
+        "description": "status válido",
+        "dimensao": "validade",
+        "total_executions": 2000,
+        "passes": 2000,
+        "failures": 0,
+        "warnings": 0,
+        "errors": 0,
+        "pass_rate": 100.0,
+        "failure_rate": 0.0,
+        "warning_rate": 0.0,
+        "error_rate": 0.0
+      }
+    },
+    "sample_errors": [],
+    "sample_warnings": []
+  },
+  {
+    "product": "operacoes-logistica",
+    "domain": "logistica",
+    "dataset_path": "domains/logistica/data/logistics.jsonl",
+    "validation_timestamp": "2026-08-05T23:25:24.278443+00:00",
+    "total_records": 939,
+    "records_with_errors": 0,
+    "records_with_warnings": 0,
+    "records_valid": 939,
+    "records_failing_schema": 0,
+    "records_failing_rules": 0,
+    "total_errors": 0,
+    "total_warnings": 0,
+    "errors_schema": 0,
+    "errors_rules": 0,
+    "errors_profiling": 0,
+    "error_rate": 0.0,
+    "warning_rate": 0.0,
+    "quality_score": 100.0,
+    "camadas": {
+      "validacao_de_esquema": {
+        "camada": "validacao_de_esquema",
+        "status": "PASS",
+        "registros_com_violacao": 0,
+        "violacoes": []
+      },
+      "perfilamento_estatistico": {
+        "camada": "perfilamento_estatistico",
+        "status": "PASS",
+        "perfil_por_atributo": {
+          "invoice_id": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 939,
+            "cardinalidade_relativa": 1.0
+          },
+          "qtd_operacoes": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 2,
+            "cardinalidade_relativa": 0.0021
+          },
+          "valor_base": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 937,
+            "cardinalidade_relativa": 0.9979
+          },
+          "valor_frete": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 935,
+            "cardinalidade_relativa": 0.9957
+          },
+          "valor_seguro": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 930,
+            "cardinalidade_relativa": 0.9904
+          },
+          "valor_imposto": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 936,
+            "cardinalidade_relativa": 0.9968
+          },
+          "valor_total": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 938,
+            "cardinalidade_relativa": 0.9989
+          },
+          "dsc_tipo_operacao": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 3,
+            "cardinalidade_relativa": 0.0032
+          },
+          "status": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 10,
+            "cardinalidade_relativa": 0.0106
+          },
+          "meses_operacao": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 1,
+            "cardinalidade_relativa": 0.0011
+          },
+          "dsc_moeda": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 1,
+            "cardinalidade_relativa": 0.0011
+          },
+          "dsc_dominio": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 1,
+            "cardinalidade_relativa": 0.0011
+          },
+          "dsc_produto": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 1,
+            "cardinalidade_relativa": 0.0011
+          },
+          "dt_versao": {
+            "taxa_nulos": 0.0,
+            "cardinalidade": 1,
+            "cardinalidade_relativa": 0.0011
+          }
+        },
+        "unicidade": {
+          "invoice_id": {
+            "registros": 939,
+            "duplicatas": 0
+          }
+        },
+        "atualidade": {
+          "avaliada": true,
+          "classificacao": "informacional",
+          "materializacao_mais_recente": "2026-08-01T14:53:48.113429Z",
+          "idade_horas": 104.53,
+          "sla_freshness": "P1D",
+          "sla_horas": 24.0,
+          "dentro_do_sla": false
+        },
+        "violacoes": []
+      },
+      "regras_de_negocio": {
+        "camada": "regras_de_negocio",
+        "status": "PASS",
+        "regras_avaliadas": 5,
+        "reprovacoes": 0
+      }
+    },
+    "dimensoes": {
+      "integridade": {
+        "descricao": "Campos obrigatórios preenchidos",
+        "verificada": true,
+        "violacoes": 0,
+        "origem": [
+          "validacao_de_esquema"
+        ],
+        "status": "PASS"
+      },
+      "validade": {
+        "descricao": "Conformidade a formatos, tipos, intervalos e enumerações",
+        "verificada": true,
+        "violacoes": 0,
+        "origem": [
+          "validacao_de_esquema",
+          "regras_de_negocio"
+        ],
+        "status": "PASS"
+      },
+      "unicidade": {
+        "descricao": "Ausência de duplicatas na chave primária",
+        "verificada": true,
+        "violacoes": 0,
+        "origem": [
+          "perfilamento_estatistico"
+        ],
+        "status": "PASS"
+      },
+      "atualidade": {
+        "descricao": "Frescor dos dados em relação ao SLA federado",
+        "verificada": true,
+        "violacoes": 0,
+        "origem": [
+          "perfilamento_estatistico"
+        ],
+        "status": "INFORMACIONAL",
+        "idade_horas": 104.53,
+        "sla_freshness": "P1D",
+        "dentro_do_sla": false
+      },
+      "consistencia": {
+        "descricao": "Coerência interna entre campos do mesmo registro",
+        "verificada": true,
+        "violacoes": 0,
+        "origem": [
+          "regras_de_negocio"
+        ],
+        "status": "PASS"
+      }
+    },
+    "rule_performance": {
+      "log-k-invoice-id-format": {
+        "description": "invoice_id deve casar com master_entity invoice",
+        "dimensao": "validade",
+        "total_executions": 939,
+        "passes": 939,
+        "failures": 0,
+        "warnings": 0,
+        "errors": 0,
+        "pass_rate": 100.0,
+        "failure_rate": 0.0,
+        "warning_rate": 0.0,
+        "error_rate": 0.0
+      },
+      "log-k-total-decomposition": {
+        "description": "valor_total deve igualar a soma de seus componentes",
+        "dimensao": "consistencia",
+        "total_executions": 939,
+        "passes": 939,
+        "failures": 0,
+        "warnings": 0,
+        "errors": 0,
+        "pass_rate": 100.0,
+        "failure_rate": 0.0,
+        "warning_rate": 0.0,
+        "error_rate": 0.0
+      },
+      "log-k-positive-count": {
+        "description": "qtd_operacoes >= 1",
+        "dimensao": "validade",
+        "total_executions": 939,
+        "passes": 939,
+        "failures": 0,
+        "warnings": 0,
+        "errors": 0,
+        "pass_rate": 100.0,
+        "failure_rate": 0.0,
+        "warning_rate": 0.0,
+        "error_rate": 0.0
+      },
+      "log-k-currency-brl": {
+        "description": "moeda BRL",
+        "dimensao": "validade",
+        "total_executions": 939,
+        "passes": 939,
+        "failures": 0,
+        "warnings": 0,
+        "errors": 0,
+        "pass_rate": 100.0,
+        "failure_rate": 0.0,
+        "warning_rate": 0.0,
+        "error_rate": 0.0
+      },
+      "log-k-valid-status": {
+        "description": "status válido em pelo menos uma operação",
+        "dimensao": "validade",
+        "total_executions": 939,
+        "passes": 939,
+        "failures": 0,
+        "warnings": 0,
+        "errors": 0,
+        "pass_rate": 100.0,
+        "failure_rate": 0.0,
+        "warning_rate": 0.0,
+        "error_rate": 0.0
+      }
+    },
+    "sample_errors": [],
+    "sample_warnings": []
+  }
+]

@@ -1,0 +1,56 @@
+{
+  "cenario": "C3a — Contrato evolui sem o dado (campos obrigatórios adicionados)",
+  "descricao": "Dois campos foram acrescentados ao schema do contrato do produto operacoes-logistica, ambos com required: true, sem qualquer alteração no artefato de dados nem na versão declarada do contrato.",
+  "arquivo_alterado": "domains/logistica/data_contract.yaml",
+  "campos_adicionados": [
+    {
+      "name": "dsc_cidade",
+      "logicalType": "string",
+      "required": true,
+      "description": "Cidade para onde a encomenda foi enviada"
+    },
+    {
+      "name": "dsc_uf",
+      "logicalType": "string",
+      "required": true,
+      "description": "Estado para onde a encomenda foi enviada"
+    }
+  ],
+  "versao_do_contrato": {
+    "antes": "1.0.0",
+    "depois": "1.0.0",
+    "observacao": "adicionar campo obrigatório é breaking change; a versão não foi incrementada"
+  },
+  "dados_alterados": false,
+  "resultado": {
+    "data_quality": {
+      "status": "FAIL",
+      "produto": "operacoes-logistica",
+      "camada": "validacao_de_esquema",
+      "dimensao": "integridade",
+      "registros_validos": "0/939",
+      "quality_score": 0.0,
+      "erros_de_esquema": 1878,
+      "erros_de_regra": 0,
+      "detalhe": "939 registros x 2 campos obrigatórios ausentes (dsc_cidade, dsc_uf)",
+      "observacao": "A camada de regras de negócio permanece PASS: nenhuma regra do contrato foi violada. O escore reprova o produto pela camada de esquema."
+    },
+    "governanca": {
+      "status": "PASS",
+      "contratos_conformes": "3/3",
+      "razao": "a governança verifica contrato x políticas federadas e não abre o artefato de dados; o contrato ficou mais completo, não menos conforme"
+    },
+    "reconciliacao": {
+      "status": "sem alteração",
+      "razao": "nenhum dado foi modificado"
+    }
+  },
+  "achados": [
+    "Achado esperado: o desalinhamento dado x contrato é detectado apenas pela camada de qualidade, na validação de esquema.",
+    "Achado adicional: spec.evolution_policies em governance/policies.yaml exige backward_compatibility e aprovação para breaking changes, e o próprio contrato declara breaking_changes: require_major_version. Nenhum validador lê essas políticas — verificado por busca em todos os scripts, zero referências. A adição de campos obrigatórios sob a versão 1.0.0 passa sem qualquer objeção. É política federada declarada e não executada.",
+    "A única verificação de versão existente (interop_semver) valida o formato X.Y.Z, não o incremento; interop_schema_compatibility compara a string 'backward_compatible' com a política, não o esquema contra sua versão anterior."
+  ],
+  "reports_regerados_em": "2026-08-04T19:57:54-03:00",
+  "observacao": "Os três artefatos de dados e os contratos financeiros permanecem idênticos ao baseline: a única intervenção é o schema do contrato logístico.",
+  "correcao_no_validador": "Antes desta execução o escore contabilizava apenas as regras de negócio, e este cenário era reportado como 939/939 e quality_score 100 % com a camada de esquema em FAIL — o mesmo padrão de falso verde já identificado em outros validadores. A camada 1 passou a emitir veredicto por registro, e a agregação do dataset é derivada desses veredictos, de modo que escore e camadas não podem mais discordar. As reprovações de esquema e de regra são contabilizadas em campos separados (errors_schema, errors_rules) e cada camada é decidida apenas pelas suas próprias violações."
+}

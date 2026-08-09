@@ -1,0 +1,7 @@
+18d17
+< tags: ["logistics", "v1", "analytical", "entity", "invoice"]
+155,158d153
+< 
+< team:
+<   - username: "logistics-team@empresa.com"
+<     role: owner

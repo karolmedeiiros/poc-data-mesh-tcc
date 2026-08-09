@@ -1,0 +1,11 @@
+97a98,107
+>       - name: dsc_cidade
+>         logicalType: string
+>         physicalType: string
+>         required: true
+>         description: "Cidade para onde a encomenda foi enviada"
+>       - name: dsc_uf
+>         logicalType: string
+>         physicalType: string
+>         required: true
+>         description: "Estado para onde a encomenda foi enviada"

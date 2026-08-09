@@ -1,0 +1,70 @@
+{
+  "timestamp": "2026-08-05T23:25:24.437202+00:00",
+  "analysis_type": "cross_domain_divergences",
+  "domains_compared": [
+    "logistica",
+    "financeiro"
+  ],
+  "total_invoices": 2000,
+  "matched_invoices": 939,
+  "divergences": {
+    "duplicated_master_key": 0,
+    "state_contradiction": 0,
+    "attribute_divergence": 0,
+    "temporal_misalignment": 0,
+    "only_in_logistics": 0,
+    "data_quality_issues": 0
+  },
+  "convergence_metrics": {
+    "convergence_rate": 100.0,
+    "convergence_basis": "faturas presentes em ambos os domínios",
+    "coverage_logistics": 100.0,
+    "coverage_finance": 46.949999999999996,
+    "referential_integrity_rate": 100.0
+  },
+  "referential_integrity": {
+    "logistics_orphan_records": 0,
+    "logistics_orphan_invoices": 0,
+    "finance_without_logistics_invoices": 1061,
+    "valid_references": 939,
+    "broken_references": 0,
+    "logistics_orphan_examples": []
+  },
+  "master_entity_uniqueness": {
+    "duplicated_keys_total": 0,
+    "by_product": {
+      "operacoes-logistica": {
+        "duplicated_invoice_ids": 0,
+        "records_shadowed": 0,
+        "invoice_ids": []
+      },
+      "contas-a-pagar": {
+        "duplicated_invoice_ids": 0,
+        "records_shadowed": 0,
+        "invoice_ids": []
+      },
+      "contas-a-receber": {
+        "duplicated_invoice_ids": 0,
+        "records_shadowed": 0,
+        "invoice_ids": []
+      }
+    },
+    "examples": []
+  },
+  "informational_findings": {
+    "granularity_one_to_many": 0,
+    "granularity_many_to_one": 939,
+    "granularity_many_to_many": 0
+  },
+  "informational_coverage": {
+    "finance_without_logistics": 1061
+  },
+  "value_ratio_stats": {
+    "description": "razão valor_total logístico / valor_liquido da fatura; grandezas distintas, sem regra de negócio que as vincule",
+    "n": 939,
+    "min": 0.0016,
+    "p50": 1.1599,
+    "max": 91.2197
+  },
+  "comparable_invoices": 939
+}

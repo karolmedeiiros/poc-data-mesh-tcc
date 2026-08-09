@@ -1,0 +1,57 @@
+{
+  "cenario": "C5 — Duplicação de entidade-mestre",
+  "descricao": "Um registro da fatura INV-2999 foi duplicado no produto contas-a-pagar, resultando em duas ocorrências idênticas da mesma entidade-mestre. A duplicação é intra-produto; o efeito relevante é cross-domain, porque invoice_id é a chave que sustenta a junção entre Logística e Financeiro.",
+  "arquivo_alterado": "domains/financeiro/contas-a-pagar/data/contas_a_pagar.jsonl",
+  "invoice_id_duplicado": "INV-2999",
+  "ocorrencias": 2,
+  "tipo_de_duplicata": "idêntica (os dois registros são byte-a-byte iguais)",
+  "contratos_alterados": false,
+  "politicas_alteradas": false,
+  "resultado": {
+    "governanca": {
+      "status": "PASS",
+      "conformes": "3/3",
+      "checagens_por_contrato": 58,
+      "contas_a_pagar_percentual": 100.0,
+      "razao": "o contrato segue declarando a entidade-mestre como única e chave primária; a conformidade é do artefato declarativo, não do dado"
+    },
+    "data_quality": {
+      "status": "FAIL",
+      "produto": "contas-a-pagar",
+      "registros_validos": "1999/2001",
+      "quality_score": 99.9,
+      "erros_de_perfilamento": 2,
+      "erros_de_esquema": 0,
+      "erros_de_regra": 0,
+      "camada": "perfilamento_estatistico",
+      "dimensao": "unicidade",
+      "violacoes_da_dimensao": 1,
+      "origem_da_deteccao": "chave primária derivada da declaração primaryKey no esquema — nenhum contrato declara regra de qualidade sobre unicidade"
+    },
+    "detector_cross_domain": {
+      "duplicated_master_key": 1,
+      "detalhe": {
+        "duplicated_invoice_ids": 1,
+        "records_shadowed": 1,
+        "invoice_ids": [
+          "INV-2999"
+        ]
+      }
+    },
+    "reconciliacao": {
+      "linhas_no_arquivo": 2001,
+      "faturas_distintas": 2000,
+      "chaves_duplicadas": 1,
+      "registros_descartados": 1,
+      "ap_total_reportado": 2000,
+      "razao": "a indexação por invoice_id mantém uma linha por chave; as colisões são apuradas antes da indexação, de modo que o registro excedente é contabilizado e reportado"
+    }
+  },
+  "achados": [
+    "Detecção parcial e assimétrica entre as camadas: a governança computacional permanece em PASS porque verifica o contrato, e não o dado; a camada de qualidade reprova pela dimensão de unicidade; e a camada de reconciliação reporta que a indexação por invoice_id descartaria um registro.",
+    "A duplicação afeta o INSTRUMENTO de análise, e não apenas o dado: a reconciliação fatura-a-fatura mantém uma linha por chave, de modo que a ocorrência excedente não participa da comparação. O relatório contabiliza 2.000 faturas para um arquivo de 2.001 linhas, e a colisão é reportada explicitamente.",
+    "A duplicata deste cenário é idêntica: perde-se a contagem, não o conteúdo. Na variante divergente — mesma chave com valores diferentes — a conclusão da reconciliação sobre a fatura depende da ordem das linhas no arquivo, e o contador de divergência de valor AP×AR sobe de 160 para 161.",
+    "A detecção pela camada de qualidade depende de o contrato declarar primaryKey para a entidade-mestre: sem essa marcação, a verificação de unicidade não é executada e o relatório informa SEM_REGRA_DECLARADA com zero violações. A governança cobre esse flanco ao exigir master_entity_unique_declared e master_entity_primary_key_declared, impedindo que um domínio se dispense da verificação por meio do próprio contrato."
+  ],
+  "salvo_em": "2026-08-05T19:55:54-03:00"
+}
