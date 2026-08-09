@@ -1,0 +1,48 @@
+{
+  "cenario": "C3b — Dado evolui sem o contrato (atributos publicados sem declaração)",
+  "descricao": "Os geradores passaram a produzir dois atributos novos no output port analítico de Logística (dsc_cidade e dsc_uf), sem que o contrato do produto os declare. É a direção inversa do cenário C3a, no qual o contrato declarava campos que o dado não trazia.",
+  "intervencao": {
+    "arquivos_alterados": [
+      "platform/generators/generate_logistics.py",
+      "platform/generators/generate_data_analytical.py"
+    ],
+    "mecanismo": "Bloco delimitado e desativável pela constante INCLUIR_DESTINO nos dois geradores: na camada operacional sorteia-se o destino de cada operação a partir de pares (cidade, UF) reais; na camada analítica publica-se o destino predominante da fatura, com desempate alfabético para saída determinística.",
+    "contrato_alterado": false,
+    "versao_do_contrato": "1.0.0"
+  },
+  "resultado": {
+    "data_quality": {
+      "status": "FAIL",
+      "produto": "operacoes-logistica",
+      "camada": "validacao_de_esquema",
+      "dimensao": "validade",
+      "registros_validos": "0/949",
+      "quality_score": 0.0,
+      "erros_de_esquema": 1898,
+      "erros_de_regra": 0,
+      "violacoes": [
+        "Atributo 'dsc_cidade' publicado sem declaração no contrato em 949 registros",
+        "Atributo 'dsc_uf' publicado sem declaração no contrato em 949 registros"
+      ]
+    },
+    "governanca": {
+      "status": "PASS",
+      "contratos_conformes": "3/3",
+      "razao": "nenhuma checagem compara o conjunto de atributos publicados com o schema declarado; a governança não abre o artefato de dados"
+    },
+    "reconciliacao": {
+      "granularidade_1_n": 147,
+      "integridade_referencial": 0,
+      "divergencias_cross_domain": {},
+      "razao": "os dois atributos novos não integram nenhuma comparação entre domínios"
+    }
+  },
+  "achados": [
+    "Par simétrico com C3a: a camada de esquema detecta as duas direções do desalinhamento dado-contrato (campo declarado e não publicado; campo publicado e não declarado), e em nenhuma delas a governança federada reage.",
+    "A violação aqui é de VALIDADE (campo_nao_declarado), não de integridade como em C3a — o dado está completo, o contrato é que está incompleto.",
+    "Adicionar atributo é, pela própria política (interoperability.versioning.backward_compatible_addition: minor), mudança que exigiria incremento de versão menor. O contrato permaneceu em 1.0.0 e nada objetou, porque spec.evolution_policies não é lido por nenhum validador."
+  ],
+  "ressalva_metodologica": "Conjunto regerado integralmente (financeiro, logística e output ports na mesma execução), de modo que os três produtos são coerentes entre si: nenhuma referência quebrada e nenhuma contradição de estado espúria. Os totais diferem do baseline (1.998 / 1.999 / 949 contra 2.000 / 2.000 / 939, granularidade 147 contra 161) porque os geradores não reproduzem o dataset do baseline a partir da semente — limitação preexistente, verificada executando os geradores do próprio baseline sem alteração alguma. As métricas de contexto deste cenário, portanto, não são diretamente comparáveis às dos cenários C1, C2 e C3a; a comparação válida é a do comportamento dos mecanismos.",
+  "salvo_em": "2026-08-04T21:19:55-03:00",
+  "nota_sobre_persistencia_da_intervencao": "Os geradores com o bloco de destino foram sincronizados no baseline com INCLUIR_DESTINO = False, para que o código sobreviva a um restore sem alterar o estado de controle. Para reentrar neste cenário após restaurar: trocar a constante para True nos dois geradores e reexecutar a cadeia de geração."
+}

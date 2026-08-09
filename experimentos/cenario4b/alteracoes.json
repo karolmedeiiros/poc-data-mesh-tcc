@@ -1,0 +1,212 @@
+{
+  "analise": "C4b — Cobertura das políticas federadas pela governança computacional",
+  "natureza": "Não é cenário de injeção: nenhum dado, contrato ou política foi alterado. É a medição de quanto da governança federada declarada em governance/policies.yaml é efetivamente executável por mecanismo automatizado.",
+  "metodo": "Cada seção de spec declara em `enforcement` se é verificada por mecanismo (`automated`, com o nome da checagem em `verified_by`), se permanece declaratória (`declaratory`, com `reason`) ou se é parcial. A anotação foi confrontada com os acessos reais às políticas no código do validador, e o resultado da execução foi extraído de reports/governance_compliance.json.",
+  "cobertura": {
+    "secoes_anotadas": 23,
+    "automated": [
+      "global_quality_rules",
+      "global_slas",
+      "interoperability.versioning",
+      "required_contract_sections",
+      "required_fields",
+      "required_monitoring",
+      "standards.documentation",
+      "standards.evolution",
+      "standards.naming",
+      "standards.quality",
+      "standards.security"
+    ],
+    "declaratory": [
+      "compliance_requirements",
+      "documentation_policies",
+      "evolution_policies",
+      "interoperability.protocols",
+      "security_policies.access_control",
+      "security_policies.audit",
+      "standards.error_budgets",
+      "standards.observability",
+      "standards.performance",
+      "standards.reliability"
+    ],
+    "partial": [
+      "interoperability",
+      "security_policies"
+    ],
+    "contagem": {
+      "automated": 11,
+      "declaratory": 10,
+      "partial": 2
+    }
+  },
+  "checagens_por_grupo": {
+    "required_sections": {
+      "total": 8,
+      "checagens": [
+        "metadata",
+        "spec.consumers",
+        "spec.dataset",
+        "spec.monitoring",
+        "spec.product",
+        "spec.quality",
+        "spec.schema",
+        "spec.tests"
+      ]
+    },
+    "schema_conformance": {
+      "total": 2,
+      "checagens": [
+        "schema_logical_type_declared",
+        "schema_physical_type_declared"
+      ]
+    },
+    "naming": {
+      "total": 6,
+      "checagens": [
+        "naming_forbidden_patterns",
+        "naming_max_length",
+        "naming_policy_defined",
+        "naming_required_field_dt_versao",
+        "naming_required_field_invoice_id",
+        "naming_snake_case"
+      ]
+    },
+    "documentation": {
+      "total": 3,
+      "checagens": [
+        "documentation_description",
+        "documentation_examples",
+        "documentation_policy_defined"
+      ]
+    },
+    "evolution": {
+      "total": 4,
+      "checagens": [
+        "evolution_backward_compatible",
+        "evolution_breaking_changes",
+        "evolution_deprecation_period",
+        "evolution_policy_defined"
+      ]
+    },
+    "security": {
+      "total": 3,
+      "checagens": [
+        "security_data_classification",
+        "security_pii_fields_declared",
+        "security_policy_defined"
+      ]
+    },
+    "slas": {
+      "total": 7,
+      "checagens": [
+        "availability_compliance",
+        "freshness_compliance",
+        "latency_compliance",
+        "sla_defined",
+        "sla_policy_config",
+        "sla_profile_resolved",
+        "throughput_compliance"
+      ]
+    },
+    "quality_rules": {
+      "total": 5,
+      "checagens": [
+        "quality_rule_non_null_ids",
+        "quality_rule_positive_amounts",
+        "quality_rule_valid_currency",
+        "quality_rule_valid_status",
+        "quality_rules_defined"
+      ]
+    },
+    "required_fields": {
+      "total": 9,
+      "checagens": [
+        "dataset_fields_defined",
+        "master_entity_declared",
+        "master_entity_field_invoice_id",
+        "master_entity_primary_key_declared",
+        "master_entity_unique_declared",
+        "required_field_dsc_dominio",
+        "required_field_dsc_moeda",
+        "required_field_dsc_produto",
+        "required_field_dt_versao"
+      ]
+    },
+    "monitoring": {
+      "total": 13,
+      "checagens": [
+        "monitoring_alert_availability_drop",
+        "monitoring_alert_high_error_rate",
+        "monitoring_alert_schema_validation_failure",
+        "monitoring_alert_stale_data",
+        "monitoring_alert_threshold_availability",
+        "monitoring_alert_threshold_error_rate",
+        "monitoring_alert_threshold_freshness",
+        "monitoring_defined",
+        "monitoring_metric_error_rate",
+        "monitoring_metric_freshness",
+        "monitoring_metric_processing_latency",
+        "monitoring_metric_record_count",
+        "monitoring_metric_schema_validation_failures"
+      ]
+    },
+    "interoperability": {
+      "total": 16,
+      "checagens": [
+        "interop_catalog_metadata",
+        "interop_consumer_contracts",
+        "interop_cross_domain_key_present",
+        "interop_currency_standard",
+        "interop_data_format_open",
+        "interop_datetime_type",
+        "interop_federated_lineage",
+        "interop_federated_lineage_upstream",
+        "interop_naming_convention",
+        "interop_schema_compatibility",
+        "interop_schema_registry",
+        "interop_semver",
+        "interop_shared_id_dsc_dominio",
+        "interop_shared_id_dsc_produto",
+        "interop_shared_id_dt_versao",
+        "interoperability_policy_defined"
+      ]
+    }
+  },
+  "total_de_checagens_por_contrato": 76,
+  "resultado_da_execucao": {
+    "conformes": "3/3",
+    "por_produto": {
+      "contas-a-pagar": {
+        "checagens": "76/76",
+        "percentual": 100.0,
+        "reprovacoes": []
+      },
+      "contas-a-receber": {
+        "checagens": "76/76",
+        "percentual": 100.0,
+        "reprovacoes": []
+      },
+      "operacoes-logistica": {
+        "checagens": "75/75",
+        "percentual": 100.0,
+        "reprovacoes": []
+      }
+    }
+  },
+  "limitacoes_por_checagem": {
+    "required_contract_sections": "testa presença de chave na visão normalizada, e o odcs_adapter cria todas as chaves com valor padrão; nenhuma ausência é detectável por este caminho. As exigências efetivas de conteúdo estão em required_fields, global_quality_rules e interoperability.",
+    "global_quality_rules": "confirma que o contrato declara regra sobre o campo alvo, por correspondência textual; não avalia a expressão. A avaliação ocorre na camada de qualidade, que executa as expressões declaradas contra os dados.",
+    "required_monitoring": "verifica que o contrato declara cada métrica e alerta exigidos, e a coerência entre o limiar do alerta e o SLA prometido; nenhuma métrica é coletada, pois não há runtime que as emita.",
+    "evolution": "verifica a adesão declarada à política de evolução; detectar quebra concreta de compatibilidade exigiria comparar o esquema com sua versão anterior, e a arquitetura não mantém registro de versões.",
+    "versioning": "valida o formato semver X.Y.Z; a correspondência entre tipo de mudança e incremento (major/minor/patch) exigiria histórico de versões.",
+    "slas": "conformidade da promessa declarada, não do serviço observado. Disponibilidade, latência e vazão reais exigiriam runtime; frescor é a única dimensão com medição efetiva, na dimensão de atualidade da camada de qualidade.",
+    "security": "verifica que o produto classifica os dados e enumera seus atributos sensíveis; cifra, RBAC e retenção de auditoria são propriedades de plataforma."
+  },
+  "achados": [
+    "A cobertura é parcial por natureza, não por omissão: das seções anotadas, as declaratórias descrevem processo humano (aprovação, notificação, auditoria, LGPD, SOX, ISO 27001) ou métrica de operação (observabilidade, orçamento de erro, confiabilidade, desempenho, protocolos) que não existem sem serviço em execução. Política declaratória não é defeito; defeito é não distinguir uma da outra.",
+    "Regra global de qualidade só é verificável se falar o vocabulário publicado pelos produtos: `applies_to` que não intersecta os atributos do contrato faz a checagem ser aprovada por inaplicabilidade. As quatro regras vigentes referenciam atributos efetivamente publicados (valor_*, dsc_moeda, status e os identificadores).",
+    "Declarar métrica e declarar alerta não basta: o limiar do alerta precisa ser coerente com o SLA prometido, sob pena de o produto avisar apenas depois de já ter rompido o compromisso. A coerência entre os dois é verificada em monitoring.",
+    "Verificação parcial sob nome abrangente é mais enganosa que verificação ausente: `interop_federated_lineage` cobre os campos de rastreio e a declaração de origem, que são as duas metades da política homônima."
+  ],
+  "medido_em": "2026-08-05T20:26:01-03:00"
+}

@@ -28,22 +28,34 @@ def parse_iso_duration_to_minutes(value: str) -> float:
     if not isinstance(value, str):
         raise ValueError("duration must be string")
 
-    match = re.fullmatch(r"P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?", value)
+    # `MS` (milissegundos) precede `M` (minutos) na alternância porque a política
+    # usa PT100MS no perfil `critical`; sem isso a duração era rejeitada como
+    # malformada e a checagem correspondente reprovava por erro de parsing.
+    match = re.fullmatch(
+        r"P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)MS)?(?:(\d+)M)?(?:(\d+)S)?)?", value)
     if not match:
         raise ValueError(f"invalid ISO duration: {value}")
 
     days = int(match.group(1) or 0)
     hours = int(match.group(2) or 0)
-    minutes = int(match.group(3) or 0)
-    seconds = int(match.group(4) or 0)
+    millis = int(match.group(3) or 0)
+    minutes = int(match.group(4) or 0)
+    seconds = int(match.group(5) or 0)
 
-    return (days * 24 * 60) + (hours * 60) + minutes + (seconds / 60)
+    return (days * 24 * 60) + (hours * 60) + minutes + (seconds / 60) + (millis / 60000)
 
 def parse_percent(value: str) -> float:
     """Converte string percentual (ex: '99.0%') para float."""
     if not isinstance(value, str) or not value.endswith("%"):
         raise ValueError(f"invalid percent format: {value}")
     return float(value.replace("%", ""))
+
+def parse_msgs_per_second(value: str) -> float:
+    """Converte vazão declarada (ex.: '100 msg/s') em mensagens por segundo."""
+    match = re.fullmatch(r"\s*(\d+(?:\.\d+)?)\s*msg/s\s*", str(value))
+    if not match:
+        raise ValueError(f"invalid throughput format: {value}")
+    return float(match.group(1))
 
 def check_required_sections(contract: Dict, policies: Dict) -> Dict[str, str]:
     """Verifica seções obrigatórias do contrato"""
@@ -110,8 +122,183 @@ def check_slas(contract: Dict, policies: Dict) -> Dict[str, str]:
             results["availability_compliance"] = "FAIL"
     else:
         results["availability_compliance"] = "FAIL"
-    
+
+    # Latência e vazão: comparadas contra o perfil de `global_slas` aplicável ao
+    # produto. Estavam declaradas na política e em todos os contratos, sem
+    # nenhuma verificação que as relacionasse.
+    perfil = perfil_de_qos(contract)
+    results["sla_profile_resolved"] = "PASS"
+
+    limite_lat = get_nested(policies, ["spec", "global_slas", "latency", perfil])
+    if limite_lat:
+        if "latency" in contract_sla:
+            try:
+                results["latency_compliance"] = (
+                    "PASS" if parse_iso_duration_to_minutes(contract_sla["latency"])
+                    <= parse_iso_duration_to_minutes(limite_lat) else "FAIL")
+            except ValueError:
+                results["latency_compliance"] = "FAIL"
+        else:
+            results["latency_compliance"] = "FAIL"
+
+    limite_thr = get_nested(policies, ["spec", "global_slas", "throughput", perfil])
+    if limite_thr:
+        if "throughput" in contract_sla:
+            try:
+                results["throughput_compliance"] = (
+                    "PASS" if parse_msgs_per_second(contract_sla["throughput"])
+                    >= parse_msgs_per_second(limite_thr) else "FAIL")
+            except ValueError:
+                results["throughput_compliance"] = "FAIL"
+        else:
+            results["throughput_compliance"] = "FAIL"
+
     return results
+
+def perfil_de_qos(contract: Dict) -> str:
+    """Perfil de SLA aplicável ao produto, conforme a natureza declarada.
+
+    As políticas em `global_slas` definem quatro perfis (default, critical,
+    batch, real_time). Comparar um output port analítico, materializado em
+    lote, contra o perfil `default` (latência PT1S, vazão 1000 msg/s) reprovaria
+    por desalinhamento de premissa, não por descumprimento: o perfil existe na
+    política justamente para isso. O perfil é derivado de `product_type`, que
+    todo contrato já declara, para não exigir campo novo.
+    """
+    tipo = (contract.get("metadata", {}) or {}).get("product_type", "")
+    return "batch" if tipo == "analytical" else "default"
+
+
+def check_naming(contract: Dict, policies: Dict) -> Dict[str, str]:
+    """Convenções de nomenclatura de `standards.naming`."""
+    naming = get_nested(policies, ["spec", "standards", "naming"]) or {}
+    if not naming:
+        return {}
+
+    campos = [f.get("name", "") for f in
+              get_nested(contract, ["spec", "dataset", "fields"], []) or []]
+    results: Dict[str, str] = {"naming_policy_defined": "PASS"}
+
+    if naming.get("convention") == "snake_case":
+        results["naming_snake_case"] = (
+            "PASS" if all(re.fullmatch(r"[a-z][a-z0-9_]*", c or "") for c in campos) else "FAIL")
+
+    limite = naming.get("max_field_name_length")
+    if limite:
+        results["naming_max_length"] = (
+            "PASS" if all(len(c or "") <= limite for c in campos) else "FAIL")
+
+    proibidos = naming.get("forbidden_patterns") or []
+    if proibidos:
+        results["naming_forbidden_patterns"] = (
+            "PASS" if not any((c or "").startswith(p) for c in campos for p in proibidos) else "FAIL")
+
+    for campo in naming.get("required_fields") or []:
+        results[f"naming_required_field_{campo}"] = "PASS" if campo in campos else "FAIL"
+
+    return results
+
+
+def check_documentation(contract: Dict, policies: Dict) -> Dict[str, str]:
+    """Exigências de documentação de `standards.documentation`."""
+    doc = get_nested(policies, ["spec", "standards", "documentation"]) or {}
+    if not doc:
+        return {}
+
+    results: Dict[str, str] = {"documentation_policy_defined": "PASS"}
+    if doc.get("description_required"):
+        results["documentation_description"] = (
+            "PASS" if get_nested(contract, ["spec", "product", "description"]) else "FAIL")
+    if doc.get("examples_required"):
+        # Exemplos executáveis: os testes unitários declarativos do contrato,
+        # que trazem input e resultado esperado.
+        results["documentation_examples"] = (
+            "PASS" if get_nested(contract, ["spec", "tests", "unit"]) else "FAIL")
+    return results
+
+
+def check_evolution(contract: Dict, policies: Dict) -> Dict[str, str]:
+    """Adesão declarada à política de evolução de esquema.
+
+    Verifica que o contrato se compromete com a política federada — não que uma
+    mudança concreta a respeitou. Detectar quebra de compatibilidade exigiria
+    comparar o esquema com sua versão anterior, o que demanda um registro de
+    versões que esta PoC não mantém; a limitação está registrada no README.
+    """
+    pol_ev = get_nested(policies, ["spec", "standards", "evolution"]) or {}
+    if not pol_ev:
+        return {}
+
+    ev = get_nested(contract, ["spec", "schema", "evolution"], {}) or {}
+    results: Dict[str, str] = {"evolution_policy_defined": "PASS"}
+
+    if pol_ev.get("backward_compatibility"):
+        results["evolution_backward_compatible"] = (
+            "PASS" if "backward" in str(ev.get("policy", "")).lower() else "FAIL")
+
+    exigido = pol_ev.get("breaking_changes")
+    if exigido:
+        results["evolution_breaking_changes"] = (
+            "PASS" if ev.get("breaking_changes") == exigido else "FAIL")
+
+    minimo = pol_ev.get("deprecation_period")
+    if minimo:
+        try:
+            declarado = parse_iso_duration_to_minutes(ev.get("deprecation_period", ""))
+            results["evolution_deprecation_period"] = (
+                "PASS" if declarado >= parse_iso_duration_to_minutes(minimo) else "FAIL")
+        except ValueError:
+            results["evolution_deprecation_period"] = "FAIL"
+
+    return results
+
+
+def check_security(contract: Dict, policies: Dict) -> Dict[str, str]:
+    """Classificação de dados quando o produto publica atributo sensível."""
+    pii_global = set(get_nested(policies, ["spec", "standards", "security", "pii_fields"], []) or [])
+    niveis = {n.get("level") for n in
+              get_nested(policies, ["spec", "security_policies", "data_classification"], []) or []}
+    if not pii_global:
+        return {}
+
+    metadata = contract.get("metadata", {}) or {}
+    campos = {f.get("name") for f in
+              get_nested(contract, ["spec", "dataset", "fields"], []) or []}
+    publicados = sorted(pii_global & campos)
+
+    results: Dict[str, str] = {"security_policy_defined": "PASS"}
+    if not publicados:
+        # Produto sem atributo sensível não precisa declarar classificação.
+        results["security_data_classification"] = "PASS"
+        return results
+
+    nivel = metadata.get("data_classification")
+    results["security_data_classification"] = "PASS" if nivel in niveis else "FAIL"
+    # O produto deve enumerar quais dos seus atributos são sensíveis, para que a
+    # exigência seja rastreável campo a campo e não apenas no nível do produto.
+    declarados = set(metadata.get("pii_fields") or [])
+    results["security_pii_fields_declared"] = (
+        "PASS" if set(publicados) <= declarados else "FAIL")
+    return results
+
+
+def check_schema_conformance(contract: Dict, policies: Dict) -> Dict[str, str]:
+    """Conformidade do esquema com o próprio padrão ODCS v3.
+
+    `physicalType` é obrigatório por propriedade no ODCS v3. A visão interna
+    normalizada o ignorava, de modo que sua ausência não era detectável por
+    nenhum mecanismo — nem pela governança, nem pela qualidade.
+    """
+    campos = get_nested(contract, ["spec", "dataset", "fields"], []) or []
+    if not campos:
+        return {}
+    sem_tipo_fisico = [f.get("name") for f in campos if not f.get("physical_type")]
+    sem_tipo_logico = [f.get("name") for f in campos if not f.get("type")]
+    return {
+        "schema_physical_type_declared": "PASS" if not sem_tipo_fisico else "FAIL",
+        "schema_logical_type_declared": "PASS" if not sem_tipo_logico else "FAIL",
+    }
+
 
 def check_quality_rules(contract: Dict, policies: Dict) -> Dict[str, str]:
     """Verifica se regras de qualidade globais estão presentes"""
@@ -192,6 +379,26 @@ def check_required_fields(contract: Dict, policies: Dict) -> Dict[str, str]:
             results[f"master_entity_field_{canonical_field}"] = (
                 "PASS" if canonical_field in field_set else "FAIL"
             )
+
+            # A master entity precisa ser declarada ÚNICA e como chave primária,
+            # não apenas existir. A camada de qualidade deriva do contrato qual
+            # campo verificar quanto a duplicatas: sem a marcação, a verificação
+            # de unicidade não é executada e o dado duplicado é reportado como
+            # SEM_REGRA_DECLARADA. Exigir a declaração impede que um domínio se
+            # dispense da checagem por meio do próprio contrato.
+            campo_mestre = next(
+                (f for f in contract_fields
+                 if isinstance(f, dict) and f.get("name") == canonical_field),
+                None,
+            )
+            results["master_entity_unique_declared"] = (
+                "PASS" if campo_mestre and campo_mestre.get("unique") else "FAIL"
+            )
+            results["master_entity_primary_key_declared"] = (
+                "PASS" if canonical_field in
+                (get_nested(contract, ["spec", "dataset", "primaryKey"], []) or [])
+                else "FAIL"
+            )
     else:
         # Aggregate: medidas (count, total) presentes
         for token in required_fields.get("measures", []):
@@ -228,8 +435,73 @@ def check_monitoring(contract: Dict, policies: Dict) -> Dict[str, str]:
         alert_name = alert["name"]
         alert_found = any(a.get("name") == alert_name for a in contract_alerts)
         results[f"monitoring_alert_{alert_name}"] = "PASS" if alert_found else "FAIL"
-    
+
+    results.update(_coerencia_alerta_sla(contract, policies, contract_alerts))
     return results
+
+
+def _limiar_da_condicao(condicao: str):
+    """Extrai (operador, valor bruto) de uma condição de alerta.
+
+    As condições são declaradas como texto simples no contrato, na forma
+    `<métrica> <operador> <limiar>` — por exemplo `freshness > P1D` ou
+    `availability < 99.0%`.
+    """
+    match = re.fullmatch(r"\s*([A-Za-z_][A-Za-z0-9_]*)\s*(<=|>=|<|>|==)\s*(.+?)\s*", str(condicao))
+    if not match:
+        return None, None, None
+    return match.group(1), match.group(2), match.group(3)
+
+
+def _coerencia_alerta_sla(contract: Dict, policies: Dict,
+                          alertas: List[Dict]) -> Dict[str, str]:
+    """Verifica se cada alerta dispara ANTES de o compromisso ser rompido.
+
+    Declarar a métrica e declarar o alerta não basta: o limiar do alerta tem de
+    ser coerente com o SLA que o produto promete. Um alerta de dados obsoletos
+    configurado para disparar em P2D, num produto que promete frescor de P1D,
+    deixa 24 horas de descumprimento silencioso — e ambos, alerta e SLA, estão
+    formalmente declarados. É a lacuna entre `check_slas` (o que se promete) e
+    `check_monitoring` (o que se observa): nenhuma das duas as relaciona.
+    """
+    resultados: Dict[str, str] = {}
+    sla = get_nested(contract, ["spec", "product", "sla"], {}) or {}
+    por_nome = {a.get("name"): a.get("condition", "") for a in alertas or []}
+
+    # 1) Frescor: o alerta deve disparar em idade menor ou igual ao SLA.
+    if "stale_data" in por_nome and sla.get("freshness"):
+        metrica, operador, limiar = _limiar_da_condicao(por_nome["stale_data"])
+        try:
+            coerente = (metrica == "freshness" and operador in (">", ">=")
+                        and parse_iso_duration_to_minutes(limiar)
+                        <= parse_iso_duration_to_minutes(sla["freshness"]))
+        except ValueError:
+            coerente = False
+        resultados["monitoring_alert_threshold_freshness"] = "PASS" if coerente else "FAIL"
+
+    # 2) Disponibilidade: o alerta deve disparar em patamar igual ou superior ao
+    #    prometido, senão avisa só depois de o SLA já ter sido rompido.
+    if "availability_drop" in por_nome and sla.get("availability"):
+        metrica, operador, limiar = _limiar_da_condicao(por_nome["availability_drop"])
+        try:
+            coerente = (metrica == "availability" and operador in ("<", "<=")
+                        and parse_percent(limiar) >= parse_percent(sla["availability"]))
+        except ValueError:
+            coerente = False
+        resultados["monitoring_alert_threshold_availability"] = "PASS" if coerente else "FAIL"
+
+    # 3) Taxa de erro: o alerta não pode tolerar mais erro que a política global.
+    maximo = get_nested(policies, ["spec", "standards", "quality", "max_error_rate"])
+    if "high_error_rate" in por_nome and maximo is not None:
+        metrica, operador, limiar = _limiar_da_condicao(por_nome["high_error_rate"])
+        try:
+            coerente = (metrica == "error_rate" and operador in (">", ">=")
+                        and float(limiar) <= float(maximo))
+        except (TypeError, ValueError):
+            coerente = False
+        resultados["monitoring_alert_threshold_error_rate"] = "PASS" if coerente else "FAIL"
+
+    return resultados
 
 def check_interoperability(contract: Dict, policies: Dict) -> Dict[str, str]:
     """Verifica compliance com a política de interoperabilidade da governança federativa.
@@ -334,6 +606,15 @@ def check_interoperability(contract: Dict, policies: Dict) -> Dict[str, str]:
     missing_trace = [f for f in trace_fields if f not in field_names]
     results["interop_federated_lineage"] = "PASS" if not missing_trace else "FAIL"
 
+    # A política exige, além dos campos de rastreio, a declaração da origem em
+    # `metadata.upstream`. Essa metade nunca era verificada: o nome da checagem
+    # sugeria cobertura da linhagem inteira, mas só os campos eram olhados.
+    declaracao = get_nested(interop, ["federated_lineage", "upstream_declaration"])
+    if get_nested(interop, ["federated_lineage", "required"], False) and declaracao:
+        chave = str(declaracao).split(".")[-1]
+        results["interop_federated_lineage_upstream"] = (
+            "PASS" if metadata.get(chave) else "FAIL")
+
     # 11) Versionamento semântico (SemVer) no metadata.version
     version = str(metadata.get("version", ""))
     semver_re = re.compile(r"^\d+\.\d+\.\d+(?:[-+].+)?$")
@@ -381,18 +662,23 @@ def validate_contract_governance(contract_path: str, policies_path: str) -> Dict
     # Executa todas as validações
     checks = [
         ("required_sections", check_required_sections),
+        ("schema_conformance", check_schema_conformance),
+        ("naming", check_naming),
+        ("documentation", check_documentation),
+        ("evolution", check_evolution),
+        ("security", check_security),
         ("slas", check_slas),
         ("quality_rules", check_quality_rules),
         ("required_fields", check_required_fields),
         ("monitoring", check_monitoring),
         ("interoperability", check_interoperability)
     ]
-    
+
     for check_name, check_func in checks:
         try:
             check_results = check_func(contract, policies)
             validation_result["compliance"][check_name] = check_results
-            
+
             # Atualiza contadores
             for result in check_results.values():
                 validation_result["summary"]["total_checks"] += 1

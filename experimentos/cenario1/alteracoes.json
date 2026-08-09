@@ -1,0 +1,23 @@
+{
+  "invoice_ids_originais": [
+    "INV-2986",
+    "INV-2988",
+    "INV-2990",
+    "INV-2992",
+    "INV-2993"
+  ],
+  "invoice_ids_substituidos": [
+    "INV-3081",
+    "INV-3082",
+    "INV-3083",
+    "INV-3084",
+    "INV-3085"
+  ],
+  "registros_afetados": 5,
+  "cenario": "C1 — Integridade referencial federada",
+  "descricao": "5 registros do output port analítico de Logística tiveram o invoice_id substituído por identificadores inexistentes no domínio Financeiro, simulando referência quebrada entre domínios sob a mesma master entity.",
+  "arquivo_alterado": "domains/logistica/data/logistics.jsonl",
+  "reports_regerados_em": "2026-08-04T19:57:54-03:00",
+  "observacao": "Relatórios regerados sob a versão atual dos validadores (governança computacional e validate_qos removidos; qualidade reorganizada por dimensões e camadas; reconciliação cross-domain entre Logística e Financeiro).",
+  "nota_de_regeracao": "Relatórios regerados sob o validador corrigido (escore de qualidade passa a incorporar a camada de esquema). As métricas deste cenário não mudaram: nenhuma alteração de esquema está envolvida."
+}

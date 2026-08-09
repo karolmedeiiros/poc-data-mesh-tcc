@@ -1,10 +1,4 @@
-# Políticas de Governança Federada (formato interno)
-# 
-# NOTA: Os contratos de dados deste repositório são escritos no padrão
-# Open Data Contract Standard (ODCS) v3 — Bitol. Este arquivo YAML
-# permanece no formato interno metadata/spec porque é consumido
-# diretamente pelos validadores de governança, que primeiro normalizam
-# os contratos ODCS via odcs_adapter.py.
+# Politicas de Governanca Federada (formato interno)
 apiVersion: v1
 kind: GovernancePolicies
 metadata:
@@ -14,27 +8,51 @@ metadata:
   created_at: "2026-01-15T00:00:00Z"
   last_modified: "2026-01-15T00:00:00Z"
   tags: ["governance", "data-mesh", "v1"]
+# ─────────────────────────────────────────────────────────────────────────────
+# ANOTAcaO DE APLICABILIDADE (`enforcement`)
+#
+# Cada secao declara se e verificada por mecanismo automatizado ou se permanece
+# declaratoria. Governanca computacional federada pressupõe politica executavel;
+# esta PoC, porem, nao tem runtime servindo os produtos, e varias secões descrevem
+# processo humano (aprovacao, notificacao, auditoria) ou metrica de operacao
+# (latência observada, taxa de erro, orcamento de erro) que nao existem aqui.
+#
+#   automated   : ha checagem correspondente; o nome dela esta em `verified_by`
+#   declaratory : sem verificacao; `reason` explica por quê
+
+# ─────────────────────────────────────────────────────────────────────────────
 spec:
-  description: "Políticas corporativas de governança para Data Mesh"
+  description: "Politicas corporativas de governanca para Data Mesh"
   
   # Padrões Federados
   standards:
     naming:
+      enforcement: automated          # verified_by: check_naming
       convention: "snake_case"
-      required_fields: ["id", "created_at", "updated_at"]
+      # Campos que todo output port analitico deve publicar. Os nomes anteriores
+      # (id, created_at, updated_at) vinham de sistema transacional e nao
+      # existiam em nenhum produto — politica inaplicavel por construcao.
+      required_fields: ["invoice_id", "dt_versao"]
       max_field_name_length: 50
       forbidden_patterns: ["temp_", "test_", "debug_"]
     
     quality:
+      # min_freshness e min_availability: check_slas.
+      # max_error_rate, amount_tolerance e allowed_currencies sao consumidos pela
+      # camada de qualidade a partir das regras do contrato, nao pela governanca.
+      enforcement: automated          # verified_by: check_slas
       max_error_rate: 0.05  # 5%
-      min_freshness: "P1D"   # produtos analíticos batch (output ports)
+      min_freshness: "P1D"   # produtos analiticos batch (output ports)
       min_availability: "99.0%"
       max_staleness: "P1D"
       amount_tolerance: 0.01
       allowed_currencies: ["BRL"]
     
-    # Data Observability (QoS Avançado)
+    # Data Observability (QoS Avancado)
     observability:
+      enforcement: declaratory
+      # reason: exige coleta continua (frequência de medicao, alerta, deriva de
+      # esquema em runtime). A PoC materializa em lote e nao observa execucao.
       data_freshness:
         enabled: true
         threshold: "PT6H"
@@ -67,6 +85,9 @@ spec:
     
     # Error Budgets (SRE Principles)
     error_budgets:
+      enforcement: declaratory
+      # reason: orcamento de erro pressupõe serie historica de disponibilidade,
+      # que nao existe sem servico em operacao.
       monthly_budget: "99.9%"
       weekly_budget: "99.5%"
       daily_budget: "99.0%"
@@ -96,6 +117,9 @@ spec:
     
     # Data Reliability Metrics
     reliability:
+      enforcement: declaratory
+      # reason: MTTR, MTBF, RTO/RPO e estrategia de backup descrevem operacao de
+      # plataforma; nao ha o que medir num conjunto de arquivos versionados.
       mean_time_to_recovery: "PT1H"
       mean_time_between_failures: "P30D"
       data_loss_prevention: "zero_loss"
@@ -116,6 +140,10 @@ spec:
     
     # Performance Metrics
     performance:
+      enforcement: declaratory
+      # reason: tempos de resposta e vazao observados exigem servico atendendo
+      # consultas. O compromisso DECLARADO e verificado em check_slas
+      # (latency_compliance e throughput_compliance).
       query_performance:
         response_time_p50: "PT2S"
         response_time_p95: "PT5S"
@@ -138,23 +166,37 @@ spec:
         auto_scaling_enabled: true
     
     security:
+      enforcement: automated          # verified_by: check_security (pii_fields)
+      # Limitacao: verifica-se que o produto classifica os dados e enumera seus
+      # atributos sensiveis. Cifra, RBAC e retencao de auditoria sao
+      # propriedades da plataforma, ausentes nesta PoC.
       encryption: "AES-256"
       access_control: "RBAC"
       audit_retention: "P365D"
-      pii_fields: ["customer_id", "supplier_id", "email", "phone"]
+      # Nomes como publicados nos output ports analiticos.
+      pii_fields: ["id_cliente", "id_fornecedor", "email", "phone"]
     
     evolution:
+      enforcement: automated          # verified_by: check_evolution
+      # Limitacao: verifica a ADESaO DECLARADA do contrato à politica. Detectar
+      # quebra concreta exigiria comparar o esquema com a versao anterior, e a
+      # PoC nao mantem registro de versões.
       backward_compatibility: true
       breaking_changes: "require_major_version"
       deprecation_period: "P90D"
       notification_period: "P30D"
     
     documentation:
+      enforcement: automated          # verified_by: check_documentation
       description_required: true
       examples_required: true
-      changelog_required: true
   
-  # Contratos Obrigatórios
+  # Contratos Obrigatorios
+  # enforcement: automated — verified_by: check_required_sections
+  # Limitacao conhecida: a checagem testa presenca de chave na visao
+  # normalizada, e o odcs_adapter cria todas as chaves com valor padrao. Na
+  # pratica nenhuma ausência e detectavel por aqui; as exigências efetivas de
+  # conteudo estao em required_fields, global_quality_rules e interoperability.
   required_contract_sections:
     - metadata
     - spec.product
@@ -165,15 +207,17 @@ spec:
     - spec.consumers
     - spec.monitoring
   
-  # Campos Obrigatórios para Produtos Analíticos (Output Ports)
-  # Esta malha publica apenas produtos analíticos agregados (consumer-aligned).
-  # Dados operacionais brutos permanecem como camada de entrada não publicada.
+  # Campos Obrigatorios para Produtos Analiticos (Output Ports)
+  # Esta malha publica apenas produtos analiticos agregados (consumer-aligned).
+  # Dados operacionais brutos permanecem como camada de entrada nao publicada.
+  # enforcement: automated — verified_by: check_required_fields
   required_fields:
+    enforcement: automated
     aggregate:
       - "dt_versao"     # quando o output port foi materializado (UTC)
-      - "dsc_dominio"   # domínio dono do produto
+      - "dsc_dominio"   # dominio dono do produto
       - "dsc_produto"   # nome do produto de dados
-      - "dsc_moeda"     # padrão semântico ISO-4217
+      - "dsc_moeda"     # padrao semântico ISO-4217
 
     
     measures:
@@ -181,24 +225,23 @@ spec:
       - "total"          # alguma soma (total_amount, total_value, ...)
   
   # Regras de Qualidade Globais
+  # enforcement: automated — verified_by: check_quality_rules
+  # Limitacao: a checagem confirma que o contrato declara regra sobre o campo
+  # alvo, por correspondência textual; ela nao avalia a expressao. A avaliacao
+  # real acontece na camada de qualidade, que executa as expressões declaradas
+  # em cada contrato contra os dados.
   global_quality_rules:
     - id: "positive_amounts"
-      description: "Valores monetários devem ser positivos"
-      expression: "amount > 0"
-      applies_to: ["amount", "gross_amount", "total_amount", "net_amount"]
+      description: "Valores monetarios devem ser positivos"
+      expression: "valor > 0"
+      applies_to: ["valor_liquido", "valor_bruto", "valor_total", "valor_base"]
       severity: "error"
     
     - id: "valid_currency"
-      description: "Moeda deve ser BRL (operações nacionais)"
-      expression: "currency == 'BRL'"
-      applies_to: ["currency"]
+      description: "Moeda deve ser BRL (operacões nacionais)"
+      expression: "dsc_moeda == 'BRL'"
+      applies_to: ["dsc_moeda"]
       severity: "error"
-    
-    - id: "future_dates"
-      description: "Datas de vencimento devem ser futuras"
-      expression: "due_date > issue_date"
-      applies_to: ["due_date", "issue_date"]
-      severity: "warning"
     
     - id: "valid_status"
       description: "Status deve estar na lista permitida"
@@ -207,50 +250,17 @@ spec:
       severity: "error"
     
     - id: "non_null_ids"
-      description: "IDs não podem ser nulos"
+      description: "IDs nao podem ser nulos"
       expression: "id IS NOT NULL AND id != ''"
-      applies_to: ["id", "invoice_id", "customer_id", "supplier_id", "operation_id"]
+      applies_to: ["id", "invoice_id", "id_cliente", "id_fornecedor", "operation_id"]
       severity: "error"
-    
-    - id: "recent_updates"
-      description: "Registros devem ser atualizados recentemente (últimos 7 dias)"
-      expression: "updated_at >= NOW() - INTERVAL '7 days'"
-      applies_to: ["updated_at"]
-      severity: "warning"
-    
-    - id: "data_freshness_compliance"
-      description: "Dados devem estar dentro do SLA de freshness"
-      expression: "TIMESTAMPDIFF(HOUR, updated_at, NOW()) <= 6"
-      applies_to: ["updated_at"]
-      severity: "error"
-    
-    - id: "schema_compatibility"
-      description: "Schema deve manter compatibilidade backward"
-      expression: "schema_version_compatible == true"
-      applies_to: ["schema_version"]
-      severity: "critical"
-    
-    - id: "volume_consistency"
-      description: "Volume de dados deve estar dentro do esperado"
-      expression: "ABS(record_count - baseline_count) / baseline_count <= 0.25"
-      applies_to: ["record_count"]
-      severity: "warning"
-    
-    - id: "error_budget_compliance"
-      description: "Taxa de erro deve respeitar error budget"
-      expression: "error_rate <= 0.001"  # 0.1% para 99.9% SLA
-      applies_to: ["error_rate"]
-      severity: "critical"
-    
-    - id: "performance_sla"
-      description: "Tempo de resposta deve estar dentro do SLA"
-      expression: "response_time_p95 <= PT5S"
-      applies_to: ["response_time"]
-      severity: "warning"
-    
       
   # SLAs Globais
+  # enforcement: automated — verified_by: check_slas
+  # O perfil aplicavel (default, critical, batch, real_time) e derivado de
+  # customProperties.product_type: produto analitico responde pelo perfil batch.
   global_slas:
+    enforcement: automated
     freshness:
       default: "PT6H"
       critical: "PT1H"
@@ -275,8 +285,14 @@ spec:
       batch: "100 msg/s"
       real_time: "10000 msg/s"
   
-  # Políticas de Evolução
+  # Politicas de Evolucao
+  # enforcement: declaratory
+  # reason: descreve PROCESSO — aprovacao pelo data office, notificacao de
+  # consumidores, plano de rollback, analise de impacto. Nada disso e atributo
+  # do contrato nem do dado. A parte verificavel (compromisso declarado de
+  # compatibilidade e prazo de depreciacao) esta em standards.evolution.
   evolution_policies:
+    enforcement: declaratory
     backward_compatibility:
       required: true
       exceptions: ["emergency_fixes", "security_patches"]
@@ -294,12 +310,16 @@ spec:
       notification_required: true
       migration_support: true
   
-  # Monitoramento Obrigatório
+  # Monitoramento Obrigatorio
+  # enforcement: automated — verified_by: check_monitoring
+  # Limitacao: verifica que o contrato DECLARA cada metrica e alerta exigidos.
+  # Nenhuma metrica coletada: nao ha runtime que as emita.
   required_monitoring:
+    enforcement: automated
     metrics:
       - name: "record_count"
         type: "counter"
-        description: "Número de registros processados"
+        description: "Numero de registros processados"
         required: true
       
       - name: "processing_latency"
@@ -319,7 +339,7 @@ spec:
       
       - name: "schema_validation_failures"
         type: "counter"
-        description: "Falhas de validação de schema"
+        description: "Falhas de validacao de schema"
         required: true
     
     alerts:
@@ -344,8 +364,10 @@ spec:
         notification: ["data_office", "sre_team"]
 
 
-  # Políticas de Segurança
+  # Politicas de Seguranca
   security_policies:
+    enforcement: partial
+    # enforcement: automated (apenas data_classification) — verified_by: check_security
     data_classification:
       - level: "public"
         requirements: ["basic_logging"]
@@ -360,17 +382,26 @@ spec:
         requirements: ["encryption", "rbac", "audit_log", "data_masking", "approval_required"]
     
     access_control:
+      enforcement: declaratory
+      # reason: nao ha sujeito, permissao ou sessao nesta PoC.
       principle: "least_privilege"
       review_frequency: "P90D"
       emergency_access: "break_glass"
     
     audit:
+      enforcement: declaratory
+      # reason: nao ha acesso a registrar; os artefatos sao arquivos locais.
       log_all_access: true
       retention_period: "P365D"
       tamper_protection: true
   
-  # Políticas de Documentação
+  # Politicas de Documentacao
+  # enforcement: declaratory
+  # reason: refere-se a documentacao do PRODUTO (paginas de catalogo), nao ao
+  # contrato. As exigências sobre o contrato estao em standards.documentation,
+  # essas sim verificadas.
   documentation_policies:
+    enforcement: declaratory
     required_sections:
       - "overview"
       - "schema_description"
@@ -387,29 +418,32 @@ spec:
       major_changes: "data_office_review"
       minor_changes: "product_team_approval"
   
-  # Política de Interoperabilidade (Governança Federativa)
-  # Garante que produtos de dados de diferentes domínios possam ser combinados,
-  # consumidos e integrados sem fricção, respeitando autonomia dos domínios e
+  # Politica de Interoperabilidade (Governanca Federativa)
+  # Garante que produtos de dados de diferentes dominios possam ser combinados,
+  # consumidos e integrados sem friccao, respeitando autonomia dos dominios e
   # padrões globais definidos pelo Data Office.
   interoperability:
+    enforcement: partial
     # Formatos abertos suportados pela malha
     data_formats:
       allowed: ["avro", "parquet", "json", "protobuf"]
       preferred: "avro"
       forbidden: ["proprietary", "xls", "csv_without_schema"]
 
-    # Schema Registry como ponto central de evolução interoperável
+    # Schema Registry como ponto central de evolucao interoperavel
     schema_registry:
       required: true
       endpoint_pattern: "^https?://.+"
       compatibility_mode: "backward"
       subject_naming: "{domain}-{product}-v{major}"
 
-    # Protocolos de exposição/consumo entre domínios
+    # Protocolos de exposicao/consumo entre dominios
     protocols:
+      enforcement: declaratory
+      # reason: a malha nao expõe endpoint algum — os output ports sao arquivos
+      # JSONL locais. Nao ha protocolo em uso para confrontar com a lista.
       sync:
         allowed: ["http", "https", "grpc"]
-        require_tls: true
       async:
         allowed: ["kafka", "pulsar", "rabbitmq"]
         require_schema_registry: true
@@ -417,15 +451,7 @@ spec:
         allowed: ["s3", "gcs", "abfs"]
 
     # ----------------------------------------------------------------------
-    # Master Entities — chaves de negócio globais governadas federativamente.
-    # Quando o backbone operacional é compartilhado entre domínios (ex.: ERP único),
-    # estas chaves representam entidades-mestre reais (faturas, clientes, fornecedores)
-    # e podem ser publicadas em múltiplos output ports para permitir reconciliação
-    # fina (entity analytical products), sob governança federada de formato
-    # e ciclo de vida.
-    # Importante: compartilhar a chave NÃO elimina divergências de vocabulário,
-    # regras de domínio, granularidade ou janela temporal — apenas viabiliza a
-    # detecção fatura-a-fatura. Continua sendo necessária a canonicalização semântica.
+    # Master Entities — chaves de negocio globais governadas federativamente.
     master_entities:
       - id: "invoice"
         canonical_field: "invoice_id"
@@ -441,12 +467,19 @@ spec:
           - "operacoes-logistica"
         cross_product_assertions:
           # Mesmo invoice_id presente em AP e AR deve representar a MESMA fatura.
-          # Divergências em status/valor são esperadas (regras de domínio).
+          # Divergências em status/valor sao esperadas (regras de dominio).
           - "ap.invoice_id == ar.invoice_id => same_real_invoice"
-          - "logistics.related_invoice_id == ap.invoice_id => same_real_invoice"
+          # No output port analitico de Logistica a chave publicada e
+          # `invoice_id`; `related_invoice_id` e o nome na camada operacional.
+          - "logistics.invoice_id == ap.invoice_id => same_real_invoice"
 
+      # O campo canonico e o nome do atributo COMO PUBLICADO nos output ports
+      # analiticos (id_cliente, id_fornecedor), nao o nome da camada
+      # operacional de origem (customer_id, supplier_id). A politica governa o
+      # produto publicado; declarar o nome operacional tornava a politica
+      # inverificavel — nenhum produto expõe esse atributo.
       - id: "customer"
-        canonical_field: "customer_id"
+        canonical_field: "id_cliente"
         format:
           type: "string"
           pattern: "^CUS-[0-9]+$"
@@ -457,7 +490,7 @@ spec:
           - "contas-a-receber"
 
       - id: "supplier"
-        canonical_field: "supplier_id"
+        canonical_field: "id_fornecedor"
         format:
           type: "string"
           pattern: "^SUP-[0-9]+$"
@@ -467,15 +500,15 @@ spec:
         published_in_products:
           - "contas-a-pagar"
 
-    # Identificadores globais compartilhados entre produtos analíticos federados.
-    # Usa os campos canônicos da malha (dsc_dominio/dsc_produto/dt_versao), que
-    # todos os output ports analíticos publicam.
+    # Identificadores globais compartilhados entre produtos analiticos federados.
+    # Usa os campos canonicos da malha (dsc_dominio/dsc_produto/dt_versao), que
+    # todos os output ports analiticos publicam.
     shared_identifiers:
       required_fields:
-        - "dsc_dominio"       # produto pertence a um domínio (Domain Ownership)
-        - "dsc_produto"       # nome do produto de dados (descoberta no catálogo)
-        - "dt_versao"         # timestamp de materialização (UTC)
-      # Dimensões usadas para junção entre produtos analíticos de domínios diferentes
+        - "dsc_dominio"       # produto pertence a um dominio (Domain Ownership)
+        - "dsc_produto"       # nome do produto de dados (descoberta no catalogo)
+        - "dt_versao"         # timestamp de materializacao (UTC)
+      # Dimensões usadas para juncao entre produtos analiticos de dominios diferentes
       cross_domain_keys:
         - "mes_emissao"
         - "meses_operacao"
@@ -486,13 +519,13 @@ spec:
         pattern: "^[A-Za-z0-9_:|-]{1,64}$"
         case_sensitive: true
 
-    # Padrões semânticos compartilhados (vocabulário comum)
+    # Padrões semânticos compartilhados (vocabulario comum)
     semantic_standards:
       datetime:
         format: "ISO-8601"
         timezone: "UTC"
         field_type: "string"        # ISO-8601 armazenado como string
-        field_name: "dt_versao"     # campo canônico de materialização (UTC)
+        field_name: "dt_versao"     # campo canonico de materializacao (UTC)
       date:
         format: "YYYY-MM-DD"
         field_type: "date"
@@ -507,7 +540,7 @@ spec:
       language: "pt-BR"
       encoding: "UTF-8"
 
-    # Convenções de nomenclatura federadas
+    # Convencões de nomenclatura federadas
     naming_conventions:
       fields: "snake_case"
       datasets: "snake_case"
@@ -515,7 +548,7 @@ spec:
       domains: "kebab-case"
       max_identifier_length: 50
 
-    # Catálogo e descoberta (federação)
+    # Catalogo e descoberta (federacao)
     catalog:
       registration_required: true
       discoverability: "mesh-wide"
@@ -527,20 +560,23 @@ spec:
         - "tags"
         - "description"
 
-    # Linhagem federada entre produtos analíticos
+    # Linhagem federada entre produtos analiticos
     federated_lineage:
       required: true
       propagation: "automatic"
-      # No nível analítico a linhagem usa os campos canônicos da malha.
+      # No nivel analitico a linhagem usa os campos canonicos da malha.
       trace_fields:
         - "dsc_dominio"
         - "dsc_produto"
         - "dt_versao"
-      # Linhagem upstream é declarada em metadata.upstream em cada contrato.
+      # Linhagem upstream e declarada em metadata.upstream em cada contrato.
       upstream_declaration: "metadata.upstream"
 
-    # Versionamento semântico interoperável
+    # Versionamento semântico interoperavel
     versioning:
+      enforcement: automated          # verified_by: interop_semver (formato)
+      # Limitacao: verifica-se o FORMATO X.Y.Z. A correspondência entre tipo de
+      # mudanca e incremento (major/minor/patch) exigiria historico de versões.
       scheme: "semver"
       breaking_change: "major"
       backward_compatible_addition: "minor"
@@ -553,8 +589,13 @@ spec:
       negotiation: "data_office_mediated"
       change_notice_period: "P30D"
 
-  # Validação de Compliance
+  # Validacao de Compliance
+  # enforcement: declaratory
+  # reason: LGPD, SOX e ISO 27001 se cumprem com processo organizacional,
+  # evidência e auditoria externa. Declara-los no artefato nao os implementa, e
+  # nenhuma checagem aqui poderia atesta-los.
   compliance_requirements:
+    enforcement: declaratory
     frameworks:
       - name: "LGPD"
         requirements: ["data_minimization", "consent_management", "data_subject_rights"]

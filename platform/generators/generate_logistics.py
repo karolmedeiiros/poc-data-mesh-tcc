@@ -25,6 +25,41 @@ def write_jsonl(path: str, rows: list[dict]) -> None:
         for r in rows:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
 
+# ╔═══════════════════════════════════════════════════════════════════════════╗
+# ║ INÍCIO — ATRIBUTOS DE DESTINO (dsc_cidade, dsc_uf)                        ║
+# ║                                                                           ║
+# ║ Bloco autocontido. Para desativar, basta trocar a constante abaixo para   ║
+# ║ False: os registros voltam a ser gerados exatamente como antes, sem os    ║
+# ║ dois atributos, e nenhuma outra parte do script precisa ser alterada.     ║
+# ║                                                                           ║
+# ║ A contrapartida analítica está em platform/generators/                    ║
+# ║ generate_data_analytical.py, sob marcação equivalente.                    ║
+# ╚═══════════════════════════════════════════════════════════════════════════╝
+INCLUIR_DESTINO = False
+
+# (cidade, UF) — destino da encomenda. Pares reais para que a UF seja sempre
+# consistente com a cidade; sortear os dois campos de forma independente
+# produziria combinações inválidas.
+DESTINOS = [
+    ("São Paulo", "SP"), ("Campinas", "SP"), ("Santos", "SP"),
+    ("Rio de Janeiro", "RJ"), ("Niterói", "RJ"),
+    ("Belo Horizonte", "MG"), ("Uberlândia", "MG"),
+    ("Curitiba", "PR"), ("Porto Alegre", "RS"), ("Florianópolis", "SC"),
+    ("Salvador", "BA"), ("Recife", "PE"), ("Fortaleza", "CE"),
+    ("Goiânia", "GO"), ("Brasília", "DF"), ("Manaus", "AM"),
+]
+
+
+def atributos_de_destino() -> dict:
+    """Retorna os atributos de destino, ou vazio quando o bloco está desativado."""
+    if not INCLUIR_DESTINO:
+        return {}
+    cidade, uf = random.choice(DESTINOS)
+    return {"dsc_cidade": cidade, "dsc_uf": uf}
+
+# ╚═══════════════════ FIM — ATRIBUTOS DE DESTINO ════════════════════════════╝
+
+
 def generate_source_event(event_id: str, base_issue: date) -> dict:
     """Evento de negócio bruto que pode ser consumido por múltiplos domínios."""
     issue = base_issue + timedelta(days=random.randint(0, 10))
@@ -141,6 +176,12 @@ class LogisticsOperationsProduct:
             "base_status": base_data["base_status"],
             "carrier_id": carrier_id,
             "tracking_number": tracking_number,
+            # ── INÍCIO — ATRIBUTOS DE DESTINO (dsc_cidade, dsc_uf) ──────────
+            # Desativar em INCLUIR_DESTINO, no topo do arquivo. Com o bloco
+            # desligado, atributos_de_destino() devolve {} e o dicionário fica
+            # idêntico ao original.
+            **atributos_de_destino(),
+            # ── FIM — ATRIBUTOS DE DESTINO ─────────────────────────────────
             "updated_at": iso_dt(log_updated),
         }
 

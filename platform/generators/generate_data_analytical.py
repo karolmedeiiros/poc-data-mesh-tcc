@@ -171,6 +171,45 @@ def ar(operational: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     return out
 
 
+# ╔═══════════════════════════════════════════════════════════════════════════╗
+# ║ INÍCIO — ATRIBUTOS DE DESTINO (dsc_cidade, dsc_uf) no output port         ║
+# ║                                                                           ║
+# ║ Bloco autocontido. Para desativar, troque a constante para False: o       ║
+# ║ output port volta a ser publicado exatamente como antes.                  ║
+# ║                                                                           ║
+# ║ O grão do produto é a fatura, e uma fatura agrega N operações que podem   ║
+# ║ ter destinos distintos. Como o contrato declara os dois atributos como    ║
+# ║ string (não array), publica-se o destino predominante da fatura, com      ║
+# ║ desempate alfabético para que a saída seja determinística.                ║
+# ║                                                                           ║
+# ║ A origem dos dados está em platform/generators/generate_logistics.py,     ║
+# ║ sob marcação equivalente. Se lá o bloco estiver desativado, os atributos  ║
+# ║ não existem no operacional e aqui são simplesmente omitidos.              ║
+# ╚═══════════════════════════════════════════════════════════════════════════╝
+INCLUIR_DESTINO = False
+
+
+def _acumular_destino(bucket: Dict[str, Any], row: Dict[str, Any]) -> None:
+    """Registra o par (cidade, UF) da operação no bucket da fatura."""
+    if not INCLUIR_DESTINO:
+        return
+    cidade, uf = row.get("dsc_cidade"), row.get("dsc_uf")
+    if cidade and uf:
+        bucket["destinos"][(cidade, uf)] = bucket["destinos"].get((cidade, uf), 0) + 1
+
+
+def _destino_predominante(bucket: Dict[str, Any]) -> Dict[str, str]:
+    """Destino mais frequente da fatura; vazio se o bloco estiver desativado."""
+    if not INCLUIR_DESTINO or not bucket.get("destinos"):
+        return {}
+    # Maior contagem primeiro; empate resolvido em ordem alfabética.
+    (cidade, uf), _ = sorted(bucket["destinos"].items(),
+                             key=lambda kv: (-kv[1], kv[0]))[0]
+    return {"dsc_cidade": cidade, "dsc_uf": uf}
+
+# ╚═══════════════════ FIM — ATRIBUTOS DE DESTINO ════════════════════════════╝
+
+
 def logistics(operational: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """Logística agrupa por invoice_id (uma fatura pode ter N operações).
 
@@ -191,6 +230,11 @@ def logistics(operational: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         "operation_types": set(),
         "statuses": set(),
         "operation_months": set(),
+        # ── INÍCIO — ATRIBUTOS DE DESTINO ───────────────────────────────────
+        # Contagem por par (cidade, UF). Fica vazio quando o bloco está
+        # desativado ou quando o operacional não traz os atributos.
+        "destinos": {},
+        # ── FIM — ATRIBUTOS DE DESTINO ─────────────────────────────────────
     })
     for row in operational:
         invoice_id = row.get("related_invoice_id")
@@ -219,6 +263,9 @@ def logistics(operational: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         b["statuses"].add(status_logistics(row.get("base_status", "")))
         op_date = row.get("operation_date") or row.get("updated_at", "")
         b["operation_months"].add(month_of(op_date))
+        # ── INÍCIO — ATRIBUTOS DE DESTINO ───────────────────────────────────
+        _acumular_destino(b, row)
+        # ── FIM — ATRIBUTOS DE DESTINO ─────────────────────────────────────
 
     out: List[Dict[str, Any]] = []
     for invoice_id, b in sorted(buckets.items()):
@@ -239,6 +286,12 @@ def logistics(operational: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             "status": sorted(b["statuses"]),
             "meses_operacao": sorted(b["operation_months"]),
             "dsc_moeda": "BRL",
+            # ── INÍCIO — ATRIBUTOS DE DESTINO (dsc_cidade, dsc_uf) ──────────
+            # Desativar em INCLUIR_DESTINO, no topo da seção. Com o bloco
+            # desligado, _destino_predominante() devolve {} e o registro
+            # publicado fica idêntico ao original.
+            **_destino_predominante(b),
+            # ── FIM — ATRIBUTOS DE DESTINO ─────────────────────────────────
             "dsc_dominio": "logistica",
             "dsc_produto": "operacoes-logistica",
             "dt_versao": generated_at,

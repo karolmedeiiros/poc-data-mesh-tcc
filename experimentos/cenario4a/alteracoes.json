@@ -1,0 +1,42 @@
+{
+  "cenario": "C4a — Ausência de metadados padronizados",
+  "descricao": "Foram removidas do contrato do produto operacoes-logistica a seção team (de onde o adaptador deriva o owner) e a lista tags. Nenhum dado, política ou código foi alterado.",
+  "arquivo_alterado": "domains/logistica/data_contract.yaml",
+  "removido": [
+    "team (owner: logistics-team@empresa.com)",
+    "tags: [logistics, v1, analytical, entity, invoice]"
+  ],
+  "dados_alterados": false,
+  "politica_violada": "interoperability.catalog.required_metadata exige owner, domain, version, tags e description em todo produto registrado no catálogo federado.",
+  "resultado": {
+    "governanca": {
+      "status": "FAIL",
+      "produto": "operacoes-logistica",
+      "conformes": "2/3",
+      "compliance_percentage": 98.21,
+      "checagem_reprovada": "interoperability.interop_catalog_metadata",
+      "checagens": "55/56",
+      "observacao": "Os produtos financeiros seguem 100% conformes: a reprovação é local ao produto cujo contrato perdeu o metadado."
+    },
+    "data_quality": {
+      "status": "PASS",
+      "registros": "4939/4939",
+      "razao": "metadado de contrato não afeta o dado publicado"
+    },
+    "catalogo": {
+      "owner": "",
+      "tags": [],
+      "observacao": "O catálogo registra o produto com owner vazio e sem tags — o produto permanece publicado e descobrível por nome, mas deixa de ser localizável por tag e perde o responsável, que é o metadado mínimo para reutilização entre domínios."
+    },
+    "reconciliacao": {
+      "status": "sem alteração",
+      "razao": "nenhum dado foi modificado"
+    }
+  },
+  "achados": [
+    "Controle POSITIVO da governança: este é um dos poucos cenários em que a governança computacional efetivamente reprova. Serve de contraprova de que os demais cenários não passam por inércia do mecanismo, e sim porque a verificação correspondente não existe.",
+    "A assimetria fica explícita quando comparado a C3a e C3b: metadado ausente no contrato é detectado; dado desalinhado do contrato não é — e nenhuma das duas camadas observa o outro domínio.",
+    "A reprovação vem de interop_catalog_metadata, não de check_required_sections: este último verifica apenas a presença de chaves na visão normalizada, que o odcs_adapter preenche com valores padrão. É a mesma vacuidade que motivou a remoção do validate_contracts."
+  ],
+  "salvo_em": "2026-08-04T22:56:43-03:00"
+}

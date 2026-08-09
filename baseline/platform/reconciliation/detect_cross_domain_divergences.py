@@ -92,6 +92,48 @@ class CrossDomainDivergenceDetector:
         
         return logistics_lookup, ap_lookup, ar_lookup
     
+    def analyze_master_key_uniqueness(self, lookups: Dict[str, Dict]) -> Dict[str, Any]:
+        """Detecta `invoice_id` repetido DENTRO de um mesmo produto.
+
+        A master entity `invoice` é declarada como chave primária única em cada
+        output port. Repetição quebra duas coisas ao mesmo tempo:
+
+          1. a unicidade prometida pelo contrato;
+          2. a própria junção entre domínios — a reconciliação fatura-a-fatura
+             indexa por `invoice_id` em dicionário, de modo que o registro
+             repetido é sobrescrito e desaparece silenciosamente da análise.
+             Isto é perda de informação no instrumento, não só violação de
+             contrato, e por isso precisa ser reportado aqui.
+
+        Só faz sentido contar como duplicata quando a granularidade do produto é
+        1:1 por fatura. A Logística publica uma linha por fatura (agregando N
+        operações), portanto vale para os três produtos.
+        """
+        resultado: Dict[str, Any] = {
+            "duplicated_keys_total": 0,
+            "by_product": {},
+            "examples": [],
+        }
+
+        for produto, lookup in lookups.items():
+            duplicadas = {inv: len(regs) for inv, regs in lookup.items() if len(regs) > 1}
+            registros_extra = sum(n - 1 for n in duplicadas.values())
+            resultado["by_product"][produto] = {
+                "duplicated_invoice_ids": len(duplicadas),
+                "records_shadowed": registros_extra,
+                "invoice_ids": sorted(duplicadas)[:50],
+            }
+            resultado["duplicated_keys_total"] += len(duplicadas)
+            for inv in sorted(duplicadas)[:20]:
+                resultado["examples"].append({
+                    "produto": produto,
+                    "invoice_id": inv,
+                    "ocorrencias": duplicadas[inv],
+                    "registros_ocultados_na_juncao": duplicadas[inv] - 1,
+                })
+
+        return resultado
+
     def analyze_granularity_differences(self, logistics_records: List[Dict], finance_records: List[Dict]) -> List[str]:
         """Analisa diferenças de granularidade (1:N)"""
         divergences = []
@@ -298,8 +340,17 @@ class CrossDomainDivergenceDetector:
         # estrangeira, então só ela pode quebrar a integridade referencial.
         logistics_orphan = logistics_invoices - finance_invoices
         integrity_metrics["logistics_orphan_invoices"] = len(logistics_orphan)
-        for invoice_id in logistics_orphan:
-            integrity_metrics["logistics_orphan_records"] += len(logistics_lookup[invoice_id])
+        exemplos_orfaos = []
+        for invoice_id in sorted(logistics_orphan):
+            registros = logistics_lookup[invoice_id]
+            integrity_metrics["logistics_orphan_records"] += len(registros)
+            exemplos_orfaos.append({
+                "invoice_id": invoice_id,
+                "operacoes": registros[0].get("qtd_operacoes"),
+                "valor_total": registros[0].get("valor_total"),
+                "tipos_operacao": registros[0].get("dsc_tipo_operacao"),
+            })
+        integrity_metrics["logistics_orphan_examples"] = exemplos_orfaos
 
         # NÃO é órfão: fatura sem operação logística. Nem toda fatura gera
         # frete (serviços, faturas canceladas). O financeiro não referencia a
@@ -333,6 +384,7 @@ class CrossDomainDivergenceDetector:
         all_invoice_ids = set(logistics_lookup.keys()) | set(finance_lookup.keys())
         
         divergence_categories = {
+            "duplicated_master_key": 0,
             "state_contradiction": 0,
             "attribute_divergence": 0,
             "temporal_misalignment": 0,
@@ -426,6 +478,17 @@ class CrossDomainDivergenceDetector:
             # Considerar como matched se não houver divergências críticas
             if not value_div and not temporal_div and not state_div and not attr_div:
                 matched_invoices += 1
+
+        # Unicidade da master entity em cada produto. Avaliada sobre os lookups
+        # já construídos, antes de qualquer junção — é justamente a junção que
+        # esconde a duplicata.
+        unicidade = self.analyze_master_key_uniqueness({
+            "operacoes-logistica": logistics_lookup,
+            "contas-a-pagar": ap_lookup,
+            "contas-a-receber": ar_lookup,
+        })
+        divergence_categories["duplicated_master_key"] = unicidade["duplicated_keys_total"]
+        self.results["master_entity_uniqueness"] = unicidade
 
         self.results["divergences"] = divergence_categories
         self.results["informational_findings"] = informational_findings
@@ -528,6 +591,17 @@ class CrossDomainDivergenceDetector:
                 print(f"   • finance_without_logistics: {sem_log} faturas "
                       f"(esperado — nem toda fatura gera frete)")
 
+        unicidade = self.results.get("master_entity_uniqueness", {})
+        if unicidade.get("duplicated_keys_total"):
+            print(f"\n🔑 Chave duplicada na master entity "
+                  f"({unicidade['duplicated_keys_total']} invoice_id):")
+            for produto, dados in unicidade["by_product"].items():
+                if not dados["duplicated_invoice_ids"]:
+                    continue
+                print(f"   • {produto}: {dados['duplicated_invoice_ids']} id(s) repetido(s), "
+                      f"{dados['records_shadowed']} registro(s) ocultado(s) na junção")
+                self._print_ids("invoice_id repetidos", dados["invoice_ids"])
+
         exemplos = self.results.get("state_contradiction_examples")
         if exemplos:
             print(f"\n🚨 Contradições de estado entre domínios "
@@ -577,6 +651,15 @@ class CrossDomainDivergenceDetector:
         print(f"   • Órfãos (logística → fatura inexistente): "
               f"{integrity['logistics_orphan_records']} registros "
               f"em {integrity['logistics_orphan_invoices']} faturas")
+        orfaos = integrity.get("logistics_orphan_examples") or []
+        if orfaos:
+            for e in orfaos[:10]:
+                print(f"        - {e['invoice_id']}: {e['operacoes']} operação(ões), "
+                      f"valor_total={e['valor_total']}, tipos={e['tipos_operacao']}")
+            if len(orfaos) > 10:
+                print(f"        … e mais {len(orfaos)-10}")
+            self._print_ids("invoice_id sem contrapartida no Financeiro",
+                            [e["invoice_id"] for e in orfaos])
         print(f"   • Faturas sem logística: "
               f"{integrity['finance_without_logistics_invoices']} (não é violação)")
     

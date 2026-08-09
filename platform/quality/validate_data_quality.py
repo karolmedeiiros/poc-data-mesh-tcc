@@ -339,6 +339,7 @@ class DataQualityValidator:
         odcs = load_odcs(contract_path)
         schema = (odcs.get("schema") or [{}])[0]
         self.properties = schema.get("properties", []) or []
+        self.campos_declarados = {p.get("name") for p in self.properties}
         self.dimensao_por_regra = {
             r.get("name"): DIMENSAO_ODCS.get(r.get("dimension"), "validade")
             for r in (schema.get("quality") or [])
@@ -352,10 +353,15 @@ class DataQualityValidator:
 
     # ── Camada 1 — Validação de esquema ─────────────────────────────────
 
-    def validar_esquema(self, records: List[Dict]) -> Dict[str, Any]:
-        """Verifica obrigatoriedade, tipo e enumeração de cada atributo declarado."""
-        violacoes = []
-        total = len(records)
+    def violacoes_de_esquema(self, record: Dict) -> List[Dict[str, Any]]:
+        """Verifica um registro contra o esquema declarado no contrato.
+
+        Fonte única da camada 1: a agregação do dataset (`validar_esquema`) é
+        derivada destes veredictos por registro, e não calculada em paralelo.
+        Sem isso, o escore de qualidade e a camada de esquema podiam discordar
+        — dataset com esquema em FAIL e `quality_score` em 100 %.
+        """
+        violacoes: List[Dict[str, Any]] = []
 
         for prop in self.properties:
             nome = prop.get("name")
@@ -364,57 +370,93 @@ class DataQualityValidator:
             tipo = prop.get("logicalType")
             aceitos = TIPOS_ACEITOS.get(tipo)
             enum = (prop.get("logicalTypeOptions") or {}).get("enum")
-            ausentes = nulos = tipo_invalido = fora_enum = 0
 
-            for r in records:
-                if nome not in r:
-                    ausentes += 1
-                    continue
-                v = r[nome]
-                if v is None or v == "":
-                    nulos += 1
-                    continue
-                if aceitos and not isinstance(v, aceitos):
-                    tipo_invalido += 1
-                if enum:
-                    valores = v if isinstance(v, list) else [v]
-                    if any(x not in enum for x in valores):
-                        fora_enum += 1
+            if nome not in record:
+                if prop.get("required"):
+                    violacoes.append({
+                        "dimensao": "integridade", "tipo": "campo_obrigatorio_nao_preenchido",
+                        "campo": nome, "causa": "ausente",
+                        "mensagem": f"Campo obrigatório '{nome}' ausente",
+                    })
+                continue
 
-            if prop.get("required") and (ausentes or nulos):
-                violacoes.append({
-                    "dimensao": "integridade", "tipo": "campo_obrigatorio_nao_preenchido",
-                    "campo": nome, "ocorrencias": ausentes + nulos,
-                    "mensagem": (f"Campo obrigatório '{nome}': {ausentes} ausente(s) e "
-                                 f"{nulos} nulo(s) em {total} registros"),
-                })
-            if tipo_invalido:
+            valor = record[nome]
+            if valor is None or valor == "":
+                if prop.get("required"):
+                    violacoes.append({
+                        "dimensao": "integridade", "tipo": "campo_obrigatorio_nao_preenchido",
+                        "campo": nome, "causa": "nulo",
+                        "mensagem": f"Campo obrigatório '{nome}' nulo ou vazio",
+                    })
+                continue
+
+            if aceitos and not isinstance(valor, aceitos):
                 violacoes.append({
                     "dimensao": "validade", "tipo": "tipo_incompativel",
-                    "campo": nome, "esperado": tipo, "ocorrencias": tipo_invalido,
-                    "mensagem": (f"Campo '{nome}' com tipo distinto de '{tipo}' em "
-                                 f"{tipo_invalido} registros"),
+                    "campo": nome, "esperado": tipo,
+                    "mensagem": f"Campo '{nome}' com tipo distinto de '{tipo}'",
                 })
-            if fora_enum:
+            if enum:
+                valores = valor if isinstance(valor, list) else [valor]
+                if any(x not in enum for x in valores):
+                    violacoes.append({
+                        "dimensao": "validade", "tipo": "valor_fora_da_enumeracao",
+                        "campo": nome, "permitidos": enum,
+                        "mensagem": f"Campo '{nome}' com valor fora de {enum}",
+                    })
+
+        for nome in record:
+            if nome not in self.campos_declarados:
                 violacoes.append({
-                    "dimensao": "validade", "tipo": "valor_fora_da_enumeracao",
-                    "campo": nome, "permitidos": enum, "ocorrencias": fora_enum,
-                    "mensagem": (f"Campo '{nome}' com valor fora de {enum} em "
-                                 f"{fora_enum} registros"),
+                    "dimensao": "validade", "tipo": "campo_nao_declarado",
+                    "campo": nome,
+                    "mensagem": f"Atributo '{nome}' publicado sem declaração no contrato",
                 })
 
-        declarados = {p.get("name") for p in self.properties}
-        nao_declarados = sorted({k for r in records for k in r} - declarados)
-        if nao_declarados:
-            violacoes.append({
-                "dimensao": "validade", "tipo": "campo_nao_declarado",
-                "campos": nao_declarados, "ocorrencias": len(nao_declarados),
-                "mensagem": (f"{len(nao_declarados)} atributo(s) publicado(s) sem "
-                             f"declaração no contrato: {', '.join(nao_declarados)}"),
-            })
+        return violacoes
+
+    def validar_esquema(self, por_registro: List[List[Dict]], total: int) -> Dict[str, Any]:
+        """Agrega em nível de dataset os veredictos de esquema por registro."""
+        # (tipo, campo) -> contagens; preserva a ordem de primeira ocorrência.
+        agregado: Dict[tuple, Dict[str, Any]] = {}
+        for violacoes in por_registro:
+            for v in violacoes:
+                chave = (v["tipo"], v["campo"])
+                acc = agregado.setdefault(chave, {
+                    "dimensao": v["dimensao"], "tipo": v["tipo"], "campo": v["campo"],
+                    "ocorrencias": 0, "ausentes": 0, "nulos": 0,
+                    **({"esperado": v["esperado"]} if "esperado" in v else {}),
+                    **({"permitidos": v["permitidos"]} if "permitidos" in v else {}),
+                })
+                acc["ocorrencias"] += 1
+                if v.get("causa") == "ausente":
+                    acc["ausentes"] += 1
+                elif v.get("causa") == "nulo":
+                    acc["nulos"] += 1
+
+        violacoes_dataset = []
+        for acc in agregado.values():
+            n, campo = acc["ocorrencias"], acc["campo"]
+            if acc["tipo"] == "campo_obrigatorio_nao_preenchido":
+                msg = (f"Campo obrigatório '{campo}': {acc['ausentes']} ausente(s) e "
+                       f"{acc['nulos']} nulo(s) em {total} registros")
+            elif acc["tipo"] == "tipo_incompativel":
+                msg = (f"Campo '{campo}' com tipo distinto de '{acc.get('esperado')}' "
+                       f"em {n} registros")
+            elif acc["tipo"] == "valor_fora_da_enumeracao":
+                msg = (f"Campo '{campo}' com valor fora de {acc.get('permitidos')} "
+                       f"em {n} registros")
+            else:
+                msg = (f"Atributo '{campo}' publicado sem declaração no contrato "
+                       f"em {n} registros")
+            if not acc["ausentes"] and not acc["nulos"]:
+                acc.pop("ausentes"), acc.pop("nulos")
+            violacoes_dataset.append({**acc, "mensagem": msg})
 
         return {"camada": "validacao_de_esquema",
-                "status": "FAIL" if violacoes else "PASS", "violacoes": violacoes}
+                "status": "FAIL" if violacoes_dataset else "PASS",
+                "registros_com_violacao": sum(1 for v in por_registro if v),
+                "violacoes": violacoes_dataset}
 
     # ── Camada 2 — Perfilamento estatístico ─────────────────────────────
 
@@ -494,14 +536,43 @@ class DataQualityValidator:
 
     # ── Camada 3 — Regras de negócio declaradas no contrato ─────────────
 
-    def validate_record(self, record: Dict) -> Dict[str, Any]:
+    def validate_record(self, record: Dict,
+                        chaves_duplicadas: Dict[str, set] = None) -> Dict[str, Any]:
         """Valida um único registro contra as regras de qualidade do contrato."""
         results = {
             "record_id": record.get("invoice_id", record.get("operation_id", "unknown")),
             "product": self.product_name, "domain": self.domain,
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "validations": [], "overall_status": "PASS", "errors": 0, "warnings": 0,
+            "validations": [], "schema_violations": [], "profiling_violations": [],
+            "overall_status": "PASS", "errors": 0, "warnings": 0,
         }
+
+        # Camada 1 aplicada ao registro. Violação de esquema é erro: um registro
+        # sem campo obrigatório declarado não é um registro válido, ainda que
+        # satisfaça todas as regras de negócio.
+        violacoes_esquema = self.violacoes_de_esquema(record)
+        if violacoes_esquema:
+            results["schema_violations"] = violacoes_esquema
+            results["errors"] += len(violacoes_esquema)
+            results["overall_status"] = "FAIL"
+
+        # Camada 2 aplicada ao registro. O perfilamento é estatístico e vive no
+        # nível do dataset, mas duplicidade de chave primária é atribuível a
+        # registros concretos: os que compartilham a chave. Sem isso, o escore
+        # exibia 100 % com a dimensão de unicidade em FAIL — o mesmo falso verde
+        # já corrigido na camada de esquema.
+        for campo, valores in (chaves_duplicadas or {}).items():
+            if record.get(campo) in valores:
+                results["profiling_violations"].append({
+                    "dimensao": "unicidade", "tipo": "chave_primaria_duplicada",
+                    "campo": campo, "valor": record.get(campo),
+                    "mensagem": (f"Chave primária '{campo}' repetida no dataset "
+                                 f"(valor {record.get(campo)!r})"),
+                })
+        if results["profiling_violations"]:
+            results["errors"] += len(results["profiling_violations"])
+            results["overall_status"] = "FAIL"
+
         for rule in self.quality_rules:
             v = self.apply_rule(record, rule)
             results["validations"].append(v)
@@ -572,18 +643,38 @@ class DataQualityValidator:
                     records.append(json.loads(line))
         total_records = len(records)
 
-        esquema = self.validar_esquema(records)
         perfil = self.perfilar(records)
+
+        # Chaves primárias repetidas, apuradas antes do laço para que cada
+        # registro envolvido receba o veredicto correspondente.
+        chaves_duplicadas: Dict[str, set] = {}
+        for campo in self.primary_key:
+            vistos, repetidos = set(), set()
+            for r in records:
+                valor = r.get(campo)
+                if valor is None:
+                    continue
+                (repetidos if valor in vistos else vistos).add(valor)
+            if repetidos:
+                chaves_duplicadas[campo] = repetidos
 
         validation_results = []
         total_errors = total_warnings = 0
         for record in records:
-            r = self.validate_record(record)
+            r = self.validate_record(record, chaves_duplicadas)
             validation_results.append(r)
             total_errors += r["errors"]
             total_warnings += r["warnings"]
 
+        # A camada 1 em nível de dataset é a agregação dos veredictos por
+        # registro produzidos em validate_record — uma implementação só.
+        esquema = self.validar_esquema(
+            [r["schema_violations"] for r in validation_results], total_records)
+
         records_valid = sum(1 for r in validation_results if r["overall_status"] == "PASS")
+        erros_de_esquema = sum(len(r["schema_violations"]) for r in validation_results)
+        erros_de_perfilamento = sum(len(r["profiling_violations"]) for r in validation_results)
+        erros_de_regra = total_errors - erros_de_esquema - erros_de_perfilamento
 
         return {
             "product": self.product_name, "domain": self.domain,
@@ -593,18 +684,34 @@ class DataQualityValidator:
             "records_with_errors": sum(1 for r in validation_results if r["overall_status"] == "FAIL"),
             "records_with_warnings": sum(1 for r in validation_results if r["overall_status"] == "WARN"),
             "records_valid": records_valid,
+            "records_failing_schema": esquema["registros_com_violacao"],
+            "records_failing_rules": sum(
+                1 for r in validation_results
+                if any(v["status"] in ("FAIL", "ERROR") for v in r["validations"])),
             "total_errors": total_errors, "total_warnings": total_warnings,
+            "errors_schema": erros_de_esquema, "errors_rules": erros_de_regra,
+            "errors_profiling": erros_de_perfilamento,
+            # Erros por registro (pode passar de 100 %: um registro acumula
+            # vários erros). Não confundir com o percentual de registros
+            # reprovados, que é `records_with_errors / total_records`.
             "error_rate": (total_errors / total_records) * 100 if total_records else 0,
             "warning_rate": (total_warnings / total_records) * 100 if total_records else 0,
-            # Percentual de registros integralmente válidos.
+            # Percentual de registros integralmente válidos: aprovados nas três
+            # camadas — esquema, perfilamento (unicidade da chave) e regras de
+            # negócio. Contabilizar apenas as regras produzia 100 % com esquema
+            # ou unicidade em FAIL.
             "quality_score": (records_valid / total_records) * 100 if total_records else 0,
             "camadas": {
                 "validacao_de_esquema": esquema,
                 "perfilamento_estatistico": perfil,
                 "regras_de_negocio": {
                     "camada": "regras_de_negocio",
-                    "status": "FAIL" if total_errors else "PASS",
+                    # Só reprovações de regra decidem esta camada. Usar
+                    # `total_errors` a punha em FAIL por violação de esquema,
+                    # atribuindo à camada 3 um problema da camada 1.
+                    "status": "FAIL" if erros_de_regra else "PASS",
                     "regras_avaliadas": len(self.quality_rules),
+                    "reprovacoes": erros_de_regra,
                 },
             },
             "dimensoes": self._consolidar_dimensoes(esquema, perfil, validation_results),
@@ -740,7 +847,12 @@ def validate_all_products():
         print(f"\n📦 Produto: {m['product']} (Domain: {m['domain']})")
         print(f"   📊 Total registros: {m['total_records']}")
         print(f"   ✅ Válidos: {m['records_valid']} ({m['quality_score']:.1f}%)")
-        print(f"   ❌ Com erros: {m['records_with_errors']} ({m['error_rate']:.1f}%)")
+        pct_reprovados = (m["records_with_errors"] / m["total_records"] * 100
+                          if m["total_records"] else 0)
+        print(f"   ❌ Com erros: {m['records_with_errors']} ({pct_reprovados:.1f}%)"
+              f" — {m['errors_schema']} erro(s) de esquema, "
+              f"{m.get('errors_profiling', 0)} de perfilamento, "
+              f"{m['errors_rules']} de regra")
 
         print("   ── Camadas de verificação")
         for nome, c in m["camadas"].items():

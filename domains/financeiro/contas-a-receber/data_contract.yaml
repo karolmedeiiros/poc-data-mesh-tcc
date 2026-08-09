@@ -40,6 +40,7 @@ schema:
         logicalType: string
         physicalType: string
         required: true
+        description: "Estado atual da fatura"
         logicalTypeOptions:
           enum: ["ABERTO", "PAGO", "CANCELADO"]
       - name: tipo_cliente
@@ -126,6 +127,12 @@ team:
     role: owner
 
 customProperties:
+  # Classificação exigida por spec.security_policies.data_classification quando
+  # o produto publica atributo listado em standards.security.pii_fields.
+  - property: data_classification
+    value: confidential
+  - property: pii_fields
+    value: ["id_cliente"]
   - property: product_type
     value: analytical
   - property: output_port_kind

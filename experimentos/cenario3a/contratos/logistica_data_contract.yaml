@@ -1,0 +1,250 @@
+# Open Data Contract Standard (ODCS) v3 — Bitol
+# https://bitol-io.github.io/open-data-contract-standard/
+apiVersion: v3.0.2
+kind: DataContract
+id: dp-log-ops-invoice
+name: operacoes-logistica
+version: "1.0.0"
+status: active
+domain: logistica
+dataProduct: operacoes-logistica
+tenant: empresa
+
+description:
+  purpose: "Output port analítico de Logística, chaveado por invoice_id (apenas operações ligadas a faturas)."
+  usage: "Reconciliação fina fatura-a-fatura entre domínios (entity analytical product)."
+  limitations: "Agrega N operações por fatura; mantém vocabulário e regras próprias do domínio de logística."
+
+tags: ["logistics", "v1", "analytical", "entity", "invoice"]
+
+schema:
+  - name: logistics_invoice
+    physicalName: logistics_invoice
+    physicalType: table
+    logicalType: object
+    description: "Output port analítico de Logística chaveado por invoice_id."
+    properties:
+      - name: invoice_id
+        logicalType: string
+        physicalType: string
+        required: true
+        unique: true
+        primaryKey: true
+        primaryKeyPosition: 1
+        description: "Master entity (federated), pode ter N operações"
+      - name: qtd_operacoes
+        logicalType: integer
+        physicalType: integer
+        required: true
+        logicalTypeOptions:
+          minimum: 1
+      - name: valor_base
+        logicalType: number
+        physicalType: number
+        required: true
+        description: "Custo base do item/serviço logístico. Semântica específica do domínio Logística; não corresponde ao valor_base dos produtos financeiros (AP/AR)."
+      - name: valor_frete
+        logicalType: number
+        physicalType: number
+        required: true
+        description: "Custo de frete da operação"
+      - name: valor_seguro
+        logicalType: number
+        physicalType: number
+        required: true
+        description: "Custo de seguro da operação"
+      - name: valor_imposto
+        logicalType: number
+        physicalType: number
+        required: true
+        description: "Valor de impostos da operação"
+      - name: valor_total
+        logicalType: number
+        physicalType: number
+        required: true
+        description: "Soma de valor_base + valor_frete + valor_seguro + valor_imposto"
+      - name: dsc_tipo_operacao
+        logicalType: array
+        physicalType: array
+        required: true
+      - name: status
+        logicalType: array
+        physicalType: array
+        required: true
+        description: "Estado atual da fatura"
+      - name: meses_operacao
+        logicalType: array
+        physicalType: array
+        required: true
+      - name: dsc_moeda
+        logicalType: string
+        physicalType: string
+        required: true
+        logicalTypeOptions:
+          enum: ["BRL"]
+      - name: dsc_dominio
+        logicalType: string
+        physicalType: string
+        required: true
+      - name: dsc_produto
+        logicalType: string
+        physicalType: string
+        required: true
+      - name: dt_versao
+        logicalType: string
+        physicalType: string
+        required: true
+        description: "Timestamp de geração do output port analítico (ISO 8601)"
+      - name: dsc_cidade
+        logicalType: string
+        physicalType: string
+        required: true
+        description: "Cidade para onde a encomenda foi enviada"
+      - name: dsc_uf
+        logicalType: string
+        physicalType: string
+        required: true
+        description: "Estado para onde a encomenda foi enviada"
+    quality:
+      - name: log-k-invoice-id-format
+        description: "invoice_id deve casar com master_entity invoice"
+        dimension: conformity
+        type: text
+        severity: error
+        customProperties:
+          - property: expression
+            value: "REGEXP_MATCH(invoice_id, '^INV-[0-9]+$')"
+      # Consistência interna: valor_total é a decomposição exata de seus
+      # componentes (mercadoria, frete, seguro e imposto). Verificação de
+      # coerência entre atributos do MESMO registro — não envolve outro produto.
+      #
+      # A tolerância de 0,01 corresponde a um centavo, granularidade natural dos
+      # valores monetários publicados (duas casas decimais). Igualdade exata não
+      # é aplicável: os componentes são arredondados individualmente e a soma em
+      # ponto flutuante acumula desvio da ordem de 1e-13, o que reprovaria
+      # registros corretos.
+      - name: log-k-total-decomposition
+        description: "valor_total deve igualar a soma de seus componentes"
+        dimension: consistency
+        type: text
+        severity: error
+        customProperties:
+          - property: expression
+            value: "ABS(valor_base + valor_frete + valor_seguro + valor_imposto - valor_total) <= 0.01"
+      - name: log-k-positive-count
+        description: "qtd_operacoes >= 1"
+        dimension: validity
+        type: text
+        severity: error
+        customProperties:
+          - property: expression
+            value: "qtd_operacoes >= 1"
+      - name: log-k-currency-brl
+        description: "moeda BRL"
+        dimension: conformity
+        type: text
+        severity: error
+        customProperties:
+          - property: expression
+            value: "dsc_moeda == 'BRL'"
+      - name: log-k-valid-status
+        description: "status válido em pelo menos uma operação"
+        dimension: validity
+        type: text
+        severity: error
+        customProperties:
+          - property: expression
+            value: "ANY(status, s => s IN ['PENDENTE','EM_PROCESSAMENTO','CONCLUIDO','CANCELADO'])"
+
+slaDefaultElement: logistics_invoice.invoice_id
+slaProperties:
+  - { property: freshness, value: "P1D", element: logistics_invoice.invoice_id }
+  - { property: availability, value: "99.0%" }
+  - { property: latency, value: "PT5S" }
+  - { property: throughput, value: "100 msg/s" }
+
+team:
+  - username: "logistics-team@empresa.com"
+    role: owner
+
+customProperties:
+  - property: product_type
+    value: analytical
+  - property: output_port_kind
+    value: entity
+  - property: master_entity
+    value: invoice
+  - property: created_at
+    value: "2026-01-15T00:00:00Z"
+  - property: last_modified
+    value: "2026-01-15T00:00:00Z"
+  - property: upstream
+    value: ["operacoes-logistica"]
+  - property: schema_registry
+    value:
+      registry: "http://schema-registry:8081"
+      subject: "logistics-invoice-v1"
+      format: "avro"
+      evolution:
+        policy: "backward_compatible"
+        breaking_changes: "require_major_version"
+        deprecation_period: "P90D"
+  - property: tests
+    value:
+      unit:
+        - { name: "id_format_ok", input: { "invoice_id": "INV-1001" }, expected: "valid" }
+      integration:
+        - { name: "invoice_id_unique", description: "primary key única", setup: "load_dataset", test: "assert_unique(invoice_id)", expected: "true" }
+  - property: consumers
+    value:
+      - name: "cross-domain-reconciliation"
+        version: ">=1.0.0"
+        contact: "data-platform@empresa.com"
+        expectations:
+          - { field: "invoice_id", required: true }
+          - { field: "valor_total", type: "number", required: true }
+  - property: monitoring
+    value:
+      metrics:
+        - { name: "record_count", type: "counter" }
+        - { name: "processing_latency", type: "histogram" }
+        - { name: "error_rate", type: "gauge" }
+        - { name: "freshness", type: "gauge" }
+        - { name: "schema_validation_failures", type: "counter" }
+      alerts:
+        - { name: "high_error_rate", condition: "error_rate > 0.05", severity: "critical" }
+        - { name: "stale_data", condition: "freshness > P1D", severity: "warning" }
+        - { name: "schema_validation_failure", condition: "schema_validation_failures > 0", severity: "error" }
+        - { name: "availability_drop", condition: "availability < 99.0%", severity: "critical" }
+  # QoS avançado — baseline federado a que o produto se compromete (Data Mesh).
+  - property: observability
+    value:
+      data_freshness: { enabled: true, threshold: "PT6H", alert_threshold: "PT8H", measurement_frequency: "PT1H" }
+      schema_drift: { enabled: true, check_frequency: "PT24H", alert_on_changes: true, breaking_change_detection: true }
+      volume_anomalies: { enabled: true, baseline_window: "P7D", deviation_threshold: 0.25, alert_threshold: 0.50 }
+      quality_degradation: { enabled: true, quality_metrics: ["completeness", "accuracy", "validity"], degradation_threshold: 0.10, recovery_sla: "PT2H" }
+      lineage_tracking: { enabled: true, upstream_dependencies: true, downstream_impacts: true, change_propagation: true }
+  - property: error_budgets
+    value:
+      monthly_budget: "99.9%"
+      weekly_budget: "99.5%"
+      daily_budget: "99.0%"
+      burn_rate_alerts: { warning_threshold: 0.80, critical_threshold: 0.95 }
+      outage_classification:
+        critical: { availability_impact: ">5%", recovery_time: ">PT1H", budget_impact: "high" }
+        major: { availability_impact: "1-5%", recovery_time: "PT15M-PT1H", budget_impact: "medium" }
+        minor: { availability_impact: "<1%", recovery_time: "<PT15M", budget_impact: "low" }
+      budget_calculation: { include_maintenance: false, include_planned_outages: false, measurement_window: "P30D" }
+  - property: reliability
+    value:
+      mean_time_to_recovery: "PT1H"
+      mean_time_between_failures: "P30D"
+      data_loss_prevention: "zero_loss"
+      recovery_objectives: { rto: "PT4H", rpo: "PT1H" }
+      backup_strategy: { frequency: "PT6H", retention: "P90D", verification: "weekly" }
+  - property: performance
+    value:
+      query_performance: { response_time_p50: "PT2S", response_time_p95: "PT5S", response_time_p99: "PT10S", timeout_threshold: "PT30S" }
+      batch_processing: { max_processing_time: "PT30M", parallel_jobs: 4, resource_utilization: 0.80 }
+      streaming: { max_lag: "PT5S", throughput_min: "1000 msg/s", consumer_lag_threshold: "PT10S" }
+      scalability: { max_concurrent_users: 100, peak_load_multiplier: 2.0, auto_scaling_enabled: true }

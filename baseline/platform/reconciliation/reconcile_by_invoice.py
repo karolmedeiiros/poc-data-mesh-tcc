@@ -54,7 +54,64 @@ def read_jsonl(path: str) -> List[Dict[str, Any]]:
 
 
 def index_by_invoice(rows: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
-    return {r["invoice_id"]: r for r in rows}
+    """Indexa os registros pela master entity, uma linha por `invoice_id`.
+
+    A indexação PRESSUPÕE unicidade da chave. Quando ela não se verifica, a
+    ocorrência seguinte sobrescreve a anterior e o registro desaparece da
+    análise sem qualquer sinal — o relatório informa 2.000 faturas para um
+    arquivo de 2.001 linhas, e a reconciliação compara um dos registros
+    ignorando a existência do outro. É perda de informação no instrumento, não
+    apenas violação do contrato, e por isso a colisão precisa ser reportada
+    aqui, e não só na camada de qualidade.
+    """
+    idx: Dict[str, Dict[str, Any]] = {}
+    for r in rows:
+        idx[r["invoice_id"]] = r
+    return idx
+
+
+def detectar_colisoes(rows: List[Dict[str, Any]], produto: str) -> Dict[str, Any]:
+    """Registros que a indexação por `invoice_id` colapsaria.
+
+    Distingue dois casos, porque a consequência analítica é diferente:
+
+      • duplicata idêntica — o registro sobrescrito é igual ao que fica, então
+        nada se perde no conteúdo, apenas a contagem fica errada;
+      • duplicata divergente — os registros diferem em algum atributo, e a
+        reconciliação passa a analisar um deles ignorando o outro. Aqui a
+        conclusão sobre a fatura depende da ordem das linhas no arquivo.
+    """
+    ocorrencias: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+    for r in rows:
+        ocorrencias[r["invoice_id"]].append(r)
+
+    duplicadas = {inv: regs for inv, regs in ocorrencias.items() if len(regs) > 1}
+    identicas, divergentes = [], []
+    for inv, regs in sorted(duplicadas.items()):
+        primeiro = json.dumps(regs[0], sort_keys=True, ensure_ascii=False)
+        todas_iguais = all(
+            json.dumps(r, sort_keys=True, ensure_ascii=False) == primeiro for r in regs[1:])
+        alvo = identicas if todas_iguais else divergentes
+        campos_divergentes = sorted({
+            campo for r in regs[1:] for campo in set(regs[0]) | set(r)
+            if regs[0].get(campo) != r.get(campo)
+        })
+        alvo.append({
+            "invoice_id": inv,
+            "ocorrencias": len(regs),
+            "registros_descartados": len(regs) - 1,
+            **({"campos_divergentes": campos_divergentes} if campos_divergentes else {}),
+        })
+
+    return {
+        "produto": produto,
+        "linhas_no_arquivo": len(rows),
+        "faturas_distintas": len(ocorrencias),
+        "chaves_duplicadas": len(duplicadas),
+        "registros_descartados": sum(len(r) - 1 for r in duplicadas.values()),
+        "duplicatas_identicas": identicas[:50],
+        "duplicatas_divergentes": divergentes[:50],
+    }
 
 
 def canonical_status(status: str) -> str:
@@ -325,6 +382,15 @@ def main() -> None:
     ar_rows = read_jsonl(AR_PATH)
     log_rows = read_jsonl(LOG_PATH)
 
+    # Colisões de chave são apuradas ANTES da indexação: depois dela a evidência
+    # já se perdeu, porque o dicionário guarda uma linha por invoice_id.
+    colisoes = [
+        detectar_colisoes(ap_rows, "contas-a-pagar"),
+        detectar_colisoes(ar_rows, "contas-a-receber"),
+        detectar_colisoes(log_rows, "operacoes-logistica"),
+    ]
+    colisoes_totais = sum(c["chaves_duplicadas"] for c in colisoes)
+
     ap_idx = index_by_invoice(ap_rows)
     ar_idx = index_by_invoice(ar_rows)
     log_idx = index_by_invoice(log_rows)
@@ -356,6 +422,11 @@ def main() -> None:
         "master_entity_in_use": next(
             (m for m in master_entities if m.get("id") == "invoice"), None
         ),
+        "master_key_collisions": {
+            "duplicated_keys_total": colisoes_totais,
+            "records_discarded_total": sum(c["registros_descartados"] for c in colisoes),
+            "by_product": colisoes,
+        },
         "ap_vs_ar": intra,
         "logistics_vs_finance": cross,
         "summary": {
@@ -366,40 +437,58 @@ def main() -> None:
             "new_category_referential_integrity_violations": cross["counters"].get(
                 "referential_integrity_violation", 0
             ),
+            "master_key_collisions": colisoes_totais,
         },
         "conclusions": [
-            (
-                "Mesma chave invoice_id — vocabulário de status diverge em "
-                f"{intra['persistent_divergences_summary'].get('status_vocabulary_diff', 0)} faturas de AP e AR "
-                ". Sem canonicalização federada, consumidores filtrariam errado."
-            ),
-            (
-                "Mesma chave invoice_id — valor de fatura diverge em "
-                f"{intra['persistent_divergences_summary'].get('amount_business_rules_diff', 0)} casos "
-                "AP vs AR (retenções fiscais vs descontos/juros). Divergência é correta por desenho."
-            ),
-            (
-                "Mesma chave invoice_id — granularidade 1:N entre Logística e Financeiro em "
-                f"{cross['counters'].get('granularity_one_to_many', 0)} faturas. "
-                "Chave compartilhada não unifica grão."
-            ),
-            (
-                "Mesma chave invoice_id — janela temporal divergente entre domínios em "
-                f"{cross['counters'].get('month_window_diff', 0)} faturas "
-                "(mês de operação logística vs mês de emissão da fatura). Nenhuma política "
-                "declara a relação esperada entre os dois períodos."
-            ),
-            (
-                "Mesma chave invoice_id — atributo comum divergente entre domínios em "
-                f"{cross['counters'].get('cross_domain_attribute_divergence', 0)} faturas "
-                "(dsc_moeda)."
-            ),
-            (
-                "Mesma chave invoice_id — contradição de estado entre domínios em "
-                f"{cross['counters'].get('cross_domain_state_contradiction', 0)} faturas "
-                "(logística CONCLUIDO vs financeiro CANCELADO). Cada estado é válido "
-                "no vocabulário de seu domínio; nenhuma camada da arquitetura relaciona os dois."
-            ),
+            texto for ocorrencias, texto in (
+                (colisoes_totais,
+                 f"{colisoes_totais} invoice_id repetido(s) dentro de um mesmo produto. "
+                 + "; ".join(
+                     f"{c['produto']}: " + ", ".join(
+                         d["invoice_id"] for d in
+                         c["duplicatas_identicas"] + c["duplicatas_divergentes"])
+                     for c in colisoes if c["chaves_duplicadas"])
+                 + ". A reconciliação indexa uma linha por chave, de modo que "
+                 f"{sum(c['registros_descartados'] for c in colisoes)} registro(s) "
+                 "seriam descartados silenciosamente: a chave compartilhada só "
+                 "sustenta a junção se a unicidade prometida no contrato se verificar."),
+                (intra["persistent_divergences_summary"].get("status_vocabulary_diff", 0),
+                 "Mesma chave invoice_id — vocabulário de status diverge em "
+                 f"{intra['persistent_divergences_summary'].get('status_vocabulary_diff', 0)} "
+                 "faturas de AP e AR. Sem canonicalização federada, consumidores "
+                 "filtrariam errado."),
+                (intra["persistent_divergences_summary"].get("amount_business_rules_diff", 0),
+                 "Mesma chave invoice_id — valor de fatura diverge em "
+                 f"{intra['persistent_divergences_summary'].get('amount_business_rules_diff', 0)} "
+                 "casos AP vs AR (retenções fiscais vs descontos/juros). Divergência é "
+                 "correta por desenho."),
+                (cross["counters"].get("granularity_one_to_many", 0),
+                 "Mesma chave invoice_id — granularidade 1:N entre Logística e Financeiro "
+                 f"em {cross['counters'].get('granularity_one_to_many', 0)} faturas. "
+                 "Chave compartilhada não unifica grão."),
+                (cross["counters"].get("month_window_diff", 0),
+                 "Mesma chave invoice_id — janela temporal divergente entre domínios em "
+                 f"{cross['counters'].get('month_window_diff', 0)} faturas (mês de operação "
+                 "logística vs mês de emissão da fatura). Nenhuma política declara a "
+                 "relação esperada entre os dois períodos."),
+                (cross["counters"].get("cross_domain_attribute_divergence", 0),
+                 "Mesma chave invoice_id — atributo comum divergente entre domínios em "
+                 f"{cross['counters'].get('cross_domain_attribute_divergence', 0)} faturas "
+                 "(dsc_moeda). Cada produto valida a própria moeda contra o seu contrato; "
+                 "nenhuma camada verifica se os dois domínios publicam a mesma unidade."),
+                (cross["counters"].get("cross_domain_state_contradiction", 0),
+                 "Mesma chave invoice_id — contradição de estado entre domínios em "
+                 f"{cross['counters'].get('cross_domain_state_contradiction', 0)} faturas "
+                 "(logística CONCLUIDO vs financeiro CANCELADO). Cada estado é válido no "
+                 "vocabulário de seu domínio; nenhuma camada da arquitetura relaciona os dois."),
+                (cross["counters"].get("referential_integrity_violation", 0),
+                 f"{cross['counters'].get('referential_integrity_violation', 0)} faturas "
+                 "logísticas apontam para faturas inexistentes no Financeiro. São elas: "
+                 + ", ".join(sorted(
+                     e["invoice_id"] for e in
+                     cross["referential_integrity"]["logistics_pointing_to_missing_invoice"]
+                 )) + "."),
+            ) if ocorrencias
         ],
     }
 
@@ -417,6 +506,27 @@ def main() -> None:
         f"🔗 Cobertura Log→Finance : {cross['coverage_logistics_in_finance_pct']}%"
     )
     print()
+
+    # Colisão de chave é reportada antes das divergências: ela compromete a
+    # própria base da comparação, não é um resultado dela.
+    if colisoes_totais:
+        print("🔑 Colisão na master entity (a indexação descartaria registros):")
+        for c in colisoes:
+            if not c["chaves_duplicadas"]:
+                continue
+            print(f"   • {c['produto']}: {c['linhas_no_arquivo']} linhas → "
+                  f"{c['faturas_distintas']} faturas distintas | "
+                  f"{c['chaves_duplicadas']} chave(s) duplicada(s), "
+                  f"{c['registros_descartados']} registro(s) descartado(s)")
+            for d in c["duplicatas_divergentes"]:
+                print(f"     ⚠️  {d['invoice_id']} ×{d['ocorrencias']} — registros DIVERGEM "
+                      f"em {', '.join(d['campos_divergentes'])}; a conclusão sobre esta "
+                      f"fatura depende da ordem das linhas no arquivo")
+            for d in c["duplicatas_identicas"]:
+                print(f"     • {d['invoice_id']} ×{d['ocorrencias']} — registros idênticos; "
+                      f"perde-se a contagem, não o conteúdo")
+        print()
+
     # Contadores informacionais: não são divergências, exibidos à parte.
     INFORMATIONAL_KEYS = {"value_ratio_observed"}
 
@@ -453,21 +563,12 @@ def main() -> None:
         for i in range(0, len(ids), 6):
             print("      " + ", ".join(ids[i:i+6]))
 
-    vr = cross.get("value_ratio_stats")
-    if vr:
-        print()
-        print("ℹ️  Achados informacionais (não divergências):")
-        print(f"   • razão valor logístico / fatura (n={vr['n']}): "
-              f"min={vr['min']} mediana={vr['p50']} max={vr['max']}")
-        print("     grandezas distintas; sem regra no contrato, não há o que validar")
     print()
     # Exibe apenas conclusões com ocorrência efetiva: uma conclusão com
     # contagem zero não descreve achado algum e apenas polui a saída.
-    ativas = [c for c in report["conclusions"] if " em 0 faturas" not in c
-              and " 0 casos " not in c]
-    if ativas:
+    if report["conclusions"]:
         print("📋 Conclusões da tese:")
-        for c in ativas:
+        for c in report["conclusions"]:
             print(f"   • {c}")
     print(f"\n📄 Relatório completo em: {REPORT_PATH}")
 

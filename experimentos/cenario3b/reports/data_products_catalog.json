@@ -1,0 +1,870 @@
+{
+  "catalog_metadata": {
+    "name": "Enterprise Data Products Catalog",
+    "version": "1.0.0",
+    "last_updated": "2026-08-05T00:19:41.743110+00:00",
+    "total_products": 3,
+    "domains": [
+      "financeiro",
+      "logistica"
+    ],
+    "description": "Catálogo federado de produtos de dados da empresa"
+  },
+  "products": [
+    {
+      "product_id": "contas-a-pagar",
+      "name": "contas-a-pagar",
+      "domain": "financeiro",
+      "owner": "finance-ap@empresa.com",
+      "version": "1.0.0",
+      "description": "",
+      "tags": [
+        "finance",
+        "ap",
+        "v1",
+        "analytical",
+        "entity",
+        "invoice"
+      ],
+      "created_at": "2026-01-15T00:00:00Z",
+      "last_modified": "2026-01-15T00:00:00Z",
+      "schema": {
+        "registry": "http://schema-registry:8081",
+        "subject": "ap-invoice-v1",
+        "format": "avro",
+        "evolution_policy": "backward_compatible",
+        "breaking_changes": "require_major_version",
+        "deprecation_period": "P90D"
+      },
+      "sla": {
+        "freshness": "P1D",
+        "availability": "99.0%",
+        "latency": "PT5S",
+        "throughput": "100 msg/s"
+      },
+      "dataset_fields": [
+        {
+          "name": "invoice_id",
+          "type": "string",
+          "required": true,
+          "description": "Master entity (federated)"
+        },
+        {
+          "name": "mes_emissao",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "required": true,
+          "enum": [
+            "ABERTO",
+            "PAGO",
+            "CANCELADO"
+          ],
+          "description": "Estado atual da fatura"
+        },
+        {
+          "name": "tipo_fatura",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "id_fornecedor",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "valor_liquido",
+          "type": "number",
+          "required": true
+        },
+        {
+          "name": "valor_base",
+          "type": "number",
+          "required": true,
+          "description": "Valor original da fatura antes de retenções, juros e descontos. Semântica específica do domínio AP; não deve ser comparado diretamente com valor_base de outros domínios."
+        },
+        {
+          "name": "dsc_moeda",
+          "type": "string",
+          "required": true,
+          "enum": [
+            "BRL"
+          ]
+        },
+        {
+          "name": "dsc_dominio",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "dsc_produto",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "dt_versao",
+          "type": "string",
+          "required": true,
+          "description": "Timestamp de geração do output port analítico (ISO 8601)"
+        }
+      ],
+      "quality_rules": [
+        {
+          "id": "ap-k-invoice-id-format",
+          "description": "invoice_id deve casar com master_entity invoice",
+          "severity": "error",
+          "expression": "REGEXP_MATCH(invoice_id, '^INV-[0-9]+$')"
+        },
+        {
+          "id": "ap-k-positive-amount",
+          "description": "valor_liquido > 0",
+          "severity": "error",
+          "expression": "valor_liquido > 0"
+        },
+        {
+          "id": "ap-k-currency-brl",
+          "description": "moeda BRL",
+          "severity": "error",
+          "expression": "dsc_moeda == 'BRL'"
+        },
+        {
+          "id": "ap-k-valid-status",
+          "description": "status válido",
+          "severity": "error",
+          "expression": "status IN ['ABERTO','PAGO','CANCELADO']"
+        }
+      ],
+      "consumers": [
+        {
+          "name": "cross-domain-reconciliation",
+          "version": ">=1.0.0",
+          "contact": "data-platform@empresa.com",
+          "expectations": [
+            {
+              "field": "invoice_id",
+              "required": true
+            },
+            {
+              "field": "valor_liquido",
+              "type": "number",
+              "required": true
+            }
+          ]
+        },
+        {
+          "name": "finance-master-data",
+          "version": ">=1.0.0",
+          "contact": "mdm@empresa.com",
+          "expectations": [
+            {
+              "field": "invoice_id",
+              "required": true
+            },
+            {
+              "field": "id_fornecedor",
+              "required": true
+            }
+          ]
+        }
+      ],
+      "monitoring": {
+        "metrics": [
+          {
+            "name": "record_count",
+            "type": "counter"
+          },
+          {
+            "name": "processing_latency",
+            "type": "histogram"
+          },
+          {
+            "name": "error_rate",
+            "type": "gauge"
+          },
+          {
+            "name": "freshness",
+            "type": "gauge"
+          },
+          {
+            "name": "schema_validation_failures",
+            "type": "counter"
+          }
+        ],
+        "alerts": [
+          {
+            "name": "high_error_rate",
+            "condition": "error_rate > 0.05",
+            "severity": "critical"
+          },
+          {
+            "name": "stale_data",
+            "condition": "freshness > P1D",
+            "severity": "warning"
+          },
+          {
+            "name": "schema_validation_failure",
+            "condition": "schema_validation_failures > 0",
+            "severity": "error"
+          },
+          {
+            "name": "availability_drop",
+            "condition": "availability < 99.0%",
+            "severity": "critical"
+          }
+        ]
+      },
+      "discovery": {
+        "lineage_fields": [
+          "invoice_id",
+          "mes_emissao",
+          "status",
+          "dsc_moeda"
+        ],
+        "cross_domain_relationships": [
+          {
+            "field": "invoice_id",
+            "target_domains": [
+              "contas-a-pagar",
+              "contas-a-receber",
+              "logistica"
+            ],
+            "relationship_type": "reference"
+          }
+        ],
+        "searchable_fields": [
+          "invoice_id",
+          "mes_emissao",
+          "status",
+          "dsc_moeda"
+        ],
+        "data_quality_metrics": []
+      }
+    },
+    {
+      "product_id": "contas-a-receber",
+      "name": "contas-a-receber",
+      "domain": "financeiro",
+      "owner": "finance-ar@empresa.com",
+      "version": "1.0.0",
+      "description": "",
+      "tags": [
+        "finance",
+        "ar",
+        "v1",
+        "analytical",
+        "entity",
+        "invoice"
+      ],
+      "created_at": "2026-01-15T00:00:00Z",
+      "last_modified": "2026-01-15T00:00:00Z",
+      "schema": {
+        "registry": "http://schema-registry:8081",
+        "subject": "ar-invoice-v1",
+        "format": "avro",
+        "evolution_policy": "backward_compatible",
+        "breaking_changes": "require_major_version",
+        "deprecation_period": "P90D"
+      },
+      "sla": {
+        "freshness": "P1D",
+        "availability": "99.0%",
+        "latency": "PT5S",
+        "throughput": "100 msg/s"
+      },
+      "dataset_fields": [
+        {
+          "name": "invoice_id",
+          "type": "string",
+          "required": true,
+          "description": "Master entity (federated)"
+        },
+        {
+          "name": "mes_emissao",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "required": true,
+          "enum": [
+            "ABERTO",
+            "PAGO",
+            "CANCELADO"
+          ],
+          "description": "Estado atual da fatura"
+        },
+        {
+          "name": "tipo_cliente",
+          "type": "string",
+          "required": true,
+          "enum": [
+            "corporate",
+            "government",
+            "b2c"
+          ]
+        },
+        {
+          "name": "id_cliente",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "valor_bruto",
+          "type": "number",
+          "required": true
+        },
+        {
+          "name": "valor_base",
+          "type": "number",
+          "required": true,
+          "description": "Valor original da fatura antes de descontos de pontualidade e juros por atraso. Semântica específica do domínio AR; não deve ser comparado diretamente com valor_base de outros domínios."
+        },
+        {
+          "name": "dsc_moeda",
+          "type": "string",
+          "required": true,
+          "enum": [
+            "BRL"
+          ]
+        },
+        {
+          "name": "dsc_dominio",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "dsc_produto",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "dt_versao",
+          "type": "string",
+          "required": true,
+          "description": "Timestamp de geração do output port analítico (ISO 8601)"
+        }
+      ],
+      "quality_rules": [
+        {
+          "id": "ar-k-invoice-id-format",
+          "description": "invoice_id deve casar com master_entity invoice",
+          "severity": "error",
+          "expression": "REGEXP_MATCH(invoice_id, '^INV-[0-9]+$')"
+        },
+        {
+          "id": "ar-k-positive-amount",
+          "description": "valor_bruto > 0",
+          "severity": "error",
+          "expression": "valor_bruto > 0"
+        },
+        {
+          "id": "ar-k-currency-brl",
+          "description": "moeda BRL",
+          "severity": "error",
+          "expression": "dsc_moeda == 'BRL'"
+        },
+        {
+          "id": "ar-k-valid-status",
+          "description": "status válido",
+          "severity": "error",
+          "expression": "status IN ['ABERTO','PAGO','CANCELADO']"
+        }
+      ],
+      "consumers": [
+        {
+          "name": "cross-domain-reconciliation",
+          "version": ">=1.0.0",
+          "contact": "data-platform@empresa.com",
+          "expectations": [
+            {
+              "field": "invoice_id",
+              "required": true
+            }
+          ]
+        },
+        {
+          "name": "credit-risk-engine",
+          "version": ">=1.0.0",
+          "contact": "risk@empresa.com",
+          "expectations": [
+            {
+              "field": "id_cliente",
+              "required": true
+            }
+          ]
+        }
+      ],
+      "monitoring": {
+        "metrics": [
+          {
+            "name": "record_count",
+            "type": "counter"
+          },
+          {
+            "name": "processing_latency",
+            "type": "histogram"
+          },
+          {
+            "name": "error_rate",
+            "type": "gauge"
+          },
+          {
+            "name": "freshness",
+            "type": "gauge"
+          },
+          {
+            "name": "schema_validation_failures",
+            "type": "counter"
+          }
+        ],
+        "alerts": [
+          {
+            "name": "high_error_rate",
+            "condition": "error_rate > 0.05",
+            "severity": "critical"
+          },
+          {
+            "name": "stale_data",
+            "condition": "freshness > P1D",
+            "severity": "warning"
+          },
+          {
+            "name": "schema_validation_failure",
+            "condition": "schema_validation_failures > 0",
+            "severity": "error"
+          },
+          {
+            "name": "availability_drop",
+            "condition": "availability < 99.0%",
+            "severity": "critical"
+          }
+        ]
+      },
+      "discovery": {
+        "lineage_fields": [
+          "invoice_id",
+          "mes_emissao",
+          "status",
+          "dsc_moeda"
+        ],
+        "cross_domain_relationships": [
+          {
+            "field": "invoice_id",
+            "target_domains": [
+              "contas-a-pagar",
+              "contas-a-receber",
+              "logistica"
+            ],
+            "relationship_type": "reference"
+          }
+        ],
+        "searchable_fields": [
+          "invoice_id",
+          "mes_emissao",
+          "status",
+          "dsc_moeda"
+        ],
+        "data_quality_metrics": []
+      }
+    },
+    {
+      "product_id": "operacoes-logistica",
+      "name": "operacoes-logistica",
+      "domain": "logistica",
+      "owner": "logistics-team@empresa.com",
+      "version": "1.0.0",
+      "description": "",
+      "tags": [
+        "logistics",
+        "v1",
+        "analytical",
+        "entity",
+        "invoice"
+      ],
+      "created_at": "2026-01-15T00:00:00Z",
+      "last_modified": "2026-01-15T00:00:00Z",
+      "schema": {
+        "registry": "http://schema-registry:8081",
+        "subject": "logistics-invoice-v1",
+        "format": "avro",
+        "evolution_policy": "backward_compatible",
+        "breaking_changes": "require_major_version",
+        "deprecation_period": "P90D"
+      },
+      "sla": {
+        "freshness": "P1D",
+        "availability": "99.0%",
+        "latency": "PT5S",
+        "throughput": "100 msg/s"
+      },
+      "dataset_fields": [
+        {
+          "name": "invoice_id",
+          "type": "string",
+          "required": true,
+          "description": "Master entity (federated), pode ter N operações"
+        },
+        {
+          "name": "qtd_operacoes",
+          "type": "integer",
+          "required": true,
+          "constraints": {
+            "minInclusive": 1
+          }
+        },
+        {
+          "name": "valor_base",
+          "type": "number",
+          "required": true,
+          "description": "Custo base do item/serviço logístico. Semântica específica do domínio Logística; não corresponde ao valor_base dos produtos financeiros (AP/AR)."
+        },
+        {
+          "name": "valor_frete",
+          "type": "number",
+          "required": true,
+          "description": "Custo de frete da operação"
+        },
+        {
+          "name": "valor_seguro",
+          "type": "number",
+          "required": true,
+          "description": "Custo de seguro da operação"
+        },
+        {
+          "name": "valor_imposto",
+          "type": "number",
+          "required": true,
+          "description": "Valor de impostos da operação"
+        },
+        {
+          "name": "valor_total",
+          "type": "number",
+          "required": true,
+          "description": "Soma de valor_base + valor_frete + valor_seguro + valor_imposto"
+        },
+        {
+          "name": "dsc_tipo_operacao",
+          "type": "array",
+          "required": true
+        },
+        {
+          "name": "status",
+          "type": "array",
+          "required": true,
+          "description": "Estado atual da fatura"
+        },
+        {
+          "name": "meses_operacao",
+          "type": "array",
+          "required": true
+        },
+        {
+          "name": "dsc_moeda",
+          "type": "string",
+          "required": true,
+          "enum": [
+            "BRL"
+          ]
+        },
+        {
+          "name": "dsc_dominio",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "dsc_produto",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "dt_versao",
+          "type": "string",
+          "required": true,
+          "description": "Timestamp de geração do output port analítico (ISO 8601)"
+        }
+      ],
+      "quality_rules": [
+        {
+          "id": "log-k-invoice-id-format",
+          "description": "invoice_id deve casar com master_entity invoice",
+          "severity": "error",
+          "expression": "REGEXP_MATCH(invoice_id, '^INV-[0-9]+$')"
+        },
+        {
+          "id": "log-k-total-decomposition",
+          "description": "valor_total deve igualar a soma de seus componentes",
+          "severity": "error",
+          "expression": "ABS(valor_base + valor_frete + valor_seguro + valor_imposto - valor_total) <= 0.01"
+        },
+        {
+          "id": "log-k-positive-count",
+          "description": "qtd_operacoes >= 1",
+          "severity": "error",
+          "expression": "qtd_operacoes >= 1"
+        },
+        {
+          "id": "log-k-currency-brl",
+          "description": "moeda BRL",
+          "severity": "error",
+          "expression": "dsc_moeda == 'BRL'"
+        },
+        {
+          "id": "log-k-valid-status",
+          "description": "status válido em pelo menos uma operação",
+          "severity": "error",
+          "expression": "ANY(status, s => s IN ['PENDENTE','EM_PROCESSAMENTO','CONCLUIDO','CANCELADO'])"
+        }
+      ],
+      "consumers": [
+        {
+          "name": "cross-domain-reconciliation",
+          "version": ">=1.0.0",
+          "contact": "data-platform@empresa.com",
+          "expectations": [
+            {
+              "field": "invoice_id",
+              "required": true
+            },
+            {
+              "field": "valor_total",
+              "type": "number",
+              "required": true
+            }
+          ]
+        }
+      ],
+      "monitoring": {
+        "metrics": [
+          {
+            "name": "record_count",
+            "type": "counter"
+          },
+          {
+            "name": "processing_latency",
+            "type": "histogram"
+          },
+          {
+            "name": "error_rate",
+            "type": "gauge"
+          },
+          {
+            "name": "freshness",
+            "type": "gauge"
+          },
+          {
+            "name": "schema_validation_failures",
+            "type": "counter"
+          }
+        ],
+        "alerts": [
+          {
+            "name": "high_error_rate",
+            "condition": "error_rate > 0.05",
+            "severity": "critical"
+          },
+          {
+            "name": "stale_data",
+            "condition": "freshness > P1D",
+            "severity": "warning"
+          },
+          {
+            "name": "schema_validation_failure",
+            "condition": "schema_validation_failures > 0",
+            "severity": "error"
+          },
+          {
+            "name": "availability_drop",
+            "condition": "availability < 99.0%",
+            "severity": "critical"
+          }
+        ]
+      },
+      "discovery": {
+        "lineage_fields": [
+          "invoice_id",
+          "status",
+          "dsc_moeda"
+        ],
+        "cross_domain_relationships": [
+          {
+            "field": "invoice_id",
+            "target_domains": [
+              "contas-a-pagar",
+              "contas-a-receber",
+              "logistica"
+            ],
+            "relationship_type": "reference"
+          }
+        ],
+        "searchable_fields": [
+          "invoice_id",
+          "status",
+          "dsc_moeda"
+        ],
+        "data_quality_metrics": []
+      }
+    }
+  ],
+  "domains": {
+    "financeiro": {
+      "domain_name": "financeiro",
+      "total_products": 2,
+      "total_consumers": 4,
+      "products": [
+        "contas-a-pagar",
+        "contas-a-receber"
+      ]
+    },
+    "logistica": {
+      "domain_name": "logistica",
+      "total_products": 1,
+      "total_consumers": 1,
+      "products": [
+        "operacoes-logistica"
+      ]
+    }
+  },
+  "search_indices": {
+    "by_domain": {
+      "financeiro": [
+        "contas-a-pagar",
+        "contas-a-receber"
+      ],
+      "logistica": [
+        "operacoes-logistica"
+      ]
+    },
+    "by_tags": {
+      "finance": [
+        "contas-a-pagar",
+        "contas-a-receber"
+      ],
+      "ap": [
+        "contas-a-pagar"
+      ],
+      "v1": [
+        "contas-a-pagar",
+        "contas-a-receber",
+        "operacoes-logistica"
+      ],
+      "analytical": [
+        "contas-a-pagar",
+        "contas-a-receber",
+        "operacoes-logistica"
+      ],
+      "entity": [
+        "contas-a-pagar",
+        "contas-a-receber",
+        "operacoes-logistica"
+      ],
+      "invoice": [
+        "contas-a-pagar",
+        "contas-a-receber",
+        "operacoes-logistica"
+      ],
+      "ar": [
+        "contas-a-receber"
+      ],
+      "logistics": [
+        "operacoes-logistica"
+      ]
+    },
+    "by_fields": {
+      "invoice_id": [
+        "contas-a-pagar",
+        "contas-a-receber",
+        "operacoes-logistica"
+      ],
+      "mes_emissao": [
+        "contas-a-pagar",
+        "contas-a-receber"
+      ],
+      "status": [
+        "contas-a-pagar",
+        "contas-a-receber",
+        "operacoes-logistica"
+      ],
+      "tipo_fatura": [
+        "contas-a-pagar"
+      ],
+      "id_fornecedor": [
+        "contas-a-pagar"
+      ],
+      "valor_liquido": [
+        "contas-a-pagar"
+      ],
+      "valor_base": [
+        "contas-a-pagar",
+        "contas-a-receber",
+        "operacoes-logistica"
+      ],
+      "dsc_moeda": [
+        "contas-a-pagar",
+        "contas-a-receber",
+        "operacoes-logistica"
+      ],
+      "dsc_dominio": [
+        "contas-a-pagar",
+        "contas-a-receber",
+        "operacoes-logistica"
+      ],
+      "dsc_produto": [
+        "contas-a-pagar",
+        "contas-a-receber",
+        "operacoes-logistica"
+      ],
+      "dt_versao": [
+        "contas-a-pagar",
+        "contas-a-receber",
+        "operacoes-logistica"
+      ],
+      "tipo_cliente": [
+        "contas-a-receber"
+      ],
+      "id_cliente": [
+        "contas-a-receber"
+      ],
+      "valor_bruto": [
+        "contas-a-receber"
+      ],
+      "qtd_operacoes": [
+        "operacoes-logistica"
+      ],
+      "valor_frete": [
+        "operacoes-logistica"
+      ],
+      "valor_seguro": [
+        "operacoes-logistica"
+      ],
+      "valor_imposto": [
+        "operacoes-logistica"
+      ],
+      "valor_total": [
+        "operacoes-logistica"
+      ],
+      "dsc_tipo_operacao": [
+        "operacoes-logistica"
+      ],
+      "meses_operacao": [
+        "operacoes-logistica"
+      ]
+    },
+    "by_consumers": {
+      "cross-domain-reconciliation": [
+        "contas-a-pagar",
+        "contas-a-receber",
+        "operacoes-logistica"
+      ],
+      "finance-master-data": [
+        "contas-a-pagar"
+      ],
+      "credit-risk-engine": [
+        "contas-a-receber"
+      ]
+    }
+  }
+}

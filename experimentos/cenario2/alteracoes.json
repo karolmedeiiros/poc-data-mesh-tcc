@@ -1,0 +1,58 @@
+{
+  "cenario": "C2 — Contradição de estado entre domínios",
+  "descricao": "O atributo status de 5 registros do output port analítico de Logística foi alterado para CONCLUIDO, produzindo combinações logicamente incompatíveis com o estado da mesma fatura no domínio Financeiro (operação concluída sobre fatura cancelada).",
+  "arquivo_alterado": "domains/logistica/data/logistics.jsonl",
+  "registros_afetados": 5,
+  "alteracoes": [
+    {
+      "invoice_id": "INV-1068",
+      "status_baseline": [
+        "PENDENTE"
+      ],
+      "status_alterado": [
+        "CONCLUIDO"
+      ]
+    },
+    {
+      "invoice_id": "INV-1085",
+      "status_baseline": [
+        "CANCELADO"
+      ],
+      "status_alterado": [
+        "CONCLUIDO"
+      ]
+    },
+    {
+      "invoice_id": "INV-1103",
+      "status_baseline": [
+        "CANCELADO"
+      ],
+      "status_alterado": [
+        "CONCLUIDO"
+      ]
+    },
+    {
+      "invoice_id": "INV-1133",
+      "status_baseline": [
+        "CANCELADO",
+        "EM_PROCESSAMENTO"
+      ],
+      "status_alterado": [
+        "CONCLUIDO",
+        "EM_PROCESSAMENTO"
+      ]
+    },
+    {
+      "invoice_id": "INV-1175",
+      "status_baseline": [
+        "CANCELADO"
+      ],
+      "status_alterado": [
+        "CONCLUIDO"
+      ]
+    }
+  ],
+  "reports_regerados_em": "2026-08-04T19:57:54-03:00",
+  "observacao": "Relatórios gerados sob a versão atual dos validadores. Os artefatos de contrato, políticas e os dois produtos financeiros permanecem idênticos ao baseline: a única intervenção é o status na Logística.",
+  "nota_de_regeracao": "Relatórios regerados sob o validador corrigido (escore de qualidade passa a incorporar a camada de esquema). As métricas deste cenário não mudaram: nenhuma alteração de esquema está envolvida."
+}

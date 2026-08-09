@@ -15,7 +15,7 @@
 >
 > Precisa de outro ponto de comparação? Crie uma pasta nova: `cp -a baseline/ baseline-v2/`
 
-Snapshot congelado da PoC Data Mesh em **2026-08-01**, com 38 arquivos.
+Snapshot congelado da PoC Data Mesh em **2026-08-01**.
 Excluídos: `.git/`, `.venv/`, `__pycache__/`, `*.pyc`.
 
 ## Estado das métricas neste snapshot
@@ -27,8 +27,6 @@ Valores de referência do grupo de controle:
 | Data Quality | 4939/4939 válidos (100 %) |
 | Governance Compliance | 3/3 contratos |
 | Contract Validation | 3/3 válidos |
-| QoS Compliance | 3/3 totalmente compliant |
-| Computational Governance | PASS |
 | Convergência cross-domain | 100 % |
 | Integridade referencial | 100 % (0 órfãos) |
 | Divergências persistentes | 321 (160 valor AP↔AR + 161 granularidade 1:N) |
@@ -58,5 +56,5 @@ bash baseline/restore.sh --force    # sem perguntar
 O restore sobrescreve a raiz com este snapshot e remove arquivos criados depois dele.
 Não toca em `.git/`, `.venv/`, `__pycache__/` nem neste diretório.
 
-> Ao rodar experimentos, guarde as anotações **fora** da pasta do projeto — o restore
-> sobrescreve o `README.md` e qualquer arquivo que exista neste snapshot.
+> O restore preserva `experimentos/` e `docs/`: os resultados dos cenários e os textos
+> do trabalho não são afetados. Qualquer outro arquivo fora do snapshot é removido.

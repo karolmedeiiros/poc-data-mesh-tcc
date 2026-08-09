@@ -71,6 +71,7 @@ schema:
         logicalType: array
         physicalType: array
         required: true
+        description: "Estado atual da fatura"
       - name: meses_operacao
         logicalType: array
         physicalType: array

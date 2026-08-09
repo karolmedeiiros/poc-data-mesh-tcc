@@ -63,7 +63,15 @@ def _fields_from_properties(properties: List[Dict[str, Any]]) -> List[Dict[str, 
         field: Dict[str, Any] = {
             "name": prop.get("name"),
             "type": prop.get("logicalType"),
+            # `physicalType` é obrigatório por propriedade no ODCS v3 e não tinha
+            # equivalente na visão interna — sem ele, sua ausência era invisível.
+            "physical_type": prop.get("physicalType"),
             "required": bool(prop.get("required", False)),
+            # Unicidade e chave primária declaradas na propriedade: a governança
+            # cobra que a master entity seja declarada única, e a camada de
+            # qualidade deriva daí qual campo verificar quanto a duplicatas.
+            "unique": bool(prop.get("unique", False)),
+            "primary_key": bool(prop.get("primaryKey", False)),
         }
         opts = prop.get("logicalTypeOptions") or {}
         if "enum" in opts:
@@ -132,7 +140,10 @@ def normalize(odcs: Dict[str, Any]) -> Dict[str, Any]:
         "tags": odcs.get("tags", []) or [],
     }
     for key in ("product_type", "output_port_kind", "master_entity",
-                "created_at", "last_modified", "upstream"):
+                "created_at", "last_modified", "upstream",
+                # Classificação de dados e atributos sensíveis declarados pelo
+                # produto, exigidos pelas políticas de segurança federadas.
+                "data_classification", "pii_fields"):
         if key in top_cp:
             metadata[key] = top_cp[key]
 
